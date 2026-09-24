@@ -273,7 +273,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Ahmedabad CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Ahmedabad",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-ajmer",
@@ -284,7 +288,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Ajmer CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Ajmer",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-prayagraj",
@@ -295,7 +303,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Prayagraj CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Prayagraj",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-bengaluru",
@@ -306,7 +318,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Bengaluru CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Bengaluru",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-bhopal",
@@ -317,7 +333,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Bhopal CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Bhopal",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-bhubaneswar",
@@ -328,7 +348,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Bhubaneswar CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Bhubaneswar",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-bilaspur",
@@ -339,7 +363,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Bilaspur CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Bilaspur",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-chandigarh",
@@ -350,7 +378,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Chandigarh CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Chandigarh",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-chennai",
@@ -361,7 +393,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Chennai CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Chennai",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-gorakhpur",
@@ -372,7 +408,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Gorakhpur CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Gorakhpur",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-guwahati",
@@ -383,7 +423,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Guwahati CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Guwahati",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-jammu",
@@ -394,7 +438,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Jammu CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Jammu",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-kolkata",
@@ -405,7 +453,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Kolkata CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Kolkata",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-malda",
@@ -416,7 +468,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Malda CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Malda",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-mumbai",
@@ -427,7 +483,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Mumbai CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Mumbai",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-muzaffarpur",
@@ -438,7 +498,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Muzaffarpur CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Muzaffarpur",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-patna",
@@ -449,7 +513,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Patna CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Patna",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-ranchi",
@@ -460,7 +528,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Ranchi CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Ranchi",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-secunderabad",
@@ -471,7 +543,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Secunderabad CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Secunderabad",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-siliguri",
@@ -482,7 +558,11 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Siliguri CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Siliguri",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   },
   {
     "id": "rrb-thiruvananthapuram",
@@ -493,6 +573,10 @@
     "include": "getdata[?]cennum",
     "titleTemplate": "RRB Thiruvananthapuram CEN {cennum}: {text}",
     "minTitle": 3,
-    "limit": 400
+    "limit": 400,
+    "group": "rrb",
+    "groupName": "RRB",
+    "region": "Thiruvananthapuram",
+    "groupTemplate": "RRB CEN {cennum}: {text}"
   }
 ]

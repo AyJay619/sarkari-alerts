@@ -7,6 +7,19 @@ export function formatItem(sourceName, category, title, link) {
   return `${ICONS[category] || "📌"} <b>${esc(category)}</b> · ${esc(sourceName)}\n\n${esc(shown)}\n\n🔗 ${esc(link)}`;
 }
 
+// One notice posted on several sites: "RRB CEN 03/2026: Exam Schedule — 21 regions".
+export function formatGroup(groupName, category, groupTitle, regions, totalRegions, link) {
+  const where = regions.length === 1 ? `${regions[0]} only`
+    : regions.length === totalRegions ? `${regions.length} regions`
+    : `${regions.join(", ")} (${regions.length} of ${totalRegions} regions)`;
+  const first = regions.length > 1 ? ` (${regions[0]} copy)` : "";
+  return `${ICONS[category] || "📌"} <b>${esc(category)}</b> · ${esc(groupName)}
+
+${esc(groupTitle)} — ${esc(where)}
+
+🔗 ${esc(link)}${esc(first)}`;
+}
+
 export function makeSender({ token, chatId, dryRun }) {
   return async function send(html) {
     if (dryRun) { console.log("\n┌── Telegram message (dry run) ──\n" + html.replace(/<\/?b>/g, "*").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").split("\n").map(l => "│ " + l).join("\n") + "\n└──"); return true; }

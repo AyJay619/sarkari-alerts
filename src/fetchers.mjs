@@ -79,18 +79,23 @@ function fromHtml(src, text, finalUrl) {
     const href = $el.attr("href");
     if (!href || href.startsWith("#") || /^(javascript|mailto|tel):/i.test(href)) return;
     let title = tidyTitle(clean($el.text()) || clean($el.attr("title")));
+    const linkText = title;
     if (title.length < minTitle) return;
     let link;
     try { link = new URL(href.trim(), finalUrl).href; } catch { return; }
     // "titleTemplate": build a readable title from the link text and the link's ?parameters, e.g. "RRB Patna CEN {cennum}: {text}"
+    let groupTitle;
     if (src.titleTemplate) {
       const q = new URL(link).searchParams;
-      title = src.titleTemplate.replace(/\{(\w+)\}/g, (_, k) => (k === "text" ? title : q.get(k) ?? ""));
+      const fill = tpl => tpl.replace(/\{(\w+)\}/g, (_, k) => (k === "text" ? linkText : q.get(k) ?? ""));
+      title = fill(src.titleTemplate);
+      // "groupTemplate": the same notice on several sites (see "group" in sources.json) gets the same groupTitle
+      if (src.groupTemplate) groupTitle = fill(src.groupTemplate);
     }
     const hay = `${title} ${link}`;
     if (include && !include.test(hay)) return;
     if (exclude && exclude.test(hay)) return;
-    items.push({ title, link });
+    items.push({ title, link, groupTitle });
   });
   return items;
 }

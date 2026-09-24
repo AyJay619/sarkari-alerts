@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fetchItemsWithRetry } from "./fetchers.mjs";
 import { categorize } from "./categorize.mjs";
-import { formatItem, makeSender } from "./telegram.mjs";
+import { formatItem, formatGroup, makeSender } from "./telegram.mjs";
 
 const args = process.argv.slice(2);
 const flag = n => args.includes(n);
@@ -45,6 +45,12 @@ if (!DRY && (!token || !chatId)) {
 const send = makeSender({ token, chatId, dryRun: DRY });
 
 let telegramProblem = false;
+const pendingGroups = {};   // group name -> [{ src, st, fresh, now }], sent as one alert per notice after all sources are checked
+
+const prune = st => {
+  const keys = Object.keys(st.seen);
+  if (keys.length > MAX_SEEN_PER_SOURCE) keys.slice(0, keys.length - MAX_SEEN_PER_SOURCE).forEach(k => delete st.seen[k]);
+};
 const summaries = [];
 
 for (const src of sources) {
@@ -78,6 +84,7 @@ for (const src of sources) {
 
   const fresh = items.filter(i => !(keyOf(i) in st.seen));
   console.log(`OK ${src.name}: ${items.length} on page, ${fresh.length} new`);
+  if (src.group) { (pendingGroups[src.group] ??= []).push({ src, st, fresh, now }); prune(st); continue; }
   // page order is newest-first, so send oldest of the new ones first
   const toSend = fresh.slice().reverse();
   const skipped = Math.max(0, toSend.length - MAX_ALERTS_PER_SOURCE);
@@ -91,8 +98,39 @@ for (const src of sources) {
     else telegramProblem = true;
   }
 
-  const keys = Object.keys(st.seen);
-  if (keys.length > MAX_SEEN_PER_SOURCE) keys.slice(0, keys.length - MAX_SEEN_PER_SOURCE).forEach(k => delete st.seen[k]);
+  prune(st);
+}
+
+// Grouped sources (e.g. the 21 RRB sites): one alert per notice, listing the sites that posted it.
+// A site that shows a notice AFTER it was already announced is recorded silently (no second alert).
+for (const [group, members] of Object.entries(pendingGroups)) {
+  const gs = ((state.groups ??= {})[group] ??= { seen: {} });
+  const byTitle = new Map();
+  for (const mem of members) for (const i of mem.fresh) {
+    const k = i.groupTitle ?? i.title;
+    if (!byTitle.has(k)) byTitle.set(k, []);
+    byTitle.get(k).push({ mem, i });
+  }
+  const markSeen = (hits, now) => hits.forEach(({ mem, i }) => (mem.st.seen[keyOf(i)] = now));
+  const now = new Date().toISOString();
+  const toAnnounce = [];
+  for (const [k, hits] of byTitle) {
+    if (k in gs.seen) markSeen(hits, now); else toAnnounce.push([k, hits]);
+  }
+  toAnnounce.reverse();   // oldest first
+  const skipped = Math.max(0, toAnnounce.length - MAX_ALERTS_PER_SOURCE);
+  for (const [k, hits] of toAnnounce.slice(skipped)) {
+    const regions = [...new Set(hits.map(h => h.mem.src.region ?? h.mem.src.name))];
+    const msg = formatGroup(hits[0].mem.src.groupName ?? group, categorize(k), k, regions, members.length, hits[0].i.link);
+    if (await send(msg)) { gs.seen[k] = now; markSeen(hits, now); } else telegramProblem = true;
+  }
+  if (skipped) {
+    if (await send(`ℹ️ <b>${group}</b>: ${skipped} more new notices not shown individually (too many at once).`))
+      toAnnounce.slice(0, skipped).forEach(([k, hits]) => { gs.seen[k] = now; markSeen(hits, now); });
+    else telegramProblem = true;
+  }
+  const gk = Object.keys(gs.seen);
+  if (gk.length > 2000) gk.slice(0, gk.length - 2000).forEach(k => delete gs.seen[k]);
 }
 
 if (summaries.length) {
