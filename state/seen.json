@@ -130,13 +130,13 @@
   "esic": {
    "initialized": false,
    "seen": {},
-   "fails": 1,
+   "fails": 2,
    "warned": false
   },
   "hpcl": {
    "initialized": false,
    "seen": {},
-   "fails": 1,
+   "fails": 2,
    "warned": false
   },
   "ugc": {
@@ -174,13 +174,13 @@
   "bhel": {
    "initialized": false,
    "seen": {},
-   "fails": 1,
+   "fails": 2,
    "warned": false
   },
   "drdo-rac": {
    "initialized": false,
    "seen": {},
-   "fails": 1,
+   "fails": 2,
    "warned": false
   },
   "aai": {
