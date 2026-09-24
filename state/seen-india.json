@@ -1,28 +1,107 @@
 {
  "sources": {
   "esic": {
-   "initialized": false,
-   "seen": {},
-   "fails": 3,
-   "warned": true
+   "initialized": true,
+   "seen": {
+    "declaration of result for advt. no. 11 of 2026-|https://esic.gov.in/attachments/recruitmentfile/Declaration_of_Result_for_Advt_No_11_of_2026_1790245844.pdf": "2026-09-24T18:41:55.610Z",
+    "notice to advertisement no. 05 of 2026 - notification of total vacancies for the walk-in-interview to be held on -|https://esic.gov.in/attachments/recruitmentfile/Notice_to_Advertisement_No_05_of_2026_Notification_of_total_vacancies_for_the_walk_in_interview_to_be_held_on_1790245130.pdf": "2026-09-24T18:41:55.610Z",
+    "result of walk-in-interview held of srispl on contract.-|https://esic.gov.in/attachments/recruitmentfile/Result_of_Walk_in_interview_held_of_SRISpl_on_Contract_1790243595.pdf": "2026-09-24T18:41:55.610Z",
+    "notice of result for the post of faculty at esic medical college & hospital, beltola, guwahati-22-|https://esic.gov.in/attachments/recruitmentfile/NOTICE_OF_RESULT_FOR_THE_POST_OF_FACULTY_AT_ESIC_MEDICAL_COLLEGE_amp_HOSPITAL_BELTOLA_GUWAHATI_22_1790243197.pdf": "2026-09-24T18:41:55.610Z",
+    "result of the walk-in interview for the post of scientist grade-i (embryologist) on contractual basis held on 16.09.2026-|https://esic.gov.in/attachments/recruitmentfile/RESULT_OF_THE_WALK_IN_INTERVIEW_FOR_THE_POST_OF_SCIENTIST_GRADE_I_EMBRYOLOGIST_ON_CONTRACTUAL_BASIS_HELD_ON_16_09_2026_1790234338.pdf": "2026-09-24T18:41:55.610Z",
+    "result of ayurveda doctor in esi hospital gurgaon website-|https://esic.gov.in/attachments/recruitmentfile/Result_of_Ayurveda_Doctor_in_ESI_Hospital_Gurgaon_website_1790156103.pdf": "2026-09-24T18:41:55.610Z",
+    "walk in interview for recruitment of full time/ part time specialists for one year and the post of senior residents on contract basis-|https://esic.gov.in/attachments/recruitmentfile/WALK_IN_INTERVIEW_FOR_RECRUITMENT_OF_FULL_TIME_PART_TIME_SPECIALISTS_FOR_ONE_YEAR_AND_THE_POST_OF_SENIOR_RESIDENTS_ON_CONTRACT_BASIS_1790155789.pdf": "2026-09-24T18:41:55.610Z",
+    "result of walk-in interviews conducted from 16.09.2026 to 18.09.2026 at esic ssh, sanathnagar, hyderabad for engagement of doctors on contractual basis (english)-|https://esic.gov.in/attachments/recruitmentfile/Result_of_Walk_in_Interviews_conducted_from_16_09_2026_to_18_09_2026_at_ESIC_SSH_Sanathnagar_Hyderabad_for_engagement_of_Doctors_on_contractual_basis_English_1790154101.pdf": "2026-09-24T18:41:55.610Z",
+    "advertisement for recruitment under hpv vaccine project-|https://esic.gov.in/attachments/recruitmentfile/Advertisement_for_recruitment_under_HPV_vaccine_project_1790153738.pdf": "2026-09-24T18:41:55.610Z",
+    "advertisement for the post of adjunct faculty, sr and teaching faculty- esic alwar-|https://esic.gov.in/attachments/recruitmentfile/Advertisement_for_the_post_of_Adjunct_Faculty_SR_and_Teaching_Faculty_ESIC_Alwar_1790149429.pdf": "2026-09-24T18:41:55.610Z"
+   },
+   "fails": 0,
+   "warned": false
   },
   "hpcl": {
-   "initialized": false,
-   "seen": {},
-   "fails": 3,
-   "warned": true
+   "initialized": true,
+   "seen": {
+    "engagement of ex-employees as ta consultant for visakh refinery – english advt.|https://www.hindustanpetroleum.com/documents/pdf/English%20Advertisement%20-%20VR%20TA%20Consultant%202026%20v1.pdf": "2026-09-24T18:41:57.467Z",
+    "engagement of ex-employees as ta consultant for visakh refinery – hindi advt.|https://www.hindustanpetroleum.com/documents/pdf/Hindi%20Advertisement%20-%20VR%20TA%20Consultant%202026%20v1.pdf": "2026-09-24T18:41:57.467Z",
+    "download application and declarations format (word files)_engagement of ex-employees as ta consultant for visakh refinery.|https://www.hindustanpetroleum.com/documents/pdf/Annexure%20II,%20III%20and%20IV.docx": "2026-09-24T18:41:57.467Z",
+    "details of applications received|https://www.hindustanpetroleum.com/documents/pdf/Position%20Wise%20Application%20Count.pdf": "2026-09-24T18:41:57.467Z",
+    "download admit card for computer-based test (cbt) for the position of junior executive – chemical, junior executive – fire & safety and assistant manager / manager – projects.|http://ibpsreg.ibps.in/hpcldaug26/oecla_aug26/login.php?appid=ca1f40e1c9c68c98fd23625f608a9000": "2026-09-24T18:41:57.467Z",
+    "syllabus for junior executive – chemical|https://www.hindustanpetroleum.com/documents/pdf/Junior%20Executive%20-%20Chemical%20Syllabus.pdf": "2026-09-24T18:41:57.467Z",
+    "syllabus for junior executive – fire & safety & safety|https://www.hindustanpetroleum.com/documents/pdf/Junior%20Executive%20Fire%20and%20Safety%20Syllabus.pdf": "2026-09-24T18:41:57.467Z",
+    "syllabus for assistant manager / manager – projects|https://www.hindustanpetroleum.com/documents/pdf/Assistant%20Manager-%20Manager%20Projects%20Syllabus.pdf": "2026-09-24T18:41:57.467Z",
+    "corrigendum/ addendum dated 2nd july, 2026|https://www.hindustanpetroleum.com/documents/pdf/140X160%20MM%20AD.pdf": "2026-09-24T18:41:57.467Z",
+    "view window advertisement|https://www.hindustanpetroleum.com/documents/pdf/Officers%2026-27.pdf": "2026-09-24T18:41:57.467Z",
+    "detailed advertisement (pdf attached)|https://www.hindustanpetroleum.com/documents/pdf/Recruitment%20of%20Officers-%20July-26_Final_1.pdf": "2026-09-24T18:41:57.467Z",
+    "detailed advertisement (pdf attached) (content is in hindi)|https://www.hindustanpetroleum.com/documents/pdf/Recruitment%20of%20Officers-%20July-26_2_Hindi.pdf": "2026-09-24T18:41:57.467Z",
+    "view window advertisement|https://www.hindustanpetroleum.com/documents/pdf/Advertisement%20-Dir%20Marketing.pdf": "2026-09-24T18:41:57.467Z",
+    "position wise cut-off marks in all categories for computer based test (cbt) held on 3rd may, 2026 against advt. no. hpcl/open/hr/3/2025-26|https://www.hindustanpetroleum.com/documents/pdf/CBT%20Cut-offs.pdf": "2026-09-24T18:41:57.467Z",
+    "public notice : recruitment fraud alert|https://www.hindustanpetroleum.com/documents/pdf/Public%20Notice%20-%20Recruitment%20Fraud%20Alert.pdf": "2026-09-24T18:41:57.467Z",
+    "details of applications received|https://www.hindustanpetroleum.com/documents/pdf/Details%20of%20Applications%20received.pdf": "2026-09-24T18:41:57.467Z",
+    "view window advertisement|https://www.hindustanpetroleum.com/documents/pdf/Window%20Advertisement.pdf": "2026-09-24T18:41:57.467Z",
+    "detailed advertisement (pdf attached)|https://www.hindustanpetroleum.com/documents/pdf/Recruitment%20of%20Officers-%20Feb%202026_Final_as%20on%209th%20March%202026.pdf": "2026-09-24T18:41:57.467Z",
+    "detailed advertisement (pdf attached) (content is in hindi)|https://www.hindustanpetroleum.com/documents/pdf/Recruitment%20of%20Officers_Feb%202026_Hindi.pdf": "2026-09-24T18:41:57.467Z",
+    "frequently asked questions|https://www.hindustanpetroleum.com/documents/pdf/FAQs_2025-26_Final.pdf": "2026-09-24T18:41:57.467Z",
+    "view window advertisement|https://www.hindustanpetroleum.com/documents/pdf/Advertisement%20of%20%20HPCL%20GAT%20-%20Refineries%20Division%20FY26-27.pdf": "2026-09-24T18:41:57.467Z",
+    "view window advertisement (content in hindi)|https://www.hindustanpetroleum.com/documents/pdf/Advertisement%20of%20%20HPCL%20GAT%20-%20Refineries%20Division%20FY26-27%20Hindi.pdf": "2026-09-24T18:41:57.467Z",
+    "pwbd disability certificate format|https://www.hindustanpetroleum.com/documents/pdf/PwBD%20Disability%20Certificate%20Format.pdf": "2026-09-24T18:41:57.467Z",
+    "letter of undertaking for using own scribe|https://www.hindustanpetroleum.com/documents/pdf//Letter%20of%20Undertaking%20for%20Using%20Own%20Scribe.pdf": "2026-09-24T18:41:57.467Z",
+    "certificate regarding physical limitation in an examinee to write|https://www.hindustanpetroleum.com/documents/pdf/Certificate%20regarding%20physical%20limitation%20in%20an%20examinee%20to%20write.pdf": "2026-09-24T18:41:57.467Z"
+   },
+   "fails": 0,
+   "warned": false
   },
   "bhel": {
-   "initialized": false,
-   "seen": {},
-   "fails": 3,
-   "warned": true
+   "initialized": true,
+   "seen": {
+    "bhel artisan – skill test result declaration|https://careers.bhel.in/ar_2025/Skill%20Test%20Result%20Declaration.pdf": "2026-09-24T18:41:59.969Z",
+    "bhel shortlisting methodology.|https://careers.bhel.in/ar_2025/Public%20Notice_Result%20Processing.pdf": "2026-09-24T18:41:59.969Z",
+    "cut-off marks for shortlisting to document verification cum skill test stage.|https://careers.bhel.in/ar_2025/Unit%20wise%20Cut%20Off_Artisans%202026.pdf": "2026-09-24T18:41:59.969Z",
+    "detailed advertisement|https://careers.bhel.in/ar_2025/Artisan_Detailed%20AD_110825.pdf": "2026-09-24T18:41:59.969Z",
+    "bhel addendum for best apprentice/ runners-up apprentice|https://careers.bhel.in/ar_2025/BHEL%20Artisans%20Addendum.pdf": "2026-09-24T18:41:59.969Z",
+    "compassionate consideration|https://careers.bhel.in/ar_2025/Compassionate%20Consideration.pdf": "2026-09-24T18:41:59.969Z",
+    "bhel medical examination rules|https://careers.bhel.in/ar_2025/Bhel_medical_examination_rules.pdf": "2026-09-24T18:41:59.969Z",
+    "detailed vacancy breakup|https://careers.bhel.in/ar_2025/Artisans_Vacancy%20Breakup_Final.pdf": "2026-09-24T18:41:59.969Z",
+    "experience certificate proforma (for age relaxation)|https://careers.bhel.in/ar_2025/Experience%20Certificate%20Proforma.pdf": "2026-09-24T18:41:59.969Z",
+    "bhel exam pattern|https://careers.bhel.in/ar_2025/BHEL%20Exam%20Pattern.pdf": "2026-09-24T18:41:59.969Z",
+    "bhel artisan syllabus|https://careers.bhel.in/ar_2025/BHEL%20Artisan%20-%20CBE%20Syllabus.pdf": "2026-09-24T18:41:59.969Z",
+    "advt. english|https://careers.bhel.in/static/PTMC%20Advt.-%20English_PSSR_092026.pdf": "2026-09-24T18:41:59.969Z",
+    "click here to apply|https://careers.bhel.in/static/Application_PSSR_092026.pdf": "2026-09-24T18:41:59.969Z",
+    "advertisement|https://careers.bhel.in/static/IVP%20PTMC%20Advertisement%20_2026.pdf": "2026-09-24T18:41:59.969Z",
+    "corrigenda - due date 12.09.2026|https://careers.bhel.in/static/Corrigenda%20PTMC%20IVP%2001092026.pdf": "2026-09-24T18:41:59.969Z",
+    "advertisement|https://careers.bhel.in/static/PTMC_Advt_Corp_AUG_2026.pdf": "2026-09-24T18:41:59.969Z",
+    "biodata form|https://careers.bhel.in/static/PTMC_Biodata_Form_Corp_AUG_2026.pdf": "2026-09-24T18:41:59.969Z",
+    "advertisement|https://careers.bhel.in/static/Advertisement_assistant_technical_consultant_jhansi.pdf": "2026-09-24T18:41:59.969Z",
+    "(english version )|https://careers.bhel.in/static/et_biodata_form.pdf": "2026-09-24T18:41:59.969Z",
+    "(hindi version )|https://careers.bhel.in/static/ET_Biodata__hindi.pdf": "2026-09-24T18:41:59.969Z",
+    "(english version )|https://careers.bhel.in/static/physical_limitation_certificate.pdf": "2026-09-24T18:41:59.969Z",
+    "(hindi version )|https://careers.bhel.in/static/physical_limitation_certificate_hindi.pdf": "2026-09-24T18:41:59.969Z",
+    "(english version )|https://careers.bhel.in/static/Format_EWS_Certificate.pdf": "2026-09-24T18:41:59.969Z",
+    "(hindi version )|https://careers.bhel.in/static/EWS_hindi.pdf": "2026-09-24T18:41:59.969Z",
+    "(english version )|https://careers.bhel.in/static/scribe_declaration_form.pdf": "2026-09-24T18:41:59.969Z"
+   },
+   "fails": 0,
+   "warned": false
   },
   "drdo-rac": {
-   "initialized": false,
-   "seen": {},
-   "fails": 3,
-   "warned": true
+   "initialized": true,
+   "seen": {
+    "brief advertisement|https://rac.gov.in/download/advt_157_brief.pdf": "2026-09-24T18:42:01.710Z",
+    "advertisement|https://rac.gov.in/download/advt_157.pdf": "2026-09-24T18:42:01.710Z",
+    "pay equivalence matrix|https://rac.gov.in/download/advt_157_payEquivalence_v1.pdf": "2026-09-24T18:42:01.710Z",
+    "tentative schedule|https://rac.gov.in/download/advt_157_calendar02.pdf": "2026-09-24T18:42:01.710Z",
+    "advertisement|https://rac.gov.in/download/advt_156_v3.pdf": "2026-09-24T18:42:01.710Z",
+    "tentative schedule|https://rac.gov.in/download/advt_156_calendar02.pdf": "2026-09-24T18:42:01.710Z",
+    "advertisement|https://rac.gov.in/download/advt_152.pdf": "2026-09-24T18:42:01.710Z",
+    "pay equivalence criteria|https://rac.gov.in/download/advt_152_payEquiMatrix_v01.pdf": "2026-09-24T18:42:01.710Z",
+    "tentative schedule|https://rac.gov.in/download/advt_152_calendar08.pdf": "2026-09-24T18:42:01.710Z",
+    "advertisement|https://rac.gov.in/download/advt_154.pdf": "2026-09-24T18:42:01.710Z",
+    "pay equivalence criteria|https://rac.gov.in/download/payEquivalenceCriteria_advt154.pdf": "2026-09-24T18:42:01.710Z",
+    "tentative schedule|https://rac.gov.in/download/advt_154_calendar03.pdf": "2026-09-24T18:42:01.710Z",
+    "public notice 263.17 kb requirement of valid gate score for direct recruitment of scientist 'b' (group a gazetted) post in defence research & development service (drds) cadre of drdo published on: 31 aug, 2026|https://rac.gov.in/download/GATEpublicNotice2027.pdf": "2026-09-24T18:42:01.710Z",
+    "addendum to advt. no. 156 : notice / addendum post induction training for selected candidates|https://rac.gov.in/download/advt_156_addendum_post_induction_training.pdf": "2026-09-24T18:42:01.710Z",
+    "addendum to advt. no. 156 : additional information on 3 posts under department of science & technology|https://rac.gov.in/download/advt_156_addendum.pdf": "2026-09-24T18:42:01.710Z"
+   },
+   "fails": 0,
+   "warned": false
   }
  }
 }
