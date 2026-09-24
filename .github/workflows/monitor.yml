@@ -1,21 +1,23 @@
 name: Check for new notices
 
+# Only a timer and the manual button can start this. Never add pull_request or other
+# triggers a stranger could fire: the "india" job runs on your own PC.
 on:
   schedule:
     - cron: "*/30 * * * *"   # every 30 minutes
   workflow_dispatch:          # the manual "Run workflow" button
 
 permissions:
-  contents: write             # needed to save state/seen.json back to the repo
-
-concurrency:
-  group: notice-monitor       # never run two checks at the same time
-  cancel-in-progress: false
+  contents: write             # needed to save state files back to the repo
 
 jobs:
-  check:
+  # Sources that work from GitHub's servers ("runner": "cloud" in sources.json)
+  cloud:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    concurrency:
+      group: notice-monitor-cloud
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
 
@@ -30,19 +32,34 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: node src/monitor.mjs
+        run: node src/monitor.mjs --runner cloud
 
       # Runs even if the step above reported a problem, so what was sent is never forgotten.
       - name: Save the list of already-seen notices
         if: always()
-        run: |
-          git config user.name  "notice-monitor"
-          git config user.email "notice-monitor@users.noreply.github.com"
-          git add state/seen.json
-          if git diff --cached --quiet; then
-            echo "Nothing new to save."
-          else
-            git commit -m "Update seen notices [skip ci]"
-            git pull --rebase origin "${GITHUB_REF_NAME}" || true
-            git push
-          fi
+        run: node src/save-state.mjs state/seen-cloud.json
+
+  # Sources blocked from GitHub's servers ("runner": "india" in sources.json), run on your PC.
+  # Not linked to the cloud job: if your PC is off, this simply waits (or expires) and the
+  # cloud job is unaffected. Only one run may wait in line; a newer one replaces an older waiting one.
+  india:
+    runs-on: [self-hosted, india]
+    timeout-minutes: 15
+    concurrency:
+      group: notice-monitor-india
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      # Uses the Node already installed on the PC (no setup-node download).
+      - run: npm ci
+
+      - name: Look for new notices and send Telegram alerts
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node src/monitor.mjs --runner india
+
+      - name: Save the list of already-seen notices
+        if: always()
+        run: node src/save-state.mjs state/seen-india.json

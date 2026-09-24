@@ -4,6 +4,11 @@ Every 30 minutes this checks a list of government recruitment websites and sends
 (jobs, admit cards, results, answer keys, corrections) to you on Telegram.
 It only *sends alerts*. It never touches your website or Sanity.
 
+There are **two jobs**: **cloud** (runs on GitHub's servers) and **india** (runs on your own Windows PC, for sites that block GitHub).
+Each source in `sources.json` has `"runner": "cloud"` or `"runner": "india"` — change that one word to move a site between jobs.
+Each job keeps its own memory file (`state/seen-cloud.json`, `state/seen-india.json`).
+If you move a site, it is treated as new on its new job (one silent "now watching" message, no flood).
+
 A Telegram message looks like:
 
 ```
@@ -26,6 +31,23 @@ Advt. No. IPRC/RMT/2026/01 dated 12.09.2026 - Inviting online applications for t
 5. Repo → **Settings → Actions → General → Workflow permissions** → choose **Read and write permissions** → Save.
 6. Run it once by hand (see below). You will get **one** message: "Now watching … — N existing notices recorded".
    After that you only get messages for genuinely new notices.
+
+## The india job: your PC
+
+**Is the runner online?** Repo → **Settings → Actions → Runners**. Your runner (label `india`) shows **Idle** or **Active** (online) or **Offline**.
+On the PC, the runner must be running (as a Windows service, or by running `run.cmd` in the runner folder).
+
+**If the PC is off:** nothing breaks. The cloud job carries on as normal. The india job just waits in line (only one waiting run is kept, so no pile-up)
+and runs when the PC is back; a run that waits more than 24 hours is cancelled by GitHub. You may miss alerts from the india sites while it is off, but you will get them when it is back on
+(notices stay on those sites' pages for a while).
+
+**Move the runner to a Mac later:**
+1. Repo → **Settings → Actions → Runners → New self-hosted runner**, pick **macOS**, and run the commands it shows on the Mac. When asked for labels, add `india`.
+2. Make sure Node.js is installed on the Mac, and that the Mac has an Indian internet connection.
+3. Start it (`./run.sh`, or install as a service with `./svc.sh install && ./svc.sh start`).
+4. Once the Mac shows as online, remove the old Windows runner (Settings → Actions → Runners → ⋯ → Remove). Nothing else changes: the workflow only looks for the `india` label.
+
+**Safety:** the workflow only starts on the timer or the manual button — never on pull requests. Keep it that way, because the india job runs on your own PC.
 
 ## Run it manually
 
@@ -61,12 +83,14 @@ Open `sources.json` and copy one of the blocks. The simple kind (a page with a l
 - `exclude` — *(optional)* drop links containing these words.
 - `minTitle` — *(optional)* ignore link texts shorter than this many letters (default 12).
 - `limit` — how many notices from the top of the page to look at (default 40).
+- `runner` — `"cloud"` (default) or `"india"`: which job checks it.
 - To pause a site without deleting it, add `"disabled": true`.
 
 **Test before you push** (needs Node.js installed once: `npm install`):
 
 ```
 node src/monitor.mjs --check
+node src/monitor.mjs --check --runner india   (only the india sites)
 ```
 
 It fetches every site and shows what it found. A site only works if it shows `OK` and the notices look right.

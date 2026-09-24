@@ -127,6 +127,7 @@
    "fails": 0,
    "warned": false
   },
+<<<<<<< HEAD:state/seen.json
   "esic": {
    "initialized": false,
    "seen": {},
@@ -139,6 +140,8 @@
    "fails": 3,
    "warned": true
   },
+=======
+>>>>>>> 1cdac7c (Split monitor into cloud and india jobs with per-runner state):state/seen-cloud.json
   "ugc": {
    "initialized": true,
    "seen": {
@@ -171,6 +174,7 @@
    "fails": 0,
    "warned": false
   },
+<<<<<<< HEAD:state/seen.json
   "bhel": {
    "initialized": false,
    "seen": {},
@@ -183,6 +187,8 @@
    "fails": 3,
    "warned": true
   },
+=======
+>>>>>>> 1cdac7c (Split monitor into cloud and india jobs with per-runner state):state/seen-cloud.json
   "aai": {
    "initialized": true,
    "seen": {

@@ -11,12 +11,14 @@ const opt = (n, d) => (args.includes(n) ? args[args.indexOf(n) + 1] : d);
 const DRY = flag("--dry-run");          // print messages instead of sending; state is not saved unless --state is given
 const CHECK = flag("--check");          // only test the sources: fetch + show what was found
 const SOURCES_FILE = opt("--sources", "sources.json");
-const STATE_FILE = opt("--state", "state/seen.json");
+const RUNNER = opt("--runner", null);      // "cloud" or "india": only check sources with this runner (default: all)
+const STATE_FILE = opt("--state", RUNNER ? `state/seen-${RUNNER}.json` : "state/seen.json");
 const FAIL_LIMIT = 3;                    // consecutive failed runs before a warning
 const MAX_ALERTS_PER_SOURCE = 15;        // safety valve if a site redesign makes everything look new
 const MAX_SEEN_PER_SOURCE = 1000;
 
-const sources = JSON.parse(fs.readFileSync(SOURCES_FILE, "utf8")).filter(s => !s.disabled);
+const sources = JSON.parse(fs.readFileSync(SOURCES_FILE, "utf8")).filter(s => !s.disabled)
+  .filter(s => !RUNNER || (s.runner ?? "cloud") === RUNNER);
 let state = { sources: {} };
 if (fs.existsSync(STATE_FILE)) state = JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
 state.sources ??= {};
