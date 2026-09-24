@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fetchItems } from "./fetchers.mjs";
+import { fetchItemsWithRetry } from "./fetchers.mjs";
 import { categorize } from "./categorize.mjs";
 import { formatItem, makeSender } from "./telegram.mjs";
 
@@ -27,7 +27,7 @@ if (CHECK) {
   let bad = 0;
   for (const src of sources) {
     try {
-      const items = await fetchItems(src);
+      const items = await fetchItemsWithRetry(src);
       console.log(`OK    ${src.name} — ${items.length} notices`);
       items.slice(0, 3).forEach(i => console.log(`        [${categorize(i.title)}] ${i.title.slice(0, 90)}\n        ${i.link.slice(0, 110)}`));
     } catch (e) { bad++; console.log(`FAIL  ${src.name} — ${e.message}`); }
@@ -49,10 +49,10 @@ for (const src of sources) {
   const st = (state.sources[src.id] ??= { initialized: false, seen: {}, fails: 0, warned: false });
   let items;
   try {
-    items = await fetchItems(src);
+    items = await fetchItemsWithRetry(src);
   } catch (e) {
     st.fails++;
-    console.log(`FAIL ${src.name}: ${e.message} (failed ${st.fails} run(s) in a row)`);
+    console.log(`FAIL ${src.name} (after retry): ${e.message} (failed ${st.fails} run(s) in a row)`);
     if (st.fails >= FAIL_LIMIT && !st.warned) {
       const ok = await send(`⚠️ <b>${src.name}</b> has failed ${st.fails} runs in a row.\nLast error: ${e.message.replace(/[<>&]/g, "")}\nI'll tell you when it recovers.`);
       if (ok) st.warned = true; else telegramProblem = true;

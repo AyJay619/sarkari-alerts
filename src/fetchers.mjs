@@ -6,19 +6,17 @@ const HEADERS = {
   "Accept-Language": "en-IN,en;q=0.9",
 };
 
-async function getText(url, tries = 3) {
-  let lastErr;
-  for (let i = 1; i <= tries; i++) {
-    try {
-      const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(30000), redirect: "follow" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return { text: await res.text(), finalUrl: res.url };
-    } catch (e) {
-      lastErr = new Error(e.cause?.code ? `${e.message} (${e.cause.code})` : e.message);
-      if (i < tries) await new Promise(r => setTimeout(r, 2000 * i));
-    }
+// One attempt, with a detailed error message so the GitHub log shows exactly what went wrong.
+async function getText(url) {
+  const started = Date.now();
+  try {
+    const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(30000), redirect: "follow" });
+    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`.trim());
+    return { text: await res.text(), finalUrl: res.url };
+  } catch (e) {
+    const cause = e.cause ? ` | cause: ${[e.cause.code, e.cause.message].filter(Boolean).join(" ")}` : "";
+    throw new Error(`${e.name}: ${e.message}${cause} | after ${((Date.now() - started) / 1000).toFixed(1)}s | url: ${url}`);
   }
-  throw lastErr;
 }
 
 const clean = s => String(s ?? "").replace(/\s+/g, " ").trim();
@@ -89,4 +87,16 @@ export async function fetchItems(src) {
   const limited = unique.slice(0, src.limit ?? 40);
   if (limited.length === 0) throw new Error("Page loaded but no notices were found (site layout may have changed)");
   return limited;
+}
+
+// Tries once, and if that fails waits a short while and tries one more time.
+export async function fetchItemsWithRetry(src, pauseMs = 20000) {
+  try {
+    return await fetchItems(src);
+  } catch (e) {
+    console.log(`  ${src.name}: first attempt failed -> ${e.message}
+  ${src.name}: retrying in ${pauseMs / 1000}s ...`);
+    await new Promise(r => setTimeout(r, pauseMs));
+    return await fetchItems(src);
+  }
 }
