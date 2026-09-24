@@ -122,3 +122,22 @@ Chosen by words in the title (see `src/categorize.mjs`): **Answer Key**, **Admit
 - If Telegram itself fails, the notice is *not* marked as seen, so it is retried on the next run.
 - If the repo has no activity for 60 days GitHub may pause scheduled runs; the state commits normally keep it active,
   and you can always press **Run workflow**.
+
+## Optional: AI check of new notices (costs money — OFF by default)
+
+Set `"aiEnabled": true` in `config.json` to turn it on (and add a GitHub secret `ANTHROPIC_API_KEY`). With it **off**, nothing changes.
+When on, only **new** notices are looked at:
+
+1. Free word check on the title (`keywords.json`): clearly relevant → sent; clearly irrelevant (tender, circular…) → skipped and logged.
+2. Unclear ones: the first 2 pages of the PDF are read as text (max ~2000 characters, never the file itself) and `claude-haiku-4-5` answers with one word.
+3. At most `maxAiCallsPerRun` (20) AI calls per run. Extra notices are still sent, marked **❓ unchecked**. If the AI fails or credit runs out, notices are also sent as ❓ unchecked — never dropped.
+4. **Not Relevant** answers are not sent; see `state/ai-log-<runner>.jsonl`. Scanned PDFs are judged by title only (**📷 scanned**). Answers are remembered per link in `state/ai-cache-<runner>.json`.
+5. The run log shows the number of AI calls and the approximate cost.
+
+**Test it first** (changes no files; messages start with 🧪 TEST; add `--dry-run` to print instead of sending):
+
+```
+node src/monitor.mjs --test-ai
+```
+
+Needs `ANTHROPIC_API_KEY` (and the two Telegram variables unless `--dry-run`) set in your terminal. It uses the SSC source and its latest 3 notices; change with `--test-source <id>`.

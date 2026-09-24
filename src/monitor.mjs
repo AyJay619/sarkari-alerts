@@ -3,6 +3,7 @@ import path from "node:path";
 import { fetchItemsWithRetry } from "./fetchers.mjs";
 import { categorize } from "./categorize.mjs";
 import { formatItem, formatGroup, makeSender } from "./telegram.mjs";
+import { Classifier, keywordVerdict, loadConfig } from "./classify.mjs";
 
 const args = process.argv.slice(2);
 const flag = n => args.includes(n);
@@ -42,7 +43,46 @@ if (!DRY && (!token || !chatId)) {
   console.error("TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set (GitHub Secrets). Nothing was sent.");
   process.exit(1);
 }
-const send = makeSender({ token, chatId, dryRun: DRY });
+let send = makeSender({ token, chatId, dryRun: DRY });
+
+// ---- AI classification (see config.json; OFF unless aiEnabled is true) ----
+const TEST_AI = flag("--test-ai");       // test the AI step on ONE source's latest 3 notices; changes no files
+const cfg = loadConfig();
+const apiKey = process.env.ANTHROPIC_API_KEY;
+const SAVES_STATE = !DRY || flag("--state");
+let ai = null;
+if (!TEST_AI && cfg.aiEnabled) {
+  if (!apiKey) console.error("aiEnabled is true but ANTHROPIC_API_KEY is not set: AI classification is OFF for this run.");
+  else ai = new Classifier(cfg, {
+    apiKey,
+    cacheFile: SAVES_STATE ? `state/ai-cache-${RUNNER ?? "all"}.json` : null,
+    logFile: SAVES_STATE ? `state/ai-log-${RUNNER ?? "all"}.jsonl` : null,
+  });
+}
+const NO_AI = { send: true, category: null, flag: null };
+
+if (TEST_AI) {
+  if (!apiKey) { console.error("Set ANTHROPIC_API_KEY (in your own terminal) to run the AI test."); process.exit(1); }
+  const srcId = opt("--test-source", "ssc");
+  const src = JSON.parse(fs.readFileSync(SOURCES_FILE, "utf8")).find(s => s.id === srcId);
+  if (!src) { console.error(`No source with id "${srcId}".`); process.exit(1); }
+  const realSend = send;
+  send = html => realSend("🧪 <b>TEST</b>\n" + html);
+  const test = new Classifier(cfg, { apiKey, force: true });   // force: use the AI even when keywords could decide; no cache/log files written
+  const items = (await fetchItemsWithRetry(src)).slice(0, 3);
+  console.log("\nTEST MODE: " + src.name + ", latest " + items.length + " notices. No state, cache or log files are changed.\n");
+  const rows = [];
+  for (const i of items) {
+    const d = await test.decide(src, i);
+    const category = d.category ?? categorize(i.title);
+    rows.push({ title: i.title.slice(0, 70), keywords: keywordVerdict(i.title), "AI chose": d.how === "AI" ? d.category : "(" + d.how + ")", flag: d.flag ?? "", "live mode": d.send ? "sends" : "would NOT send" });
+    const note = d.send ? "" : "\n\n(Live mode would NOT send this: AI said Not Relevant)";
+    if (!(await send(formatItem(src.name, category, i.title, i.link, d.flag) + note))) console.error("Telegram send failed");
+  }
+  console.table(rows);
+  console.log(test.summary());
+  process.exit(0);
+}
 
 let telegramProblem = false;
 const pendingGroups = {};   // group name -> [{ src, st, fresh, now }], sent as one alert per notice after all sources are checked
@@ -89,7 +129,9 @@ for (const src of sources) {
   const toSend = fresh.slice().reverse();
   const skipped = Math.max(0, toSend.length - MAX_ALERTS_PER_SOURCE);
   for (const i of toSend.slice(skipped)) {
-    if (await send(formatItem(src.name, categorize(i.title), i.title, i.link))) st.seen[keyOf(i)] = now;
+    const d = ai ? await ai.decide(src, i) : NO_AI;
+    if (!d.send) { st.seen[keyOf(i)] = now; continue; }   // "Not Relevant": not sent, written to the review log
+    if (await send(formatItem(src.name, d.category ?? categorize(i.title), i.title, i.link, d.flag))) st.seen[keyOf(i)] = now;
     else telegramProblem = true; // not marked as seen, so it is retried next run
   }
   if (skipped) {
@@ -121,7 +163,10 @@ for (const [group, members] of Object.entries(pendingGroups)) {
   const skipped = Math.max(0, toAnnounce.length - MAX_ALERTS_PER_SOURCE);
   for (const [k, hits] of toAnnounce.slice(skipped)) {
     const regions = [...new Set(hits.map(h => h.mem.src.region ?? h.mem.src.name))];
-    const msg = formatGroup(hits[0].mem.src.groupName ?? group, categorize(k), k, regions, members.length, hits[0].i.link);
+    // One AI decision for the whole group (cached under the group's title, not one region's link)
+    const d = ai ? await ai.decide(hits[0].mem.src, { title: k, link: `group:${group}:${k}` }) : NO_AI;
+    if (!d.send) { gs.seen[k] = now; markSeen(hits, now); continue; }
+    const msg = formatGroup(hits[0].mem.src.groupName ?? group, d.category ?? categorize(k), k, regions, members.length, hits[0].i.link, d.flag);
     if (await send(msg)) { gs.seen[k] = now; markSeen(hits, now); } else telegramProblem = true;
   }
   if (skipped) {
@@ -141,7 +186,8 @@ if (summaries.length) {
   }
 }
 
-if (!DRY || flag("--state")) {
+if (ai) { console.log(ai.summary()); if (SAVES_STATE) ai.save(); }
+if (SAVES_STATE) {
   fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
   fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 1) + "\n");
 }

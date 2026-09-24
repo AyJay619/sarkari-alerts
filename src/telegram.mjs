@@ -2,18 +2,26 @@ const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(
 
 const ICONS = { "Job": "💼", "Admit Card": "🎫", "Result": "📊", "Answer Key": "🔑", "Correction": "✏️", "Other": "📌" };
 
-export function formatItem(sourceName, category, title, link) {
+// flag: null | "unchecked" (the AI could not check it) | "scanned" (PDF is a scan, judged by title only)
+const FLAGS = { unchecked: "❓ unchecked", scanned: "📷 scanned" };
+const flagLine = flag => (FLAGS[flag] ? "\n" + FLAGS[flag] : "");
+
+export function formatItem(sourceName, category, title, link, flag = null) {
   const shown = title.length > 400 ? title.slice(0, 397) + "…" : title;
-  return `${ICONS[category] || "📌"} <b>${esc(category)}</b> · ${esc(sourceName)}\n\n${esc(shown)}\n\n🔗 ${esc(link)}`;
+  return `${ICONS[category] || "📌"} <b>${esc(category)}</b> · ${esc(sourceName)}${flagLine(flag)}
+
+${esc(shown)}
+
+🔗 ${esc(link)}`;
 }
 
 // One notice posted on several sites: "RRB CEN 03/2026: Exam Schedule — 21 regions".
-export function formatGroup(groupName, category, groupTitle, regions, totalRegions, link) {
+export function formatGroup(groupName, category, groupTitle, regions, totalRegions, link, flag = null) {
   const where = regions.length === 1 ? `${regions[0]} only`
     : regions.length === totalRegions ? `${regions.length} regions`
     : `${regions.join(", ")} (${regions.length} of ${totalRegions} regions)`;
   const first = regions.length > 1 ? ` (${regions[0]} copy)` : "";
-  return `${ICONS[category] || "📌"} <b>${esc(category)}</b> · ${esc(groupName)}
+  return `${ICONS[category] || "📌"} <b>${esc(category)}</b> · ${esc(groupName)}${flagLine(flag)}
 
 ${esc(groupTitle)} — ${esc(where)}
 

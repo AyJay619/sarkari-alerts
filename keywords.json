@@ -1,0 +1,15 @@
+{
+  "relevant": [
+    "recruitment", "vacancy", "vacancies", "advertisement", "advt", "notification for", "engagement of", "walk-in", "walk in",
+    "admit card", "call letter", "e-call", "hall ticket", "city intimation",
+    "result", "merit list", "selection list", "final list", "shortlisted",
+    "answer key", "response sheet", "objection",
+    "corrigendum", "addendum", "extension of last date", "revised", "exam schedule", "exam date", "interview schedule",
+    "apprentice", "trainee", "management trainee"
+  ],
+  "irrelevant": [
+    "tender", "quotation", "e-auction", "auction", "rate contract",
+    "circular", "office order", "office memorandum", "holiday", "gazette", "rti", "annual report", "press release",
+    "newsletter", "supply of", "procurement"
+  ]
+}

@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0",
-    "undici": "^7.29.1"
+    "undici": "^7.29.1",
+    "unpdf": "^1.8.1"
   }
 }

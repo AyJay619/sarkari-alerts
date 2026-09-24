@@ -1,16 +1,18 @@
 // Commits and pushes one state file. Used by the workflow on both Linux and Windows runners.
-// Usage: node src/save-state.mjs state/seen-cloud.json
+// Usage: node src/save-state.mjs state/seen-cloud.json [more files...]   (files that do not exist are skipped)
 import { execFileSync } from "node:child_process";
 
-const file = process.argv[2];
-if (!file) { console.error("Usage: node src/save-state.mjs <state-file>"); process.exit(1); }
+import fs from "node:fs";
+const files = process.argv.slice(2).filter(f => fs.existsSync(f));
+const file = files.join(" ");
+if (!files.length) { console.error("Usage: node src/save-state.mjs <state-file>"); process.exit(1); }
 const branch = process.env.GITHUB_REF_NAME || "main";
 const git = (...a) => execFileSync("git", a, { stdio: "inherit" });
 const gitOk = (...a) => { try { git(...a); return true; } catch { return false; } };
 
 git("config", "user.name", "notice-monitor");
 git("config", "user.email", "notice-monitor@users.noreply.github.com");
-git("add", file);
+git("add", ...files);
 if (gitOk("diff", "--cached", "--quiet")) { console.log("Nothing new to save."); process.exit(0); }
 git("commit", "-m", `Update seen notices (${file}) [skip ci]`);
 

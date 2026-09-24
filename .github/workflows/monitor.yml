@@ -32,12 +32,13 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}   # only used if aiEnabled is true in config.json
         run: node src/monitor.mjs --runner cloud
 
       # Runs even if the step above reported a problem, so what was sent is never forgotten.
       - name: Save the list of already-seen notices
         if: always()
-        run: node src/save-state.mjs state/seen-cloud.json
+        run: node src/save-state.mjs state/seen-cloud.json state/ai-cache-cloud.json state/ai-log-cloud.jsonl
 
   # Sources blocked from GitHub's servers ("runner": "india" in sources.json), run on your PC.
   # Not linked to the cloud job: if your PC is off, this simply waits (or expires) and the
@@ -61,8 +62,9 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}   # only used if aiEnabled is true in config.json
         run: node src/monitor.mjs --runner india
 
       - name: Save the list of already-seen notices
         if: always()
-        run: node src/save-state.mjs state/seen-india.json
+        run: node src/save-state.mjs state/seen-india.json state/ai-cache-india.json state/ai-log-india.jsonl

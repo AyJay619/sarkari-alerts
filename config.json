@@ -1,0 +1,10 @@
+{
+  "aiEnabled": false,
+  "maxAiCallsPerRun": 20,
+  "model": "claude-haiku-4-5",
+  "maxTokens": 8,
+  "pdfPages": 2,
+  "pdfMaxChars": 2000,
+  "pdfMaxMegabytes": 15,
+  "pricePerMillionTokens": { "input": 1.0, "output": 5.0 }
+}
