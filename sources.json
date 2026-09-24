@@ -126,5 +126,373 @@
     "url": "https://www.upsc.gov.in/",
     "include": "[.]pdf",
     "limit": 20
+  },
+  {
+    "id": "ibps",
+    "name": "IBPS",
+    "runner": "india",
+    "type": "html",
+    "url": "https://www.ibps.in/",
+    "extraCerts": [
+      "certs/globalsign-rsa-ov-ssl-ca-2018.pem"
+    ],
+    "include": "ibpsreg|crp|recruit|call letter|result",
+    "exclude": "index[.]php/(careers|recruitment|services|faq|contact|regional-rural-bank|clerical-cadre|management-trainees|specialist-officers)/?$",
+    "minTitle": 15,
+    "limit": 25
+  },
+  {
+    "id": "bel",
+    "name": "BEL Careers",
+    "runner": "india",
+    "type": "html",
+    "url": "https://bel-india.in/job-notifications/",
+    "extraCerts": [
+      "certs/sectigo-ov-r36.pem"
+    ],
+    "rowSelector": ".career-result-box",
+    "rowTitle": "h2",
+    "rowLink": "a.file-link",
+    "limit": 25
+  },
+  {
+    "id": "niacl",
+    "name": "NIACL",
+    "runner": "india",
+    "type": "html",
+    "url": "https://www.newindia.co.in/recruitment/list",
+    "include": "docs/recruitment",
+    "exclude": "declaration|travelling|handout|annexure|format for",
+    "minTitle": 15,
+    "limit": 25
+  },
+  {
+    "id": "uiic",
+    "name": "UIIC Recruitment",
+    "runner": "india",
+    "type": "html",
+    "url": "https://uiic.co.in/web/careers/recruitment",
+    "rowSelector": "table tr",
+    "rowTitle": "td:nth-child(2)",
+    "rowLink": "a[href*='recruitment/details']",
+    "limit": 20
+  },
+  {
+    "id": "oil-india",
+    "name": "Oil India",
+    "runner": "india",
+    "type": "html",
+    "url": "https://www.oil-india.com/advertisement-list",
+    "rowSelector": "table tr",
+    "rowTitle": "td:nth-child(2)",
+    "rowLink": "a[href*='download-advertisement']",
+    "limit": 20
+  },
+  {
+    "id": "csir",
+    "name": "CSIR",
+    "runner": "india",
+    "type": "html",
+    "url": "https://www.csir.res.in/en/career-opportunities/recruitment",
+    "rowSelector": "table tr",
+    "rowTitle": "td:nth-child(2)",
+    "rowLink": "a[href*='.pdf']",
+    "limit": 20
+  },
+  {
+    "id": "india-post",
+    "name": "India Post",
+    "runner": "india",
+    "type": "html",
+    "url": "https://www.indiapost.gov.in/vacancies",
+    "rowSelector": "table tr",
+    "rowTitle": "td:nth-child(2)",
+    "limit": 25
+  },
+  {
+    "id": "powergrid",
+    "name": "POWERGRID",
+    "runner": "india",
+    "type": "html",
+    "url": "https://www.powergrid.in/en/job-opportunities",
+    "rowSelector": "#js_Notification li",
+    "rowTitle": "a",
+    "rowLink": "a",
+    "limit": 20
+  },
+  {
+    "id": "coal-india",
+    "name": "Coal India",
+    "runner": "india",
+    "type": "html",
+    "url": "https://www.coalindia.in/career-cil/jobs-coal-india/",
+    "rowSelector": "table tr",
+    "rowLink": "a[href]",
+    "minTitle": 20,
+    "limit": 25
+  },
+  {
+    "id": "nhpc",
+    "name": "NHPC",
+    "runner": "india",
+    "type": "html",
+    "url": "https://www.nhpcindia.com/welcome/job",
+    "rowSelector": "li.list-group-item",
+    "rowTitle": ".col-md-7",
+    "rowLink": "a[href]",
+    "limit": 25
+  },
+  {
+    "id": "ongc",
+    "name": "ONGC",
+    "runner": "india",
+    "type": "html",
+    "url": "https://ongcindia.com/web/eng/career/recruitment-notice",
+    "selector": "a.pdf-link",
+    "minTitle": 15,
+    "limit": 25
+  },
+  {
+    "id": "gail",
+    "name": "GAIL",
+    "runner": "india",
+    "type": "html",
+    "url": "https://www.gailonline.com/Vacancies.html",
+    "fromScript": true,
+    "rowSelector": ".vacancy-card",
+    "rowTitle": "h3",
+    "rowLink": "a[href]",
+    "limit": 20
+  },
+  {
+    "id": "rrb-ahmedabad",
+    "name": "RRB Ahmedabad",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/ahmedabad",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Ahmedabad CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-ajmer",
+    "name": "RRB Ajmer",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/ajmer",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Ajmer CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-prayagraj",
+    "name": "RRB Prayagraj",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/prayagraj",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Prayagraj CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-bengaluru",
+    "name": "RRB Bengaluru",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/bengaluru",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Bengaluru CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-bhopal",
+    "name": "RRB Bhopal",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/bhopal",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Bhopal CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-bhubaneswar",
+    "name": "RRB Bhubaneswar",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/bhubaneswar",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Bhubaneswar CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-bilaspur",
+    "name": "RRB Bilaspur",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/bilaspur",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Bilaspur CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-chandigarh",
+    "name": "RRB Chandigarh",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/chandigarh",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Chandigarh CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-chennai",
+    "name": "RRB Chennai",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/chennai",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Chennai CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-gorakhpur",
+    "name": "RRB Gorakhpur",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/gorakhpur",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Gorakhpur CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-guwahati",
+    "name": "RRB Guwahati",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/guwahati",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Guwahati CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-jammu",
+    "name": "RRB Jammu",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/jammu",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Jammu CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-kolkata",
+    "name": "RRB Kolkata",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/kolkata",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Kolkata CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-malda",
+    "name": "RRB Malda",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/malda",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Malda CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-mumbai",
+    "name": "RRB Mumbai",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/mumbai",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Mumbai CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-muzaffarpur",
+    "name": "RRB Muzaffarpur",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/muzaffarpur",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Muzaffarpur CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-patna",
+    "name": "RRB Patna",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/patna",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Patna CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-ranchi",
+    "name": "RRB Ranchi",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/ranchi",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Ranchi CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-secunderabad",
+    "name": "RRB Secunderabad",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/secunderabad",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Secunderabad CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-siliguri",
+    "name": "RRB Siliguri",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/siliguri",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Siliguri CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
+  },
+  {
+    "id": "rrb-thiruvananthapuram",
+    "name": "RRB Thiruvananthapuram",
+    "runner": "india",
+    "type": "html",
+    "url": "https://rrb.indianrailways.gov.in/thiruvananthapuram",
+    "include": "getdata[?]cennum",
+    "titleTemplate": "RRB Thiruvananthapuram CEN {cennum}: {text}",
+    "minTitle": 3,
+    "limit": 400
   }
 ]

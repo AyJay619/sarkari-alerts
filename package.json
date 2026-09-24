@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "scripts": { "start": "node src/monitor.mjs", "dry": "node src/monitor.mjs --dry-run" },
-  "dependencies": { "cheerio": "^1.0.0" }
+  "scripts": {
+    "start": "node src/monitor.mjs",
+    "dry": "node src/monitor.mjs --dry-run"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "undici": "^7.29.1"
+  }
 }

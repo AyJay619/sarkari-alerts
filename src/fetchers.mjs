@@ -1,4 +1,7 @@
+import fs from "node:fs";
+import tls from "node:tls";
 import * as cheerio from "cheerio";
+import { Agent, fetch as undiciFetch } from "undici";
 
 const HEADERS = {
   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
@@ -6,11 +9,24 @@ const HEADERS = {
   "Accept-Language": "en-IN,en;q=0.9",
 };
 
+// Some sites forget to send their intermediate certificate. For those sources only, "extraCerts" in
+// sources.json lists PEM files (in certs/) that are trusted on top of the normal list. Checking stays ON.
+const agents = new Map();
+function agentFor(extraCerts) {
+  const key = extraCerts.join("|");
+  if (!agents.has(key)) {
+    const extra = extraCerts.map(f => fs.readFileSync(new URL("../" + f, import.meta.url), "utf8"));
+    agents.set(key, new Agent({ connect: { ca: [...tls.rootCertificates, ...extra] } }));
+  }
+  return agents.get(key);
+}
+
 // One attempt, with a detailed error message so the GitHub log shows exactly what went wrong.
-async function getText(url) {
+async function getText(url, extraCerts) {
   const started = Date.now();
   try {
-    const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(30000), redirect: "follow" });
+    const opts = { headers: HEADERS, signal: AbortSignal.timeout(30000), redirect: "follow" };
+    const res = extraCerts?.length ? await undiciFetch(url, { ...opts, dispatcher: agentFor(extraCerts) }) : await fetch(url, opts);
     if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`.trim());
     return { text: await res.text(), finalUrl: res.url };
   } catch (e) {
@@ -22,13 +38,22 @@ async function getText(url) {
 const clean = s => String(s ?? "").replace(/\s+/g, " ").trim();
 // Removes leftovers like "Read More" or "(1.68 MB)" / "PDF size:(251 KB)" so titles read cleanly.
 const tidyTitle = t => t
+  .replace(/\s*\(\s*[\d.,]+\s*[KM]B\s*\|.*$/i, "")   // "( 1.72 MB | PDF | open in Adobe Reader )"
   .replace(/\s*(read more|click here|download)\W*$/i, "")
   .replace(/\s*(pdf\s*)?(size:)?\s*\(\s*[\d.,]+\s*[KM]B\s*\)\s*[.\d\/]*\s*$/i, "")
   .trim();
 const pick = (obj, path) => path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj);
 
-function fromHtml(src, text, finalUrl) {
+// For pages that build their list in JavaScript from a `template string` (e.g. GAIL): pull the HTML out of those strings.
+const htmlFromScriptStrings = text => {
   const $ = cheerio.load(text);
+  const parts = [];
+  $("script:not([src])").each((_, s) => { for (const m of $(s).html().matchAll(/`([^`]*<[a-z][^`]*)`/gi)) parts.push(m[1]); });
+  return parts.join("\n");
+};
+
+function fromHtml(src, text, finalUrl) {
+  const $ = cheerio.load(src.fromScript ? htmlFromScriptStrings(text) : text);
   const include = src.include ? new RegExp(src.include, "i") : null;
   const exclude = src.exclude ? new RegExp(src.exclude, "i") : null;
   const minTitle = src.minTitle ?? 12;
@@ -53,10 +78,15 @@ function fromHtml(src, text, finalUrl) {
     const $el = $(el);
     const href = $el.attr("href");
     if (!href || href.startsWith("#") || /^(javascript|mailto|tel):/i.test(href)) return;
-    const title = tidyTitle(clean($el.text()) || clean($el.attr("title")));
+    let title = tidyTitle(clean($el.text()) || clean($el.attr("title")));
     if (title.length < minTitle) return;
     let link;
     try { link = new URL(href.trim(), finalUrl).href; } catch { return; }
+    // "titleTemplate": build a readable title from the link text and the link's ?parameters, e.g. "RRB Patna CEN {cennum}: {text}"
+    if (src.titleTemplate) {
+      const q = new URL(link).searchParams;
+      title = src.titleTemplate.replace(/\{(\w+)\}/g, (_, k) => (k === "text" ? title : q.get(k) ?? ""));
+    }
     const hay = `${title} ${link}`;
     if (include && !include.test(hay)) return;
     if (exclude && exclude.test(hay)) return;
@@ -79,7 +109,7 @@ function fromJson(src, text) {
 
 // Returns [{title, link}] in page order (newest first on most sites). Throws on any problem.
 export async function fetchItems(src) {
-  const { text, finalUrl } = await getText(src.url);
+  const { text, finalUrl } = await getText(src.url, src.extraCerts);
   const items = src.type === "json" ? fromJson(src, text) : fromHtml(src, text, finalUrl);
   // de-duplicate identical title+link within one page
   const seen = new Set();

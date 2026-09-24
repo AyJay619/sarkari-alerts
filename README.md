@@ -84,6 +84,9 @@ Open `sources.json` and copy one of the blocks. The simple kind (a page with a l
 - `minTitle` — *(optional)* ignore link texts shorter than this many letters (default 12).
 - `limit` — how many notices from the top of the page to look at (default 40).
 - `runner` — `"cloud"` (default) or `"india"`: which job checks it.
+- `extraCerts` — *(optional)* for a site whose security certificate is incomplete ("unable to verify the first certificate"): a list of certificate files from the `certs/` folder to trust **for that site only**. Security checking stays on for everything else.
+- `fromScript` — *(optional)* `true` if the site builds its list with JavaScript from a text template inside the page (GAIL does).
+- `titleTemplate` — *(optional)* builds a clearer title from the link text and the link's web-address parameters, e.g. `"RRB Patna CEN {cennum}: {text}"`.
 - To pause a site without deleting it, add `"disabled": true`.
 
 **Test before you push** (needs Node.js installed once: `npm install`):
