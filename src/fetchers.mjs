@@ -11,22 +11,27 @@ const HEADERS = {
 
 // Some sites forget to send their intermediate certificate. For those sources only, "extraCerts" in
 // sources.json lists PEM files (in certs/) that are trusted on top of the normal list. Checking stays ON.
+// "timeoutMs" (optional, per source) allows slow sites longer, both to connect and to answer. Other sources keep the defaults.
 const agents = new Map();
-function agentFor(extraCerts) {
-  const key = extraCerts.join("|");
+function agentFor(extraCerts = [], timeoutMs) {
+  const key = extraCerts.join("|") + "@" + (timeoutMs ?? "");
   if (!agents.has(key)) {
-    const extra = extraCerts.map(f => fs.readFileSync(new URL("../" + f, import.meta.url), "utf8"));
-    agents.set(key, new Agent({ connect: { ca: [...tls.rootCertificates, ...extra] } }));
+    const connect = {};
+    if (extraCerts.length) connect.ca = [...tls.rootCertificates, ...extraCerts.map(f => fs.readFileSync(new URL("../" + f, import.meta.url), "utf8"))];
+    if (timeoutMs) connect.timeout = timeoutMs;
+    const opts = { connect };
+    if (timeoutMs) Object.assign(opts, { headersTimeout: timeoutMs, bodyTimeout: timeoutMs });
+    agents.set(key, new Agent(opts));
   }
   return agents.get(key);
 }
 
 // One attempt, with a detailed error message so the GitHub log shows exactly what went wrong.
-async function getText(url, extraCerts) {
+async function getText(url, { extraCerts, timeoutMs } = {}) {
   const started = Date.now();
   try {
-    const opts = { headers: HEADERS, signal: AbortSignal.timeout(30000), redirect: "follow" };
-    const res = extraCerts?.length ? await undiciFetch(url, { ...opts, dispatcher: agentFor(extraCerts) }) : await fetch(url, opts);
+    const opts = { headers: HEADERS, signal: AbortSignal.timeout(timeoutMs ?? 30000), redirect: "follow" };
+    const res = extraCerts?.length || timeoutMs ? await undiciFetch(url, { ...opts, dispatcher: agentFor(extraCerts, timeoutMs) }) : await fetch(url, opts);
     if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`.trim());
     return { text: await res.text(), finalUrl: res.url };
   } catch (e) {
@@ -114,7 +119,7 @@ function fromJson(src, text) {
 
 // Returns [{title, link}] in page order (newest first on most sites). Throws on any problem.
 export async function fetchItems(src) {
-  const { text, finalUrl } = await getText(src.url, src.extraCerts);
+  const { text, finalUrl } = await getText(src.url, src);
   const items = src.type === "json" ? fromJson(src, text) : fromHtml(src, text, finalUrl);
   // de-duplicate identical title+link within one page
   const seen = new Set();
