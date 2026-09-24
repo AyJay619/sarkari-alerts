@@ -1,5 +1,5 @@
 {
-  "aiEnabled": false,
+  "aiEnabled": true,
   "maxAiCallsPerRun": 20,
   "model": "claude-haiku-4-5",
   "maxTokens": 8,
