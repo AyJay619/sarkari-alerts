@@ -231,7 +231,10 @@
     "rowSelector": "table tr",
     "rowLink": "a[href]",
     "minTitle": 20,
-    "limit": 25
+    "limit": 25,
+    "allowedHosts": [
+      "d3u7ubx0okog7j.cloudfront.net"
+    ]
   },
   {
     "id": "nhpc",

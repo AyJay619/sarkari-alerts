@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "start": "node src/monitor.mjs",
-    "dry": "node src/monitor.mjs --dry-run"
+    "dry": "node src/monitor.mjs --dry-run",
+    "listener": "node --env-file=.env src/listener.mjs",
+    "listener:status": "node src/listener-status.mjs",
+    "test:listener": "node test/listener.test.mjs",
+    "send-test-alerts": "node --env-file=.env src/send-test-alerts.mjs"
   },
   "dependencies": {
     "cheerio": "^1.0.0",

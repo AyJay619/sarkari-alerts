@@ -67,7 +67,7 @@ if (TEST_AI) {
   const src = JSON.parse(fs.readFileSync(SOURCES_FILE, "utf8")).find(s => s.id === srcId);
   if (!src) { console.error(`No source with id "${srcId}".`); process.exit(1); }
   const realSend = send;
-  send = html => realSend("🧪 <b>TEST</b>\n" + html);
+  send = (html, withButton) => realSend("🧪 <b>TEST</b>\n" + html, withButton);
   const test = new Classifier(cfg, { apiKey, force: true });   // force: use the AI even when keywords could decide; no cache/log files written
   const items = (await fetchItemsWithRetry(src)).slice(0, 3);
   console.log("\nTEST MODE: " + src.name + ", latest " + items.length + " notices. No state, cache or log files are changed.\n");
@@ -77,7 +77,7 @@ if (TEST_AI) {
     const category = d.category ?? categorize(i.title);
     rows.push({ title: i.title.slice(0, 70), keywords: keywordVerdict(i.title), "AI chose": d.how === "AI" ? d.category : "(" + d.how + ")", flag: d.flag ?? "", "live mode": d.send ? "sends" : "would NOT send" });
     const note = d.send ? "" : "\n\n(Live mode would NOT send this: AI said Not Relevant)";
-    if (!(await send(formatItem(src.name, category, i.title, i.link, d.flag) + note))) console.error("Telegram send failed");
+    if (!(await send(formatItem(src.name, category, i.title, i.link, d.flag) + note, true))) console.error("Telegram send failed");
   }
   console.table(rows);
   console.log(test.summary());
@@ -131,7 +131,7 @@ for (const src of sources) {
   for (const i of toSend.slice(skipped)) {
     const d = ai ? await ai.decide(src, i) : NO_AI;
     if (!d.send) { st.seen[keyOf(i)] = now; continue; }   // "Not Relevant": not sent, written to the review log
-    if (await send(formatItem(src.name, d.category ?? categorize(i.title), i.title, i.link, d.flag))) st.seen[keyOf(i)] = now;
+    if (await send(formatItem(src.name, d.category ?? categorize(i.title), i.title, i.link, d.flag), true)) st.seen[keyOf(i)] = now;
     else telegramProblem = true; // not marked as seen, so it is retried next run
   }
   if (skipped) {
@@ -167,7 +167,7 @@ for (const [group, members] of Object.entries(pendingGroups)) {
     const d = ai ? await ai.decide(hits[0].mem.src, { title: k, link: `group:${group}:${k}` }) : NO_AI;
     if (!d.send) { gs.seen[k] = now; markSeen(hits, now); continue; }
     const msg = formatGroup(hits[0].mem.src.groupName ?? group, d.category ?? categorize(k), k, regions, members.length, hits[0].i.link, d.flag);
-    if (await send(msg)) { gs.seen[k] = now; markSeen(hits, now); } else telegramProblem = true;
+    if (await send(msg, true)) { gs.seen[k] = now; markSeen(hits, now); } else telegramProblem = true;
   }
   if (skipped) {
     if (await send(`ℹ️ <b>${group}</b>: ${skipped} more new notices not shown individually (too many at once).`))

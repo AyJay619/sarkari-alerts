@@ -26,17 +26,49 @@ function agentFor(extraCerts = [], timeoutMs) {
   return agents.get(key);
 }
 
+// One HTTP request, honouring the source's extraCerts / timeoutMs.
+function request(url, { extraCerts, timeoutMs } = {}, redirect = "follow") {
+  const opts = { headers: HEADERS, signal: AbortSignal.timeout(timeoutMs ?? 30000), redirect };
+  return extraCerts?.length || timeoutMs ? undiciFetch(url, { ...opts, dispatcher: agentFor(extraCerts, timeoutMs) }) : fetch(url, opts);
+}
+const explain = (e, started, url) => {
+  const cause = e.cause ? ` | cause: ${[e.cause.code, e.cause.message].filter(Boolean).join(" ")}` : "";
+  return new Error(`${e.name}: ${e.message}${cause} | after ${((Date.now() - started) / 1000).toFixed(1)}s | url: ${url}`);
+};
+
 // One attempt, with a detailed error message so the GitHub log shows exactly what went wrong.
-async function getText(url, { extraCerts, timeoutMs } = {}) {
+async function getText(url, srcOpts = {}) {
   const started = Date.now();
   try {
-    const opts = { headers: HEADERS, signal: AbortSignal.timeout(timeoutMs ?? 30000), redirect: "follow" };
-    const res = extraCerts?.length || timeoutMs ? await undiciFetch(url, { ...opts, dispatcher: agentFor(extraCerts, timeoutMs) }) : await fetch(url, opts);
+    const res = await request(url, srcOpts);
     if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`.trim());
     return { text: await res.text(), finalUrl: res.url };
   } catch (e) {
-    const cause = e.cause ? ` | cause: ${[e.cause.code, e.cause.message].filter(Boolean).join(" ")}` : "";
-    throw new Error(`${e.name}: ${e.message}${cause} | after ${((Date.now() - started) / 1000).toFixed(1)}s | url: ${url}`);
+    throw explain(e, started, url);
+  }
+}
+
+// Downloads a file (used by the listener). Redirects are followed by hand so that EVERY hop can be checked:
+// allow(url) must throw to refuse a URL. optsFor(url) gives that host's extraCerts / timeoutMs.
+export async function getBuffer(url, { allow = () => {}, optsFor = () => ({}), maxBytes = 30 * 1024 * 1024 } = {}) {
+  const started = Date.now();
+  let current = url;
+  try {
+    for (let hop = 0; hop <= 5; hop++) {
+      allow(current);
+      const res = await request(current, optsFor(current), "manual");
+      const loc = res.headers.get("location");
+      if (res.status >= 300 && res.status < 400 && loc) { current = new URL(loc, current).href; continue; }
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`.trim());
+      if (Number(res.headers.get("content-length") ?? 0) > maxBytes) throw new Error("file is too large");
+      const buf = Buffer.from(await res.arrayBuffer());
+      if (buf.length > maxBytes) throw new Error("file is too large");
+      return { buf, finalUrl: current, contentType: res.headers.get("content-type") ?? "" };
+    }
+    throw new Error("too many redirects");
+  } catch (e) {
+    if (e.refused) throw e;
+    throw explain(e, started, url);
   }
 }
 

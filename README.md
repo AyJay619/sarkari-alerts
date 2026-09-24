@@ -142,3 +142,37 @@ node src/monitor.mjs --test-ai
 ```
 
 Needs `ANTHROPIC_API_KEY` (and the two Telegram variables unless `--dry-run`) set in your terminal. It uses the SSC source and its latest 3 notices; change with `--test-source <id>`.
+
+## "📥 Send to agents" button and the listener (on your Windows PC)
+
+Every alert has a **📥 Send to agents** button. Tapping it saves that notice into an inbox folder on your PC, for your agents to pick up:
+
+- The PDF is downloaded to `C:\Dev\sarkari-inbox\pending\` and named like `2026-09-26_SSC_Tentative-Vacancy-of-Combined-Graduate-Level-Examination.pdf`.
+- Next to it is a `.json` with the source, title, category, link and alert date.
+- If the link is a web page and not a PDF (RRB pages), only the `.json` is saved and the reply says "link only — no PDF".
+- The bot replies "✅ Saved to inbox: …" and the button turns into "✅ Sent to agents". Tap it again and nothing happens. If the same PDF is already there, you get "Already in inbox".
+- If the download fails you get "❌ Download failed: …" and the button stays so you can tap again.
+
+**How the listener knows what to download:** the button itself carries no link (Telegram only allows 64 characters). Instead, the listener reads the source, title, category and link from the alert message you tapped. That also works for alerts sent from GitHub's servers, where no PC could have remembered a short ID.
+
+**Safety:** it only obeys taps from *your* chat (`TELEGRAM_CHAT_ID`); anyone else is ignored silently. It only downloads from websites that appear in `sources.json` (a source can add extra file hosts with `"allowedHosts": [...]`) and checks this again on every redirect; anything else is refused and you are told on Telegram. The inbox folder may not be inside OneDrive (change it with `"inboxDir"` in `config.json`).
+
+### One-time setup
+
+1. Put these in the `.env` file in the project folder (it is never uploaded to GitHub):
+   ```
+   TELEGRAM_BOT_TOKEN=...
+   TELEGRAM_CHAT_ID=...
+   ```
+2. Double-click **`listener\install-listener.cmd`**. It makes the listener start hidden every time you log in to Windows, restarts it if it crashes, and starts it right now. (If Windows says access is denied, right-click it → *Run as administrator*.) It uses no PowerShell scripts, so your execution policy is untouched.
+3. Try it: run `npm run send-test-alerts` — three 🧪 TEST alerts arrive: a real SSC PDF, one from a website that is not allowed (should be refused), and an RRB link (link only). Tap each button.
+
+### Is it running?
+
+Double-click **`listener\check-listener.cmd`**. It says RUNNING or NOT RUNNING, whether it starts at login, and shows the last log lines. The full log is `C:\Dev\sarkari-inbox\logs\listener.log`.
+
+To stop it and remove the automatic start: double-click **`listener\uninstall-listener.cmd`**. To run it by hand in a window (to watch it): `npm run listener`.
+
+Only one listener can run at a time, and nothing else in this project uses Telegram's `getUpdates` or a webhook.
+
+Test without touching Telegram: `npm run test:listener` (uses a fake Telegram and real downloads from SSC).

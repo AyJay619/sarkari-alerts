@@ -1,3 +1,11 @@
+// Telegram's address. TELEGRAM_API_BASE lets tests point at a fake server.
+export const apiBase = () => process.env.TELEGRAM_API_BASE || "https://api.telegram.org";
+
+// The button under every alert. It carries no link: the listener (src/listener.mjs) reads the link, title, source and
+// category from the alert message itself, so it also works for alerts sent from GitHub's servers.
+export const SEND_BUTTON = { inline_keyboard: [[{ text: "📥 Send to agents", callback_data: "send" }]] };
+export const DONE_BUTTON = { inline_keyboard: [[{ text: "✅ Sent to agents", callback_data: "done" }]] };
+
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const ICONS = { "Job": "💼", "Admit Card": "🎫", "Result": "📊", "Answer Key": "🔑", "Correction": "✏️", "Other": "📌" };
@@ -29,14 +37,15 @@ ${esc(groupTitle)} — ${esc(where)}
 }
 
 export function makeSender({ token, chatId, dryRun }) {
-  return async function send(html) {
+  // withButton: true for alerts (notices); false for summaries and warnings.
+  return async function send(html, withButton = false) {
     if (dryRun) { console.log("\n┌── Telegram message (dry run) ──\n" + html.replace(/<\/?b>/g, "*").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").split("\n").map(l => "│ " + l).join("\n") + "\n└──"); return true; }
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        const res = await fetch(`${apiBase()}/bot${token}/sendMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: chatId, text: html, parse_mode: "HTML", disable_web_page_preview: true }),
+          body: JSON.stringify({ chat_id: chatId, text: html, parse_mode: "HTML", disable_web_page_preview: true, ...(withButton ? { reply_markup: SEND_BUTTON } : {}) }),
           signal: AbortSignal.timeout(20000),
         });
         const body = await res.json().catch(() => ({}));
