@@ -1,0 +1,48 @@
+name: Check for new notices
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # every 30 minutes
+  workflow_dispatch:          # the manual "Run workflow" button
+
+permissions:
+  contents: write             # needed to save state/seen.json back to the repo
+
+concurrency:
+  group: notice-monitor       # never run two checks at the same time
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Look for new notices and send Telegram alerts
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node src/monitor.mjs
+
+      # Runs even if the step above reported a problem, so what was sent is never forgotten.
+      - name: Save the list of already-seen notices
+        if: always()
+        run: |
+          git config user.name  "notice-monitor"
+          git config user.email "notice-monitor@users.noreply.github.com"
+          git add state/seen.json
+          if git diff --cached --quiet; then
+            echo "Nothing new to save."
+          else
+            git commit -m "Update seen notices [skip ci]"
+            git pull --rebase origin "${GITHUB_REF_NAME}" || true
+            git push
+          fi

@@ -1,0 +1,97 @@
+# Sarkari Alerts — notice monitor
+
+Every 30 minutes this checks a list of government recruitment websites and sends **new** notices
+(jobs, admit cards, results, answer keys, corrections) to you on Telegram.
+It only *sends alerts*. It never touches your website or Sanity.
+
+A Telegram message looks like:
+
+```
+💼 Job · ISRO
+
+Advt. No. IPRC/RMT/2026/01 dated 12.09.2026 - Inviting online applications for the posts of ...
+
+🔗 https://www.isro.gov.in/IPRCRecruitment4.html
+```
+
+## One-time setup
+
+1. **Make a Telegram bot:** in Telegram, chat with `@BotFather`, send `/newbot`, follow the steps.
+   You get a **token** (a long text like `123456:ABC...`).
+2. **Start the bot:** open your new bot in Telegram and press **Start** (send it any message).
+3. **Find your chat id:** in Telegram chat with `@userinfobot` — it replies with your **Id** (a number).
+4. **Save both in GitHub** (never in the code): your repo → **Settings → Secrets and variables → Actions → New repository secret**. Add two secrets, with these exact names:
+   - `TELEGRAM_BOT_TOKEN` — the token
+   - `TELEGRAM_CHAT_ID` — the number
+5. Repo → **Settings → Actions → General → Workflow permissions** → choose **Read and write permissions** → Save.
+6. Run it once by hand (see below). You will get **one** message: "Now watching … — N existing notices recorded".
+   After that you only get messages for genuinely new notices.
+
+## Run it manually
+
+Repo → **Actions** tab → **Check for new notices** → **Run workflow** (green button).
+
+## Check that it is working
+
+- Repo → **Actions** tab: a green tick every ~30 minutes means it ran. Click a run to read the log —
+  each source shows a line like `OK ISRO: 22 on page, 0 new`.
+- The file `state/seen.json` gets a new commit whenever something was recorded.
+- If a website stops working for **3 runs in a row** you get **one** ⚠️ warning message, and one ✅ message when it recovers.
+- Note: GitHub sometimes runs "every 30 minutes" jobs a few minutes late. That is normal.
+
+## Add a new website
+
+Open `sources.json` and copy one of the blocks. The simple kind (a page with a list of links):
+
+```json
+{
+  "id": "mysite",
+  "name": "My Site",
+  "type": "html",
+  "url": "https://example.gov.in/recruitment-page",
+  "include": "advt|recruitment|result|admit",
+  "limit": 25
+}
+```
+
+- `id` — a short unique name, no spaces (used to remember what was already seen).
+- `name` — what appears in the Telegram message.
+- `url` — the page that lists the notices / recruitment / what's new.
+- `include` — *(optional)* only keep links whose text or address contains one of these words (separate with `|`). Use it to cut out menu links.
+- `exclude` — *(optional)* drop links containing these words.
+- `minTitle` — *(optional)* ignore link texts shorter than this many letters (default 12).
+- `limit` — how many notices from the top of the page to look at (default 40).
+- To pause a site without deleting it, add `"disabled": true`.
+
+**Test before you push** (needs Node.js installed once: `npm install`):
+
+```
+node src/monitor.mjs --check
+```
+
+It fetches every site and shows what it found. A site only works if it shows `OK` and the notices look right.
+Websites that need a CAPTCHA, load their list with JavaScript, or block automated visitors will show `FAIL` or find nothing —
+skip those.
+
+To preview the Telegram messages without sending anything:
+
+```
+node src/monitor.mjs --dry-run --state test-state.json
+```
+
+(Run it twice; delete a few lines from `test-state.json` in between to see "new notice" messages.)
+
+Tables and JSON feeds need extra fields (`rowSelector`, `itemsPath` …); see the AAI and SSC entries in `sources.json` as examples.
+
+## What the category tags mean
+
+Chosen by words in the title (see `src/categorize.mjs`): **Answer Key**, **Admit Card**, **Correction**
+(corrigendum, addendum, extension…), **Result**, **Job** (advertisement, recruitment, vacancy…), otherwise **Other**.
+
+## Good to know
+
+- The first time a source is seen, its existing notices are recorded silently — no flood.
+- If more than 15 new notices from one site show up at once (usually a site redesign), you get the 15 newest plus one "N more" note.
+- If Telegram itself fails, the notice is *not* marked as seen, so it is retried on the next run.
+- If the repo has no activity for 60 days GitHub may pause scheduled runs; the state commits normally keep it active,
+  and you can always press **Run workflow**.

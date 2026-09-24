@@ -1,0 +1,4 @@
+node_modules/
+scratch/
+*.dry.json
+test-state.json
