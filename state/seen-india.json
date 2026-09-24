@@ -3,26 +3,26 @@
   "esic": {
    "initialized": false,
    "seen": {},
-   "fails": 1,
-   "warned": false
+   "fails": 3,
+   "warned": true
   },
   "hpcl": {
    "initialized": false,
    "seen": {},
-   "fails": 1,
-   "warned": false
+   "fails": 3,
+   "warned": true
   },
   "bhel": {
    "initialized": false,
    "seen": {},
-   "fails": 1,
-   "warned": false
+   "fails": 3,
+   "warned": true
   },
   "drdo-rac": {
    "initialized": false,
    "seen": {},
-   "fails": 1,
-   "warned": false
+   "fails": 3,
+   "warned": true
   }
  }
 }
