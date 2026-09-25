@@ -38,7 +38,7 @@ export function sourceForHost(hostname, sources) {
 // Layout (see formatItem / formatGroup in telegram.mjs):
 //   [🧪 TEST]
 //   <icon> <Category> · <Source>
-//   [❓ unchecked | 📷 scanned]
+//   [❓ unchecked | 🤖 AI skipped: cap reached | 📷 scanned]
 //   <blank>
 //   <title>
 //   <blank>
@@ -55,7 +55,7 @@ export function parseAlert(text) {
   const link = blocks[linkBlock].match(/^🔗\s*(\S+)/u)?.[1];
   const title = blocks.slice(1, linkBlock).join(" ").trim();
   if (!link || !title) return null;
-  const flag = /unchecked/.test(blocks[0]) ? "unchecked" : /scanned/.test(blocks[0]) ? "scanned" : null;
+  const flag = /unchecked/.test(blocks[0]) ? "unchecked" : /AI skipped/.test(blocks[0]) ? "capped" : /scanned/.test(blocks[0]) ? "scanned" : null;
   return { category: header[1], source: header[2].trim(), title, link, flag, test };
 }
 

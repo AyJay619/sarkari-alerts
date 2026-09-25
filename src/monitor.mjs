@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import crypto from "node:crypto";
 import path from "node:path";
 import { fetchItemsWithRetry } from "./fetchers.mjs";
 import { categorize } from "./categorize.mjs";
@@ -13,16 +14,24 @@ const DRY = flag("--dry-run");          // print messages instead of sending; st
 const CHECK = flag("--check");          // only test the sources: fetch + show what was found
 const SOURCES_FILE = opt("--sources", "sources.json");
 const RUNNER = opt("--runner", null);      // "cloud" or "india": only check sources with this runner (default: all)
+const ONLY = opt("--only", null);            // comma-separated source ids: only these (used to test a few sites, e.g. from GitHub cloud)
 const STATE_FILE = opt("--state", RUNNER ? `state/seen-${RUNNER}.json` : "state/seen.json");
 const FAIL_LIMIT = 3;                    // consecutive failed runs before a warning
 const MAX_ALERTS_PER_SOURCE = 15;        // safety valve if a site redesign makes everything look new
 const MAX_SEEN_PER_SOURCE = 1000;
 
 const sources = JSON.parse(fs.readFileSync(SOURCES_FILE, "utf8")).filter(s => !s.disabled)
-  .filter(s => !RUNNER || (s.runner ?? "cloud") === RUNNER);
+  .filter(s => !RUNNER || (s.runner ?? "cloud") === RUNNER)
+  .filter(s => !ONLY || ONLY.split(",").includes(s.id));
 let state = { sources: {} };
 if (fs.existsSync(STATE_FILE)) state = JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
 state.sources ??= {};
+
+// A fingerprint of everything that decides WHICH notices a source finds (URL, filters, selectors, limit...).
+// If it changes, the source is silently re-baselined (see below) so a wider filter can never flood you with old notices.
+// Not part of it: name, runner and timeoutMs. Sources saved before this existed have no fingerprint yet: they just get one
+// stored, unless sources.json carries "rebaseline": true for them.
+const fingerprint = src => { const { name, runner, timeoutMs, ...rest } = src; return crypto.createHash("sha1").update(JSON.stringify(rest)).digest("hex").slice(0, 12); };
 
 const keyOf = i => (i.title.toLowerCase().replace(/\s+/g, " ") + "|" + i.link).slice(0, 600);
 
@@ -114,13 +123,21 @@ for (const src of sources) {
   st.fails = 0;
   const now = new Date().toISOString();
 
-  if (!st.initialized) {
+  const fp = fingerprint(src);
+  const changed = st.initialized && (st.fp ? st.fp !== fp : src.rebaseline === true);
+  if (!st.initialized || changed) {
+    // Silent baseline: everything on the page right now is recorded as already seen. No alerts, no AI calls.
     items.forEach(i => (st.seen[keyOf(i)] = now));
     st.initialized = true;
-    summaries.push(`Now watching <b>${src.name}</b> — ${items.length} existing notices recorded`);
-    console.log(`FIRST RUN ${src.name}: recorded ${items.length}`);
+    st.fp = fp;
+    summaries.push(changed
+      ? `Updated <b>${src.name}</b> — ${items.length} notices on the page recorded (no alerts for these)`
+      : `Now watching <b>${src.name}</b> — ${items.length} existing notices recorded`);
+    console.log(`${changed ? "RE-BASELINE" : "FIRST RUN"} ${src.name}: recorded ${items.length}`);
+    prune(st);
     continue;
   }
+  st.fp ??= fp;
 
   const fresh = items.filter(i => !(keyOf(i) in st.seen));
   console.log(`OK ${src.name}: ${items.length} on page, ${fresh.length} new`);

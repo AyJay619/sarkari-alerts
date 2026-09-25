@@ -10,8 +10,8 @@ const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(
 
 const ICONS = { "Job": "💼", "Admit Card": "🎫", "Result": "📊", "Answer Key": "🔑", "Correction": "✏️", "Other": "📌" };
 
-// flag: null | "unchecked" (the AI could not check it) | "scanned" (PDF is a scan, judged by title only)
-const FLAGS = { unchecked: "❓ unchecked", scanned: "📷 scanned" };
+// flag: null | "unchecked" (the AI could not check it) | "capped" (this run already used its AI calls) | "scanned" (PDF is a scan, judged by title only)
+const FLAGS = { unchecked: "❓ unchecked", capped: "🤖 AI skipped: cap reached", scanned: "📷 scanned" };
 const flagLine = flag => (FLAGS[flag] ? "\n" + FLAGS[flag] : "");
 
 export function formatItem(sourceName, category, title, link, flag = null) {

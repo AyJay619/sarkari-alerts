@@ -79,7 +79,7 @@ Not Relevant = tenders, circulars, office orders, policies, anything not about r
     return cat;
   }
 
-  // Returns { send, category (null = keep the keyword category), flag (null | "unchecked" | "scanned"), how }
+  // Returns { send, category (null = keep the keyword category), flag (null | "unchecked" | "capped" | "scanned"), how }
   async decide(src, item) {
     const verdict = keywordVerdict(item.title);
     if (!this.force) {
@@ -93,7 +93,7 @@ Not Relevant = tenders, circulars, office orders, policies, anything not about r
       return { send: cached !== "Not Relevant", category: cached, flag: null, how: "cache" };
     }
     if (this.broken) return { send: true, category: null, flag: "unchecked", how: "AI stopped" };
-    if (this.calls >= this.cfg.maxAiCallsPerRun) return { send: true, category: null, flag: "unchecked", how: "call limit reached" };
+    if (this.calls >= this.cfg.maxAiCallsPerRun) return { send: true, category: null, flag: "capped", how: "call limit reached" };
 
     let text = "", scanned = false;
     if (/\.pdf(\?|#|$)/i.test(item.link)) {

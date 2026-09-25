@@ -88,14 +88,26 @@ Open `sources.json` and copy one of the blocks. The simple kind (a page with a l
 - `extraCerts` — *(optional)* for a site whose security certificate is incomplete ("unable to verify the first certificate"): a list of certificate files from the `certs/` folder to trust **for that site only**. Security checking stays on for everything else.
 - `fromScript` — *(optional)* `true` if the site builds its list with JavaScript from a text template inside the page (GAIL does).
 - `titleTemplate` — *(optional)* builds a clearer title from the link text and the link's web-address parameters, e.g. `"RRB Patna CEN {cennum}: {text}"`.
+- `pageLink` — *(optional)* `true` if the site's file links change on every visit (NTPC does): every notice then points to the page itself.
+- `method` / `form` / `headers` — *(optional)* for the rare site whose list comes from a POST request (HAL does): `"method": "POST", "form": {"lang": "en"}`. `headers` changes a header for that site only.
+- `rowTitle` — normally the CSS selector of the title inside a table row; `"self"` uses the whole row text.
+- `contextClosest` / `contextFind` / `contextAttr` — *(optional)* for pages where a link's text is just "Result" or "English": puts the heading of the surrounding box in front of it (PowerGrid, BPCL). `contextAttr` takes that heading from an attribute instead of its text, for headings whose wording changes (SBI).
+- `rebaseline` — *(optional)* `true` on an existing site whose `url`/filter you have just changed: its first run afterwards silently records everything on the page as "seen".
 - To pause a site without deleting it, add `"disabled": true`.
+
+**No flood of old notices.** A new site, and any site whose `url` or filter you change, is recorded silently on its first run
+(everything on the page counts as "already seen", no alerts, no AI calls) — you only get one short "Now watching …" line.
+The monitor spots a changed filter by itself (it remembers a fingerprint of each site's settings).
 
 **Test before you push** (needs Node.js installed once: `npm install`):
 
 ```
 node src/monitor.mjs --check
 node src/monitor.mjs --check --runner india   (only the india sites)
+node src/monitor.mjs --check --only sbi,hal,nta   (only these ids)
 ```
+
+To find out whether a site also works from GitHub's servers (so it can run as `"cloud"` instead of on your PC), press **Run workflow** on **Test sites from GitHub cloud** in the Actions tab. It only reads pages; it changes and sends nothing.
 
 It fetches every site and shows what it found. A site only works if it shows `OK` and the notices look right.
 Websites that need a CAPTCHA, load their list with JavaScript, or block automated visitors will show `FAIL` or find nothing —
@@ -131,7 +143,7 @@ When on, only **new** notices are looked at:
 
 1. Free word check on the title (`keywords.json`): clearly relevant → sent; clearly irrelevant (tender, circular…) → skipped and logged.
 2. Unclear ones: the first 2 pages of the PDF are read as text (max ~2000 characters, never the file itself) and `claude-haiku-4-5` answers with one word.
-3. At most `maxAiCallsPerRun` (20) AI calls per run. Extra notices are still sent, marked **❓ unchecked**. If the AI fails or credit runs out, notices are also sent as ❓ unchecked — never dropped.
+3. At most `maxAiCallsPerRun` (20) AI calls per run. Extra notices are still sent, marked **🤖 AI skipped: cap reached**. If the AI fails or credit runs out, notices are also sent as ❓ unchecked — never dropped.
 4. **Not Relevant** answers are not sent; see `state/ai-log-<runner>.jsonl`. Scanned PDFs are judged by title only (**📷 scanned**). Answers are remembered per link in `state/ai-cache-<runner>.json`.
 5. The run log shows the number of AI calls and the approximate cost.
 

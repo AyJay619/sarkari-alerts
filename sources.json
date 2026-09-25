@@ -124,8 +124,9 @@
     "runner": "cloud",
     "type": "html",
     "url": "https://www.upsc.gov.in/",
-    "include": "[.]pdf",
-    "limit": 20
+    "include": "whats-new/|[.]pdf",
+    "limit": 60,
+    "rebaseline": true
   },
   {
     "id": "ibps",
@@ -191,6 +192,17 @@
     "limit": 20
   },
   {
+    "id": "oil-india-archive",
+    "name": "Oil India (recent advertisements)",
+    "runner": "india",
+    "type": "html",
+    "url": "https://www.oil-india.com/archive-advertisement-data",
+    "rowSelector": "table tr",
+    "rowTitle": ".tooltiphovertext",
+    "rowLink": "a[href]",
+    "limit": 20
+  },
+  {
     "id": "csir",
     "name": "CSIR",
     "runner": "india",
@@ -199,6 +211,17 @@
     "rowSelector": "table tr",
     "rowTitle": "td:nth-child(2)",
     "rowLink": "a[href*='.pdf']",
+    "limit": 20
+  },
+  {
+    "id": "csir-archive",
+    "name": "CSIR (recent results & adverts)",
+    "runner": "india",
+    "type": "html",
+    "url": "https://www.csir.res.in/en/career-opportunities/recruitment/archive-recruitment",
+    "rowSelector": "table tr",
+    "rowTitle": "td:nth-child(2)",
+    "rowLink": "a[href]",
     "limit": 20
   },
   {
@@ -217,10 +240,13 @@
     "runner": "india",
     "type": "html",
     "url": "https://www.powergrid.in/en/job-opportunities",
-    "rowSelector": "#js_Notification li",
-    "rowTitle": "a",
-    "rowLink": "a",
-    "limit": 20
+    "limit": 400,
+    "selector": ".newBorderBox a.showMoreBtn",
+    "contextClosest": ".newBorderBox",
+    "contextFind": "h4",
+    "minTitle": 8,
+    "exclude": "Click here|register|login",
+    "rebaseline": true
   },
   {
     "id": "coal-india",
@@ -583,5 +609,195 @@
     "groupName": "RRB",
     "region": "Thiruvananthapuram",
     "groupTemplate": "RRB CEN {cennum}: {text}"
+  },
+  {
+    "id": "sbi",
+    "name": "SBI Careers",
+    "runner": "india",
+    "type": "html",
+    "url": "https://sbi.bank.in/web/careers/current-openings",
+    "selector": "#jobLinks .card a[href]",
+    "contextClosest": ".card",
+    "contextFind": ".accordion",
+    "contextAttr": "data-articleid",
+    "minTitle": 4,
+    "exclude": ": Hindi https",
+    "limit": 500
+  },
+  {
+    "id": "ntpc",
+    "name": "NTPC Careers",
+    "runner": "india",
+    "type": "html",
+    "url": "https://careers.ntpc.co.in/recruitment/",
+    "rowSelector": "ul.post-job-bx > li",
+    "rowTitle": "h5",
+    "pageLink": true,
+    "minTitle": 15,
+    "limit": 700
+  },
+  {
+    "id": "bpcl",
+    "name": "BPCL Careers",
+    "runner": "india",
+    "type": "html",
+    "url": "https://www.bharatpetroleum.in/careers/job-openings",
+    "selector": "table.main-tbl a[href]",
+    "contextClosest": "tr",
+    "contextFind": "td:nth-child(2) p",
+    "minTitle": 10,
+    "exclude": "travel reimbursement|apply online",
+    "limit": 100
+  },
+  {
+    "id": "hal",
+    "name": "HAL Careers",
+    "runner": "india",
+    "type": "json",
+    "url": "https://hal-india.co.in/backend/wp-json/hal/v1/career",
+    "method": "POST",
+    "form": {
+      "lang": "en"
+    },
+    "headers": {
+      "Accept": "application/json"
+    },
+    "itemsPath": "career",
+    "titleField": "title",
+    "linkField": "id",
+    "linkPrefix": "https://hal-india.co.in/career#",
+    "fallbackLink": "https://hal-india.co.in/career"
+  },
+  {
+    "id": "army",
+    "name": "Indian Army (admit cards)",
+    "runner": "india",
+    "type": "html",
+    "url": "https://joinindianarmy.nic.in/",
+    "rowSelector": "table tr",
+    "rowTitle": "self",
+    "exclude": "Post / Category Name",
+    "minTitle": 15,
+    "limit": 50
+  },
+  {
+    "id": "navy",
+    "name": "Indian Navy",
+    "runner": "india",
+    "type": "html",
+    "url": "https://www.joinindiannavy.gov.in/",
+    "include": "/en/event/",
+    "minTitle": 15,
+    "limit": 30
+  },
+  {
+    "id": "barc-vacancies",
+    "name": "BARC Vacancies",
+    "runner": "india",
+    "type": "html",
+    "url": "https://barc.gov.in/careers/recruitment.html",
+    "rowSelector": "table tr",
+    "rowTitle": "td:nth-child(2)",
+    "rowLink": "a[href]",
+    "minTitle": 10,
+    "limit": 30
+  },
+  {
+    "id": "barc-results",
+    "name": "BARC Results & Interviews",
+    "runner": "india",
+    "type": "html",
+    "url": "https://barc.gov.in/careers/result.html",
+    "rowSelector": "table tr",
+    "rowTitle": "td:nth-child(2)",
+    "rowLink": "a[href]",
+    "minTitle": 10,
+    "limit": 40
+  },
+  {
+    "id": "nta",
+    "name": "NTA",
+    "runner": "india",
+    "type": "html",
+    "url": "https://nta.ac.in/",
+    "rowSelector": ".latestPart p",
+    "rowTitle": "content",
+    "rowLink": "a[href]",
+    "minTitle": 10,
+    "limit": 1000
+  },
+  {
+    "id": "kvs-notifications",
+    "name": "KVS Notifications",
+    "runner": "india",
+    "type": "html",
+    "url": "https://kvsangathan.nic.in/en/interview-notice/",
+    "rowSelector": "table tr",
+    "rowTitle": "td:nth-child(1)",
+    "rowLink": "a[href]",
+    "minTitle": 10,
+    "limit": 40,
+    "timeoutMs": 45000
+  },
+  {
+    "id": "kvs-results",
+    "name": "KVS Results & Answer Keys",
+    "runner": "india",
+    "type": "html",
+    "url": "https://kvsangathan.nic.in/en/results-misc-answer-keys/",
+    "rowSelector": "table tr",
+    "rowTitle": "td:nth-child(1)",
+    "rowLink": "a[href]",
+    "minTitle": 10,
+    "limit": 40,
+    "timeoutMs": 45000
+  },
+  {
+    "id": "nvs",
+    "name": "NVS Recruitment",
+    "runner": "india",
+    "type": "json",
+    "url": "https://navodaya.gov.in/api/public/media?media_type_id=7&limit=100&page=1",
+    "itemsPath": "data.items",
+    "titleField": "title_english",
+    "linkField": "download_url",
+    "linkPrefix": "https://navodaya.gov.in",
+    "fallbackLink": "https://navodaya.gov.in/"
+  },
+  {
+    "id": "dsssb-vacancies",
+    "name": "DSSSB Vacancies",
+    "runner": "india",
+    "type": "html",
+    "url": "https://dsssb.delhi.gov.in/dsssb-vacancies",
+    "rowSelector": "li:has(a.tab-view)",
+    "rowTitle": ".tab-title",
+    "rowLink": "a.tab-view",
+    "minTitle": 10,
+    "limit": 30
+  },
+  {
+    "id": "dsssb-exams",
+    "name": "DSSSB Exam Notices",
+    "runner": "india",
+    "type": "html",
+    "url": "https://dsssb.delhi.gov.in/notice-of-exam",
+    "rowSelector": "li:has(a.tab-view)",
+    "rowTitle": ".tab-title",
+    "rowLink": "a.tab-view",
+    "minTitle": 10,
+    "limit": 30
+  },
+  {
+    "id": "dsssb-results",
+    "name": "DSSSB Results",
+    "runner": "india",
+    "type": "html",
+    "url": "https://dsssb.delhi.gov.in/doit/dsssb/latest-result",
+    "rowSelector": "table tr",
+    "rowTitle": "td:nth-child(2)",
+    "rowLink": "a[href]",
+    "minTitle": 10,
+    "limit": 30
   }
 ]

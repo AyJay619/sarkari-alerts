@@ -48,7 +48,7 @@ jobs:
     defaults:
       run:
         shell: cmd            # avoids PowerShell's script-execution policy on the PC
-    timeout-minutes: 15
+    timeout-minutes: 30   # more sites now; slow ones can take a couple of minutes each
     concurrency:
       group: notice-monitor-india
       cancel-in-progress: false

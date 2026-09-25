@@ -27,8 +27,11 @@ function agentFor(extraCerts = [], timeoutMs) {
 }
 
 // One HTTP request, honouring the source's extraCerts / timeoutMs.
-function request(url, { extraCerts, timeoutMs } = {}, redirect = "follow") {
-  const opts = { headers: HEADERS, signal: AbortSignal.timeout(timeoutMs ?? 30000), redirect };
+// Optional per source: "method": "POST" + "form": {...} for the few sites whose list comes from a POST request (e.g. HAL),
+// and "headers": {...} to change a header for that site only (HAL refuses the normal Accept header on POST).
+function request(url, { extraCerts, timeoutMs, method, form, headers } = {}, redirect = "follow") {
+  const opts = { headers: { ...HEADERS, ...headers }, signal: AbortSignal.timeout(timeoutMs ?? 30000), redirect };
+  if (method === "POST") Object.assign(opts, { method, body: new URLSearchParams(form ?? {}) });
   return extraCerts?.length || timeoutMs ? undiciFetch(url, { ...opts, dispatcher: agentFor(extraCerts, timeoutMs) }) : fetch(url, opts);
 }
 const explain = (e, started, url) => {
@@ -99,11 +102,13 @@ function fromHtml(src, text, finalUrl) {
     // Table/list layout: each row has a title somewhere and a link somewhere.
     $(src.rowSelector).each((_, row) => {
       const $row = $(row);
-      const title = tidyTitle(clean(src.rowTitle ? $row.find(src.rowTitle).first().text() : $row.find("td").first().text()));
+      // rowTitle "self" = the whole row text (for rows that are just a few plain cells, e.g. an admit-card schedule)
+      const title = tidyTitle(clean(src.rowTitle === "self" ? $row.text() : src.rowTitle ? $row.find(src.rowTitle).first().text() : $row.find("td").first().text()));
       const href = $row.find(src.rowLink || "a[href]").first().attr("href");
       if (title.length < minTitle) return;
       let link = finalUrl;
       try { if (href) link = new URL(href.trim(), finalUrl).href; } catch {}
+      if (src.pageLink) link = finalUrl;
       const hay = title + " " + link;
       if (include && !include.test(hay)) return;
       if (exclude && exclude.test(hay)) return;
@@ -120,6 +125,15 @@ function fromHtml(src, text, finalUrl) {
     if (title.length < minTitle) return;
     let link;
     try { link = new URL(href.trim(), finalUrl).href; } catch { return; }
+    // "contextClosest" + "contextFind" (optional): put the heading of the surrounding box in front of a bare link text,
+    // e.g. "Recruitment of Officer Trainee (Law) 2025: Notice 5 - Shortlisted for interview".
+    // "contextAttr" (optional) uses that element's attribute (e.g. an advertisement number) instead of its text,
+    // for headings whose wording changes over time (which would make old notices look new).
+    if (src.contextClosest) {
+      const $ctx = $el.closest(src.contextClosest).find(src.contextFind || "h4").first();
+      const ctx = clean(src.contextAttr ? $ctx.attr(src.contextAttr) : $ctx.text()).replace(/^\d+\.\s+/, "");   // drop list numbers ("22. ..."): they shift when the list grows
+      if (ctx) title = `${ctx}: ${title}`;
+    }
     // "titleTemplate": build a readable title from the link text and the link's ?parameters, e.g. "RRB Patna CEN {cennum}: {text}"
     let groupTitle;
     if (src.titleTemplate) {
@@ -129,6 +143,7 @@ function fromHtml(src, text, finalUrl) {
       // "groupTemplate": the same notice on several sites (see "group" in sources.json) gets the same groupTitle
       if (src.groupTemplate) groupTitle = fill(src.groupTemplate);
     }
+    if (src.pageLink) link = finalUrl;
     const hay = `${title} ${link}`;
     if (include && !include.test(hay)) return;
     if (exclude && exclude.test(hay)) return;

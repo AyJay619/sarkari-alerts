@@ -1,0 +1,36 @@
+name: Test sites from GitHub cloud
+
+# Manual button only (no timer, no other triggers). It changes nothing and sends nothing:
+# it just tries to open the sites you name from GitHub's servers and prints what it found.
+# A site that says OK here can be moved to "runner": "cloud" in sources.json;
+# a site that FAILs here has to stay on "runner": "india" (your PC).
+on:
+  workflow_dispatch:
+    inputs:
+      ids:
+        description: "Comma-separated source ids from sources.json (leave the default to test the newly added sites)"
+        default: "oil-india-archive,csir-archive,sbi,ntpc,bpcl,hal,army,navy,barc-vacancies,barc-results,nta,kvs-notifications,kvs-results,nvs,dsssb-vacancies,dsssb-exams,dsssb-results"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # --check only fetches and prints; it never touches the state files or Telegram.
+      - name: Try each site from GitHub's servers
+        env:
+          IDS: ${{ inputs.ids }}
+        run: node src/monitor.mjs --check --only "$IDS"
