@@ -38,12 +38,14 @@ async function pdfText(url, cfg) {
 
 export class Classifier {
   // cacheFile / logFile: where the cache and the review log are kept (null = never write them; used by test mode)
-  constructor(cfg, { apiKey, cacheFile = null, logFile = null, force = false } = {}) {
+  constructor(cfg, { apiKey, cacheFile = null, logFile = null, force = false, mergeCacheFrom = null } = {}) {
     Object.assign(this, { cfg, apiKey, cacheFile, logFile, force });
     this.calls = 0; this.inTokens = 0; this.outTokens = 0;
     this.broken = null;   // reason the AI was switched off for the rest of this run (bad key, no credit, rate limit)
     this.logRows = [];
     this.cache = cacheFile && fs.existsSync(cacheFile) ? JSON.parse(fs.readFileSync(cacheFile, "utf8")) : {};
+    // one-time carry-over of another cache (the old cloud job's): what this cache already knows wins
+    if (mergeCacheFrom && fs.existsSync(mergeCacheFrom)) this.cache = { ...JSON.parse(fs.readFileSync(mergeCacheFrom, "utf8")), ...this.cache };
   }
 
   get cost() {

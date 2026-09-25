@@ -53,6 +53,16 @@ and runs when the PC is back; a run that waits more than 24 hours is cancelled b
 
 Repo → **Actions** tab → **Check for new notices** → **Run workflow** (green button).
 
+## Everything runs on your PC
+
+All sites are checked by the GitHub runner installed on your PC (a Windows service that starts by itself when Windows starts).
+- **PC off (night):** the timer keeps ticking, but only ONE run can wait in line; a newer one replaces the older waiting one
+  (the replaced ones show as "cancelled" in the Actions tab — normal). When the PC starts, that one run catches everything posted overnight.
+- **No internet right after boot:** the monitor waits up to ~4 minutes for it, then stops quietly. A lost connection is never counted as a site failing.
+- **Morning message:** the first run each day (after 6 am India time) ends with "☀️ Morning check done: N sites, X new notices, Y failed".
+- The old GitHub-cloud job is gone. The file `state/seen-cloud.json` is only kept so its memory can be carried over once; the PC ignores it afterwards.
+- Want a site checked from GitHub's servers again? Test it with **Test sites from GitHub cloud**; then you would need to add a cloud job back.
+
 ## Check that it is working
 
 - Repo → **Actions** tab: a green tick every ~30 minutes means it ran. Click a run to read the log —

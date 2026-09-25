@@ -2,7 +2,7 @@
   {
     "id": "ssc",
     "name": "SSC",
-    "runner": "cloud",
+    "runner": "india",
     "type": "json",
     "url": "https://ssc.gov.in/api/general-website/portal/notice-boards?page=1&limit=20&contentType=notice-boards&key=createdAt&order=DESC&isAttachment=true&language=english&attributes=id,headline,examId,contentType,redirectUrl,startDate,endDate,language,createdAt",
     "itemsPath": "data",
@@ -14,7 +14,7 @@
   {
     "id": "isro",
     "name": "ISRO",
-    "runner": "cloud",
+    "runner": "india",
     "type": "html",
     "url": "https://www.isro.gov.in/Careers.html",
     "include": "Advt|Advertisement|Corrigendum|Schedule|Selection|Admit|Result|Recruitment",
@@ -24,7 +24,7 @@
   {
     "id": "sail",
     "name": "SAIL",
-    "runner": "cloud",
+    "runner": "india",
     "type": "html",
     "url": "https://sailcareers.com/",
     "minTitle": 20,
@@ -33,7 +33,7 @@
   {
     "id": "cbse",
     "name": "CBSE Recruitment",
-    "runner": "cloud",
+    "runner": "india",
     "type": "html",
     "url": "https://www.cbse.gov.in/cbsenew/recruitment.html",
     "include": "[.]pdf",
@@ -43,7 +43,7 @@
   {
     "id": "rbi",
     "name": "RBI Vacancies",
-    "runner": "cloud",
+    "runner": "india",
     "type": "html",
     "url": "https://opportunities.rbi.org.in/Scripts/Vacancies.aspx",
     "include": "bs_viewcontent",
@@ -72,7 +72,7 @@
   {
     "id": "ugc",
     "name": "UGC",
-    "runner": "cloud",
+    "runner": "india",
     "type": "html",
     "url": "https://www.ugc.gov.in/",
     "include": "pdfnews",
@@ -101,7 +101,7 @@
   {
     "id": "aai",
     "name": "AAI Recruitment",
-    "runner": "cloud",
+    "runner": "india",
     "type": "html",
     "url": "https://www.aai.aero/en/careers/recruitment",
     "rowSelector": "table tbody tr",
@@ -112,7 +112,7 @@
   {
     "id": "lic",
     "name": "LIC Careers",
-    "runner": "cloud",
+    "runner": "india",
     "type": "html",
     "url": "https://licindia.in/careers",
     "include": "engagement|recruitment|apprentice|advert",
@@ -121,7 +121,7 @@
   {
     "id": "upsc",
     "name": "UPSC",
-    "runner": "cloud",
+    "runner": "india",
     "type": "html",
     "url": "https://www.upsc.gov.in/",
     "include": "whats-new/|[.]pdf",

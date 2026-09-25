@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import path from "node:path";
 import { fetchItemsWithRetry } from "./fetchers.mjs";
 import { categorize } from "./categorize.mjs";
-import { formatItem, formatGroup, makeSender } from "./telegram.mjs";
+import { formatItem, formatGroup, makeSender, apiBase } from "./telegram.mjs";
 import { Classifier, keywordVerdict, loadConfig } from "./classify.mjs";
 
 const args = process.argv.slice(2);
@@ -26,6 +26,20 @@ const sources = JSON.parse(fs.readFileSync(SOURCES_FILE, "utf8")).filter(s => !s
 let state = { sources: {} };
 if (fs.existsSync(STATE_FILE)) state = JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
 state.sources ??= {};
+
+// One-time move of the old GitHub-cloud job's memory into the PC's: sites that used to run on "cloud" carry over what they had
+// already seen, so moving them to the PC neither re-baselines them nor floods you with old notices. Only sites the PC state
+// does not know yet are copied, so this does nothing on later runs.
+const LEGACY_STATE = "state/seen-cloud.json";
+if (RUNNER === "india" && fs.existsSync(LEGACY_STATE)) {
+  const old = JSON.parse(fs.readFileSync(LEGACY_STATE, "utf8")).sources ?? {};
+  for (const src of sources) {
+    if (old[src.id] && !state.sources[src.id]?.initialized) {
+      state.sources[src.id] = old[src.id];
+      console.log(`IMPORTED the saved memory of ${src.name} from ${LEGACY_STATE} (${Object.keys(old[src.id].seen ?? {}).length} notices)`);
+    }
+  }
+}
 
 // A fingerprint of everything that decides WHICH notices a source finds (URL, filters, selectors, limit...).
 // If it changes, the source is silently re-baselined (see below) so a wider filter can never flood you with old notices.
@@ -65,6 +79,7 @@ if (!TEST_AI && cfg.aiEnabled) {
   else ai = new Classifier(cfg, {
     apiKey,
     cacheFile: SAVES_STATE ? `state/ai-cache-${RUNNER ?? "all"}.json` : null,
+    mergeCacheFrom: RUNNER === "india" ? "state/ai-cache-cloud.json" : null,   // old cloud answers are kept (one-time carry-over)
     logFile: SAVES_STATE ? `state/ai-log-${RUNNER ?? "all"}.jsonl` : null,
   });
 }
@@ -93,7 +108,24 @@ if (TEST_AI) {
   process.exit(0);
 }
 
+// The PC may have just started and Windows may not have its network up yet. Wait a few minutes for it. If there is still no
+// internet, stop quietly (exit 0, nothing saved): being offline is not a site failure, and the next run simply tries again.
+async function waitForInternet(tries = 8, pauseMs = 30000) {
+  for (let i = 1; i <= tries; i++) {
+    try { await fetch(apiBase(), { signal: AbortSignal.timeout(15000) }); return true; } catch { /* not reachable yet */ }
+    console.log(`No internet yet (attempt ${i}/${tries})` + (i < tries ? `, waiting ${pauseMs / 1000}s ...` : ""));
+    if (i < tries) await new Promise(r => setTimeout(r, pauseMs));
+  }
+  return false;
+}
+if (!(await waitForInternet())) {
+  console.log("OFFLINE: the PC has no internet right now. Nothing was checked or changed; the next run will try again.");
+  process.exit(0);
+}
+
 let telegramProblem = false;
+let alertsSent = 0;         // notices announced in this run (for the morning message)
+const failures = [];        // sites that could not be read in this run
 const pendingGroups = {};   // group name -> [{ src, st, fresh, now }], sent as one alert per notice after all sources are checked
 
 const prune = st => {
@@ -108,12 +140,8 @@ for (const src of sources) {
   try {
     items = await fetchItemsWithRetry(src);
   } catch (e) {
-    st.fails++;
-    console.log(`FAIL ${src.name} (after retry): ${e.message} (failed ${st.fails} run(s) in a row)`);
-    if (st.fails >= FAIL_LIMIT && !st.warned) {
-      const ok = await send(`⚠️ <b>${src.name}</b> has failed ${st.fails} runs in a row.\nLast error: ${e.message.replace(/[<>&]/g, "")}\nI'll tell you when it recovers.`);
-      if (ok) st.warned = true; else telegramProblem = true;
-    }
+    failures.push({ src, st, e });   // counted after the loop, so a PC that lost its internet is not blamed on every site
+    console.log(`FAIL ${src.name} (after retry): ${e.message}`);
     continue;
   }
 
@@ -148,7 +176,7 @@ for (const src of sources) {
   for (const i of toSend.slice(skipped)) {
     const d = ai ? await ai.decide(src, i) : NO_AI;
     if (!d.send) { st.seen[keyOf(i)] = now; continue; }   // "Not Relevant": not sent, written to the review log
-    if (await send(formatItem(src.name, d.category ?? categorize(i.title), i.title, i.link, d.flag), true)) st.seen[keyOf(i)] = now;
+    if (await send(formatItem(src.name, d.category ?? categorize(i.title), i.title, i.link, d.flag), true)) { st.seen[keyOf(i)] = now; alertsSent++; }
     else telegramProblem = true; // not marked as seen, so it is retried next run
   }
   if (skipped) {
@@ -158,6 +186,21 @@ for (const src of sources) {
   }
 
   prune(st);
+}
+
+// Failures. If (nearly) EVERY site failed, the internet dropped during the run: that is not the sites' fault, so nobody's
+// "runs in a row" counter goes up. Otherwise each failed site counts, and you get one warning after FAIL_LIMIT runs in a row.
+const networkDown = sources.length >= 5 && failures.length >= sources.length * 0.9;
+if (networkDown) console.log(`Almost every site failed (${failures.length}/${sources.length}): treating it as a lost connection, not counting failures.`);
+else for (const { src, st, e } of failures) {
+  st.fails++;
+  console.log(`${src.name} has now failed ${st.fails} run(s) in a row`);
+  if (st.fails >= FAIL_LIMIT && !st.warned) {
+    const ok = await send(`⚠️ <b>${src.name}</b> has failed ${st.fails} runs in a row.
+Last error: ${e.message.replace(/[<>&]/g, "")}
+I'll tell you when it recovers.`);
+    if (ok) st.warned = true; else telegramProblem = true;
+  }
 }
 
 // Grouped sources (e.g. the 21 RRB sites): one alert per notice, listing the sites that posted it.
@@ -184,7 +227,7 @@ for (const [group, members] of Object.entries(pendingGroups)) {
     const d = ai ? await ai.decide(hits[0].mem.src, { title: k, link: `group:${group}:${k}` }) : NO_AI;
     if (!d.send) { gs.seen[k] = now; markSeen(hits, now); continue; }
     const msg = formatGroup(hits[0].mem.src.groupName ?? group, d.category ?? categorize(k), k, regions, members.length, hits[0].i.link, d.flag);
-    if (await send(msg, true)) { gs.seen[k] = now; markSeen(hits, now); } else telegramProblem = true;
+    if (await send(msg, true)) { gs.seen[k] = now; markSeen(hits, now); alertsSent++; } else telegramProblem = true;
   }
   if (skipped) {
     if (await send(`ℹ️ <b>${group}</b>: ${skipped} more new notices not shown individually (too many at once).`))
@@ -200,6 +243,15 @@ if (summaries.length) {
     telegramProblem = true;
     // Summary not delivered: harmless, but say so in the log.
     console.error("Could not deliver the 'now watching' summary.");
+  }
+}
+
+// Morning check: once per day (Indian time), on the first complete run at or after 06:00, so you know the system started.
+if (!ONLY && !networkDown) {
+  const ist = new Date(Date.now() + 5.5 * 3600 * 1000), today = ist.toISOString().slice(0, 10);
+  if (ist.getUTCHours() >= 6 && state.morning !== today) {
+    const msg = `☀️ Morning check done: ${sources.length} sites, ${alertsSent} new notice${alertsSent === 1 ? "" : "s"}, ${failures.length} failed`;
+    if (await send(msg)) state.morning = today; else telegramProblem = true;
   }
 }
 

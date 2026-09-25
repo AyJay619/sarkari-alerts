@@ -1,7 +1,7 @@
 name: Check for new notices
 
 # Only a timer and the manual button can start this. Never add pull_request or other
-# triggers a stranger could fire: the "india" job runs on your own PC.
+# triggers a stranger could fire: the job runs on your own PC.
 on:
   schedule:
     - cron: "*/30 * * * *"   # every 30 minutes
@@ -11,44 +11,16 @@ permissions:
   contents: write             # needed to save state files back to the repo
 
 jobs:
-  # Sources that work from GitHub's servers ("runner": "cloud" in sources.json)
-  cloud:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    concurrency:
-      group: notice-monitor-cloud
-      cancel-in-progress: false
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - run: npm ci
-
-      - name: Look for new notices and send Telegram alerts
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}   # only used if aiEnabled is true in config.json
-        run: node src/monitor.mjs --runner cloud
-
-      # Runs even if the step above reported a problem, so what was sent is never forgotten.
-      - name: Save the list of already-seen notices
-        if: always()
-        run: node src/save-state.mjs state/seen-cloud.json state/ai-cache-cloud.json state/ai-log-cloud.jsonl
-
-  # Sources blocked from GitHub's servers ("runner": "india" in sources.json), run on your PC.
-  # Not linked to the cloud job: if your PC is off, this simply waits (or expires) and the
-  # cloud job is unaffected. Only one run may wait in line; a newer one replaces an older waiting one.
+  # Every site is checked here, on your own PC ("runner": "india" in sources.json).
+  # When the PC is off, the runs simply wait. Because of the "concurrency" block below, only ONE run can be waiting:
+  # each new timer tick replaces the older waiting one (the old one shows as "cancelled", which is normal, not a failure).
+  # So when the PC starts in the morning, exactly one run starts, and it catches everything posted overnight.
   india:
     runs-on: [self-hosted, india]
     defaults:
       run:
         shell: cmd            # avoids PowerShell's script-execution policy on the PC
-    timeout-minutes: 30   # more sites now; slow ones can take a couple of minutes each
+    timeout-minutes: 30
     concurrency:
       group: notice-monitor-india
       cancel-in-progress: false
