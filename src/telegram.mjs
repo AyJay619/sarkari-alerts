@@ -14,9 +14,12 @@ const ICONS = { "Job": "💼", "Admit Card": "🎫", "Result": "📊", "Answer K
 const FLAGS = { unchecked: "❓ unchecked", capped: "🤖 AI skipped: cap reached", scanned: "📷 scanned" };
 const flagLine = flag => (FLAGS[flag] ? "\n" + FLAGS[flag] : "");
 
-export function formatItem(sourceName, category, title, link, flag = null) {
+// First-line tag: "🏛️ Central · " or "🗺️ State · " (parseAlert in inbox.mjs skips it)
+const tag = level => (level === "state" ? "🗺️ State · " : "🏛️ Central · ");
+
+export function formatItem(sourceName, category, title, link, flag = null, level = "central") {
   const shown = title.length > 400 ? title.slice(0, 397) + "…" : title;
-  return `${ICONS[category] || "📌"} <b>${esc(category)}</b> · ${esc(sourceName)}${flagLine(flag)}
+  return `${tag(level)}${ICONS[category] || "📌"} <b>${esc(category)}</b> · ${esc(sourceName)}${flagLine(flag)}
 
 ${esc(shown)}
 
@@ -24,12 +27,12 @@ ${esc(shown)}
 }
 
 // One notice posted on several sites: "RRB CEN 03/2026: Exam Schedule — 21 regions".
-export function formatGroup(groupName, category, groupTitle, regions, totalRegions, link, flag = null) {
+export function formatGroup(groupName, category, groupTitle, regions, totalRegions, link, flag = null, level = "central") {
   const where = regions.length === 1 ? `${regions[0]} only`
     : regions.length === totalRegions ? `${regions.length} regions`
     : `${regions.join(", ")} (${regions.length} of ${totalRegions} regions)`;
   const first = regions.length > 1 ? ` (${regions[0]} copy)` : "";
-  return `${ICONS[category] || "📌"} <b>${esc(category)}</b> · ${esc(groupName)}${flagLine(flag)}
+  return `${tag(level)}${ICONS[category] || "📌"} <b>${esc(category)}</b> · ${esc(groupName)}${flagLine(flag)}
 
 ${esc(groupTitle)} — ${esc(where)}
 

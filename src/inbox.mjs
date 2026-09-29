@@ -49,7 +49,7 @@ export function parseAlert(text) {
   const test = /^🧪\s*TEST/.test(lines[0]);
   if (test) lines = lines.slice(1);
   const blocks = lines.join("\n").split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
-  const header = blocks[0]?.split("\n")[0]?.match(/^\S+\s+(.+?)\s+·\s+(.+)$/u);
+  const header = blocks[0]?.split("\n")[0]?.replace(/^\S+\s+(Central|State)\s+·\s+/u, "")?.match(/^\S+\s+(.+?)\s+·\s+(.+)$/u);
   const linkBlock = blocks.findIndex(b => b.startsWith("🔗"));
   if (!header || linkBlock < 1) return null;
   const link = blocks[linkBlock].match(/^🔗\s*(\S+)/u)?.[1];

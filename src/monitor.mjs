@@ -4,6 +4,7 @@ import path from "node:path";
 import { fetchItemsWithRetry } from "./fetchers.mjs";
 import { categorize } from "./categorize.mjs";
 import { formatItem, formatGroup, makeSender, apiBase } from "./telegram.mjs";
+import { buildPlan, levelOf } from "./order.mjs";
 import { Classifier, keywordVerdict, loadConfig } from "./classify.mjs";
 
 const args = process.argv.slice(2);
@@ -43,9 +44,9 @@ if (RUNNER === "india" && fs.existsSync(LEGACY_STATE)) {
 
 // A fingerprint of everything that decides WHICH notices a source finds (URL, filters, selectors, limit...).
 // If it changes, the source is silently re-baselined (see below) so a wider filter can never flood you with old notices.
-// Not part of it: name, runner and timeoutMs. Sources saved before this existed have no fingerprint yet: they just get one
+// Not part of it: name, runner, level and timeoutMs. Sources saved before this existed have no fingerprint yet: they just get one
 // stored, unless sources.json carries "rebaseline": true for them.
-const fingerprint = src => { const { name, runner, timeoutMs, ...rest } = src; return crypto.createHash("sha1").update(JSON.stringify(rest)).digest("hex").slice(0, 12); };
+const fingerprint = src => { const { name, runner, timeoutMs, level, ...rest } = src; return crypto.createHash("sha1").update(JSON.stringify(rest)).digest("hex").slice(0, 12); };
 
 const keyOf = i => (i.title.toLowerCase().replace(/\s+/g, " ") + "|" + i.link).slice(0, 600);
 
@@ -126,6 +127,8 @@ if (!(await waitForInternet())) {
 let telegramProblem = false;
 let alertsSent = 0;         // notices announced in this run (for the morning message)
 const failures = [];        // sites that could not be read in this run
+const pendingAlerts = [];   // notices found in this run; sent together at the end, ordered by level and category (see order.mjs)
+const pendingNotes = [];    // "N more not shown" notes, sent after the alerts
 const pendingGroups = {};   // group name -> [{ src, st, fresh, now }], sent as one alert per notice after all sources are checked
 
 const prune = st => {
@@ -176,14 +179,11 @@ for (const src of sources) {
   for (const i of toSend.slice(skipped)) {
     const d = ai ? await ai.decide(src, i) : NO_AI;
     if (!d.send) { st.seen[keyOf(i)] = now; continue; }   // "Not Relevant": not sent, written to the review log
-    if (await send(formatItem(src.name, d.category ?? categorize(i.title), i.title, i.link, d.flag), true)) { st.seen[keyOf(i)] = now; alertsSent++; }
-    else telegramProblem = true; // not marked as seen, so it is retried next run
+    const category = d.category ?? categorize(i.title), level = levelOf(src);
+    // marked as seen only once it is really sent; if sending fails it is retried next run
+    pendingAlerts.push({ level, category, html: formatItem(src.name, category, i.title, i.link, d.flag, level), onSent: () => (st.seen[keyOf(i)] = now) });
   }
-  if (skipped) {
-    if (await send(`ℹ️ <b>${src.name}</b>: ${skipped} more new notices not shown individually (too many at once). Check the site: ${src.url}`))
-      toSend.slice(0, skipped).forEach(i => (st.seen[keyOf(i)] = now));
-    else telegramProblem = true;
-  }
+  if (skipped) pendingNotes.push({ html: `ℹ️ <b>${src.name}</b>: ${skipped} more new notices not shown individually (too many at once). Check the site: ${src.url}`, onSent: () => toSend.slice(0, skipped).forEach(i => (st.seen[keyOf(i)] = now)) });
 
   prune(st);
 }
@@ -226,17 +226,22 @@ for (const [group, members] of Object.entries(pendingGroups)) {
     // One AI decision for the whole group (cached under the group's title, not one region's link)
     const d = ai ? await ai.decide(hits[0].mem.src, { title: k, link: `group:${group}:${k}` }) : NO_AI;
     if (!d.send) { gs.seen[k] = now; markSeen(hits, now); continue; }
-    const msg = formatGroup(hits[0].mem.src.groupName ?? group, d.category ?? categorize(k), k, regions, members.length, hits[0].i.link, d.flag);
-    if (await send(msg, true)) { gs.seen[k] = now; markSeen(hits, now); alertsSent++; } else telegramProblem = true;
+    const category = d.category ?? categorize(k), level = levelOf(hits[0].mem.src);
+    pendingAlerts.push({ level, category, html: formatGroup(hits[0].mem.src.groupName ?? group, category, k, regions, members.length, hits[0].i.link, d.flag, level), onSent: () => { gs.seen[k] = now; markSeen(hits, now); } });
   }
-  if (skipped) {
-    if (await send(`ℹ️ <b>${group}</b>: ${skipped} more new notices not shown individually (too many at once).`))
-      toAnnounce.slice(0, skipped).forEach(([k, hits]) => { gs.seen[k] = now; markSeen(hits, now); });
-    else telegramProblem = true;
-  }
+  if (skipped) pendingNotes.push({ html: `ℹ️ <b>${group}</b>: ${skipped} more new notices not shown individually (too many at once).`, onSent: () => toAnnounce.slice(0, skipped).forEach(([k, hits]) => { gs.seen[k] = now; markSeen(hits, now); }) });
   const gk = Object.keys(gs.seen);
   if (gk.length > 2000) gk.slice(0, gk.length - 2000).forEach(k => delete gs.seen[k]);
 }
+
+// Send everything found in this run: one summary, then Central (Jobs, Admit Cards, Results, Other), then State. Nothing new = nothing sent.
+// If the summary or a level/category header cannot be sent, the notices are still tried (their own send decides "seen").
+for (const m of buildPlan(pendingAlerts)) {
+  const ok = await send(m.html, !!m.alert);
+  if (m.alert) { if (ok) { m.alert.onSent(); alertsSent++; } else telegramProblem = true; }
+  else if (!ok) telegramProblem = true;
+}
+for (const n of pendingNotes) { if (await send(n.html)) n.onSent(); else telegramProblem = true; }
 
 if (summaries.length) {
   if (!(await send("👀 " + summaries.join("\n")))) {
