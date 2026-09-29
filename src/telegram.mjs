@@ -42,9 +42,50 @@ ${esc(groupTitle)} — ${esc(where)}${bodyBlock(extra)}
 🔗 ${esc(link)}${esc(first)}`;
 }
 
+// Telegram refuses messages over 4096 characters. Long ones (the "now watching" summary, big category lists) are cut into several
+// messages of at most `limit` characters, always at a line break (a single over-long line is cut hard). HTML tags that are open
+// at a cut (<b>, <i>, <a href>, ...) are closed there and re-opened in the next part, so every part is valid HTML.
+export const TELEGRAM_SAFE_LIMIT = 3500;   // well under 4096: room for the re-opened tags
+export function splitMessage(html, limit = TELEGRAM_SAFE_LIMIT) {
+  if (html.length <= limit) return [html];
+  const lines = [];
+  for (const line of html.split("\n")) {
+    if (line.length <= limit) { lines.push(line); continue; }
+    for (let i = 0; i < line.length; i += limit - 200) lines.push(line.slice(i, i + limit - 200));   // rare: one giant line
+  }
+  const open = [];   // tags still open at this point: { name, tag }
+  const track = text => {
+    for (const m of text.matchAll(/<(\/?)([a-z]+)[^>]*>/gi)) {
+      const name = m[2].toLowerCase();
+      if (m[1]) { const i = open.map(o => o.name).lastIndexOf(name); if (i >= 0) open.splice(i, 1); }
+      else open.push({ name, tag: m[0] });
+    }
+  };
+  const parts = []; let cur = [], len = 0, prefix = "";
+  const flush = () => {
+    parts.push(cur.join("\n") + [...open].reverse().map(o => "</" + o.name + ">").join(""));
+    prefix = open.map(o => o.tag).join(""); cur = []; len = prefix.length;
+  };
+  for (const line of lines) {
+    if (cur.length && len + line.length + 1 > limit) flush();
+    cur.push(cur.length ? line : prefix + line); len += line.length + 1; track(line);
+  }
+  if (cur.length) parts.push(cur.join("\n"));
+  return parts.filter(p => p.trim());
+}
+
 export function makeSender({ token, chatId, dryRun }) {
   // withButton: true for alerts (notices); false for summaries and warnings.
   return async function send(html, withButton = false) {
+    const parts = splitMessage(html);
+    if (parts.length > 1) {   // several messages; the button (if any) goes under the last one; ok only if every part was delivered
+      let all = true;
+      for (let i = 0; i < parts.length; i++) all = (await sendOne(parts[i], withButton && i === parts.length - 1)) && all;
+      return all;
+    }
+    return sendOne(html, withButton);
+  };
+  async function sendOne(html, withButton) {
     if (dryRun) { console.log("\n┌── Telegram message (dry run) ──\n" + html.replace(/<\/?b>/g, "*").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").split("\n").map(l => "│ " + l).join("\n") + "\n└──"); return true; }
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
@@ -66,5 +107,5 @@ export function makeSender({ token, chatId, dryRun }) {
       }
     }
     return false;
-  };
+  }
 }

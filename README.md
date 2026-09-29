@@ -95,7 +95,7 @@ Open `sources.json` and copy one of the blocks. The simple kind (a page with a l
 - `limit` — how many notices from the top of the page to look at (default 40).
 - `runner` — `"cloud"` (default) or `"india"`: which job checks it.
 - `timeoutMs` — *(optional)* for a slow site: how many milliseconds to wait (default is 10 seconds to connect and 30 seconds in total), e.g. `45000`.
-- `extraCerts` — *(optional)* for a site whose security certificate is incomplete ("unable to verify the first certificate"): a list of certificate files from the `certs/` folder to trust **for that site only**. Security checking stays on for everything else.
+- `extraCerts` — *(optional)* for a site whose security certificate is incomplete ("unable to verify the first certificate"): a list of certificate files from the `certs/` folder to trust **for that site only**. Security checking stays on for everything else. **Why this matters on the PC:** your own Windows account has `NODE_USE_SYSTEM_CA=1`, so Node trusts the Windows certificate store there (Windows quietly downloads missing intermediate certificates). The GitHub runner service runs as NETWORK SERVICE without that setting and only trusts Node's built-in list, so a site with an incomplete certificate works in your tests but fails in the live run. To check a site the way the service sees it, run it without that variable: `env -u NODE_USE_SYSTEM_CA node src/monitor.mjs --check --only <id>` (Git Bash) or `set NODE_USE_SYSTEM_CA=` first (cmd). Never turn certificate checking off; add the intermediate to `certs/` instead. A cert file may hold two certificates (an intermediate and the root it needs). Intermediates expire: REC's (`emsign-dv-tls-ca-g2a-1.pem`) runs to Dec 2028.
 - `fromScript` — *(optional)* `true` if the site builds its list with JavaScript from a text template inside the page (GAIL does).
 - `titleTemplate` — *(optional)* builds a clearer title from the link text and the link's web-address parameters, e.g. `"RRB Patna CEN {cennum}: {text}"`.
 - `pageLink` — *(optional)* `true` if the site's file links change on every visit (NTPC does): every notice then points to the page itself.
@@ -130,6 +130,10 @@ node src/monitor.mjs --check
 node src/monitor.mjs --check --runner india   (only the india sites)
 node src/monitor.mjs --check --only sbi,hal,nta   (only these ids)
 ```
+
+**AI dry run** (Actions tab → **AI dry run** → Run workflow, type a source id such as `ssc`): runs on your PC, reads the latest 3 notices of that one site, runs the AI check on them exactly as a live run would (Post, vacancies, ✅/⛔ dates, 🙈 skip) and sends them to your Telegram marked 🧪 TEST. It saves nothing: no seen-list, no AI cache, no log, no commit. It needs the `ANTHROPIC_API_KEY` secret.
+
+**Long Telegram messages** (e.g. the "now watching" list after many new sites) are split at line breaks into parts under 3,500 characters (Telegram's limit is 4,096). If a summary or heading message cannot be delivered, the run still succeeds; only a failed *notice* alert makes the run report a problem (and that notice is retried next run).
 
 To find out whether a site also works from GitHub's servers (so it can run as `"cloud"` instead of on your PC), press **Run workflow** on **Test sites from GitHub cloud** in the Actions tab. It only reads pages; it changes and sends nothing.
 

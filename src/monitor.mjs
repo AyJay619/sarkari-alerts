@@ -47,7 +47,11 @@ if (RUNNER === "india" && fs.existsSync(LEGACY_STATE)) {
 // If it changes, the source is silently re-baselined (see below) so a wider filter can never flood you with old notices.
 // Not part of it: name, runner, level and timeoutMs. Sources saved before this existed have no fingerprint yet: they just get one
 // stored, unless sources.json carries "rebaseline": true for them.
-const fingerprint = src => { const { name, runner, timeoutMs, level, ...rest } = src; return crypto.createHash("sha1").update(JSON.stringify(rest)).digest("hex").slice(0, 12); };
+const hashOf = rest => crypto.createHash("sha1").update(JSON.stringify(rest)).digest("hex").slice(0, 12);
+// (extraCerts is left out too: HOW to connect does not change WHICH notices are found)
+const fingerprint = src => { const { name, runner, timeoutMs, level, extraCerts, ...rest } = src; return hashOf(rest); };
+// Fingerprints saved before extraCerts was left out still count as "unchanged" (no needless silent re-baseline).
+const legacyFingerprint = src => { const { name, runner, timeoutMs, level, ...rest } = src; return hashOf(rest); };
 
 const keyOf = i => (i.title.toLowerCase().replace(/\s+/g, " ") + "|" + i.link).slice(0, 600);
 
@@ -160,7 +164,7 @@ for (const src of sources) {
   }
 
   const fp = fingerprint(src);
-  const changed = st.initialized && (st.fp ? st.fp !== fp : src.rebaseline === true);
+  const changed = st.initialized && (st.fp ? st.fp !== fp && st.fp !== legacyFingerprint(src) : src.rebaseline === true);
   if (!st.initialized || changed) {
     // Silent baseline: everything on the page right now is recorded as already seen. No alerts, no AI calls.
     items.forEach(i => (st.seen[keyOf(i)] = now));
@@ -173,7 +177,7 @@ for (const src of sources) {
     prune(st);
     continue;
   }
-  st.fp ??= fp;
+  st.fp = fp;   // (also moves a legacy fingerprint over to the current form)
 
   const fresh = items.filter(i => !(keyOf(i) in st.seen));
   console.log(`OK ${src.name}: ${items.length} on page, ${fresh.length} new`);
@@ -244,14 +248,13 @@ for (const [group, members] of Object.entries(pendingGroups)) {
 for (const m of buildPlan(pendingAlerts)) {
   const ok = await send(m.html, !!m.alert);
   if (m.alert) { if (ok) { m.alert.onSent(); alertsSent++; } else telegramProblem = true; }
-  else if (!ok) telegramProblem = true;
+  else if (!ok) console.error("Could not deliver a summary/heading message (the notices themselves are unaffected).");
 }
 for (const n of pendingNotes) { if (await send(n.html)) n.onSent(); else telegramProblem = true; }
 
 if (summaries.length) {
   if (!(await send("👀 " + summaries.join("\n")))) {
-    telegramProblem = true;
-    // Summary not delivered: harmless, but say so in the log.
+    // Summary not delivered: harmless (the sources ARE recorded), so it never fails the run. Just say so in the log.
     console.error("Could not deliver the 'now watching' summary.");
   }
 }

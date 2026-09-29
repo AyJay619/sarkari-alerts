@@ -25,7 +25,7 @@ jobs:
       group: notice-monitor-india
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Uses the Node already installed on the PC (no setup-node download).
       - run: npm ci
