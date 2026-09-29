@@ -2,6 +2,7 @@ import fs from "node:fs";
 import crypto from "node:crypto";
 import path from "node:path";
 import { fetchItemsWithRetry } from "./fetchers.mjs";
+import { emptyReminder } from "./emptycheck.mjs";
 import { categorize } from "./categorize.mjs";
 import { formatItem, formatGroup, makeSender, apiBase } from "./telegram.mjs";
 import { buildPlan, levelOf } from "./order.mjs";
@@ -153,6 +154,10 @@ for (const src of sources) {
   }
   st.fails = 0;
   const now = new Date().toISOString();
+  if (src.allowEmpty) {   // an empty list is fine, but 60 days of it deserves a look
+    const r = emptyReminder(st, items.length);
+    if (r.remind) await send(`ℹ️ <b>${src.name}</b> has listed no notices for ${r.days} days. That may be normal, or the page layout may have changed: worth a quick look: ${src.url}`);
+  }
 
   const fp = fingerprint(src);
   const changed = st.initialized && (st.fp ? st.fp !== fp : src.rebaseline === true);

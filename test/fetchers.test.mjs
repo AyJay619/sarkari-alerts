@@ -1,6 +1,7 @@
 // Tests for the newer site-reading options against a FAKE local web server. Run:  node test/fetchers.test.mjs
 import http from "node:http";
 import { fetchItems, isoDate } from "../src/fetchers.mjs";
+import { emptyReminder } from "../src/emptycheck.mjs";
 
 let n = 0, bad = 0;
 const check = (name, ok, extra = "") => { n++; if (!ok) bad++; console.log(`${ok ? "PASS" : "FAIL"}  ${name}${extra ? "  — " + extra : ""}`); };
@@ -56,6 +57,13 @@ try { await fetchItems({ type: "html", url: B + "/empty", include: "[.]pdf" }); 
 items = await fetchItems({ type: "html", url: B + "/empty", include: "[.]pdf", allowEmpty: true });
 check("allowEmpty: an empty list is fine", Array.isArray(items) && items.length === 0);
 try { await fetchItems({ type: "html", url: B + "/missing", allowEmpty: true }); check("allowEmpty does not hide real errors", false); } catch (e) { check("allowEmpty does not hide real errors", /404/.test(e.message)); }
+
+// the 60-day reminder for allowEmpty sources
+{ const st = {}; const d0 = new Date("2026-01-01T00:00:00Z"), day = n => new Date(d0.getTime() + n * 86400000);
+  check("empty list: no reminder on day 0 or day 59", !emptyReminder(st, 0, day(0)).remind && !emptyReminder(st, 0, day(59)).remind);
+  const r = emptyReminder(st, 0, day(60)); check("empty list: reminder on day 60", r.remind && r.days === 60);
+  check("empty list: not again the next day, but again after another 60 days", !emptyReminder(st, 0, day(61)).remind && emptyReminder(st, 0, day(120)).remind);
+  check("a notice clears the reminder state", !emptyReminder(st, 3, day(130)).remind && st.emptySince === undefined && st.emptyRemindedAt === undefined); }
 
 // the site's own end date per list entry
 check("isoDate reads three formats and rejects impossible dates", isoDate("15/10/2026") === "2026-10-15" && isoDate(" 5-1-2027 ") === "2027-01-05" && isoDate("31.02.2026") === null && isoDate("soon") === null);

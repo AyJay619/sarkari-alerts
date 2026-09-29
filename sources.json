@@ -2157,7 +2157,7 @@
     "runner": "india",
     "level": "central",
     "type": "html",
-    "url": "https://icar.org.in/en/vacancy",
+    "url": "https://icar.org.in/en/vacancies",
     "rowSelector": "tr:has(a[href])",
     "rowTitle": "td:nth-child(2)",
     "rowLink": "a[href]",
@@ -2191,6 +2191,102 @@
     "include": "secure-pdf|writereaddata/Portal/Recruitment|sites/default/files",
     "allowEmpty": true,
     "exclude": "compassionate|qualified|roll no|unique id",
+    "limit": 40
+  },
+  {
+    "id": "cochin-shipyard",
+    "name": "Cochin Shipyard Careers",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://cochinshipyard.in/Careers",
+    "rowSelector": "tr:has(a[href*='careerdetail'])",
+    "rowTitle": "td:nth-child(2)",
+    "rowLink": "a[href*='careerdetail']",
+    "exclude": "compassionate|qualified|roll no|unique id",
+    "minTitle": 15,
+    "limit": 60
+  },
+  {
+    "id": "aweil",
+    "name": "AWEIL Careers",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://aweil.in/career",
+    "rowSelector": "tr[data-document-row]",
+    "rowTitle": ".dbim-document-title",
+    "rowLink": "a[href]",
+    "exclude": "compassionate|qualified|roll no|unique id",
+    "minTitle": 15,
+    "limit": 60
+  },
+  {
+    "id": "hsl",
+    "name": "Hindustan Shipyard Careers",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://hslvizag.in/en/careers",
+    "render": true,
+    "include": "hsl-cms/media|WriteReadData|[.]pdf",
+    "exclude": "procurement|improvement|Interview Results|shortlisted|compassionate|qualified|roll no|unique id",
+    "titleReplace": [
+      "^link(.*?)(\\s*\\(?Size:.*)?$",
+      "$1"
+    ],
+    "minTitle": 12,
+    "limit": 60
+  },
+  {
+    "id": "bmrcl",
+    "name": "Bangalore Metro Careers",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://www.bmrc.co.in/career/",
+    "render": true,
+    "rowSelector": "div.metro-bonds-header2",
+    "rowTitle": "p strong",
+    "rowLink": "a[href]",
+    "titleReplace": [
+      "^\\d+\\)\\s*",
+      ""
+    ],
+    "exclude": "compassionate|qualified|roll no|unique id",
+    "minTitle": 10,
+    "limit": 60
+  },
+  {
+    "id": "mmrcl",
+    "name": "Mumbai Metro (MMRCL) Advertisements",
+    "runner": "india",
+    "level": "central",
+    "type": "json",
+    "url": "https://portal.mmrcl.com/en/api/advertisement-public-list/",
+    "itemsPath": "results",
+    "titleField": "title",
+    "linkField": "attach_pdf",
+    "fallbackLink": "https://recruitment.mmrcl.com/en",
+    "allowedHosts": [
+      "mmrcl-development.s3.amazonaws.com"
+    ],
+    "limit": 40
+  },
+  {
+    "id": "nimhans",
+    "name": "NIMHANS Recruitment and Notifications",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://www.nimhans.ac.in/announcements/nimhans-recruitment-and-notifications-announcement",
+    "extraCerts": [
+      "certs/nimhans.pem"
+    ],
+    "include": "[.]pdf",
+    "allowEmpty": true,
+    "exclude": "compassionate|qualified|roll no|unique id",
+    "minTitle": 15,
     "limit": 40
   }
 ]
