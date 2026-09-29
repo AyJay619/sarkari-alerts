@@ -1,5 +1,7 @@
 import fs from "node:fs";
 import tls from "node:tls";
+import os from "node:os";
+import path from "node:path";
 import * as cheerio from "cheerio";
 import { Agent, fetch as undiciFetch } from "undici";
 
@@ -202,16 +204,33 @@ function fromJson(src, text) {
 }
 
 // Returns [{title, link}] in page order (newest first on most sites). Throws on any problem.
-// For pages that only show their list after JavaScript has run (FCI): opens the page in the Chrome (or Edge) that is installed on
-// this PC, headless, optionally clicks a button by its text ("clickText", e.g. "English"), and returns the finished page.
-// Only used when the source says "render": true. No login, no captcha: if a page ever shows a bot check, that source is not added.
+// For pages that only show their list after JavaScript has run (FCI): opens the page in a headless browser, optionally clicks a
+// button by its text ("clickText", e.g. "English"), and returns the finished page.
+// Browser order: Playwright's own pinned Chromium (kept in a fixed folder, so Chrome updates cannot change it) -> installed Chrome
+// -> installed Edge. The one used is logged. Only used when the source says "render": true. No login, no captcha: if a page ever
+// shows a bot check, that source is not added.
+// The pinned Chromium lives OUTSIDE the project on purpose: the GitHub runner wipes its checkout folder on every run, and a fixed
+// path works for whichever Windows account the runner service uses. Override with SARKARI_BROWSERS_PATH. Install: npm run install-browser
+export function browsersPath() {
+  return process.env.SARKARI_BROWSERS_PATH
+    || (process.platform === "win32" ? path.join(process.env.ProgramData || "C:\\ProgramData", "sarkari-alerts", "browsers") : path.join(os.homedir(), ".cache", "sarkari-alerts", "browsers"));
+}
+
+const BROWSER_NAMES = { pinned: "pinned Chromium", chrome: "installed Chrome", msedge: "installed Edge" };
+
 async function getRendered(src) {
+  process.env.PLAYWRIGHT_BROWSERS_PATH = browsersPath();   // read by playwright-core when it looks for its own Chromium
   const { chromium } = await import("playwright-core");
-  let browser, lastError;
-  for (const channel of src.browserChannel ? [src.browserChannel] : ["chrome", "msedge"]) {
-    try { browser = await chromium.launch({ channel, headless: true }); break; } catch (e) { lastError = e; }
+  let browser;
+  const problems = [];
+  for (const which of src.browserChannel ? [src.browserChannel] : ["pinned", "chrome", "msedge"]) {
+    try {
+      browser = await chromium.launch(which === "pinned" ? { headless: true } : { channel: which, headless: true });
+      console.log(`  ${src.name}: browser used: ${BROWSER_NAMES[which] ?? which}`);
+      break;
+    } catch (e) { problems.push(`${BROWSER_NAMES[which] ?? which}: ${String(e?.message ?? "").split("\n")[0].slice(0, 100)}`); }
   }
-  if (!browser) throw new Error("No Chrome or Edge found for a rendered page: " + String(lastError?.message ?? "").split("\n")[0]);
+  if (!browser) throw new Error("browser could not start (" + problems.join("; ") + ")");
   try {
     const page = await browser.newPage({ locale: "en-IN" });
     await page.goto(src.url, { waitUntil: "networkidle", timeout: src.timeoutMs ?? 45000 });

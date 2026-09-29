@@ -104,7 +104,7 @@ Open `sources.json` and copy one of the blocks. The simple kind (a page with a l
 - `jsonInPage` — *(optional, with `"type": "json"`)* the list is a JavaScript variable inside the page, e.g. `"glblMasterCareerDetails"` (Bank of Baroda). `include`/`exclude` also work on JSON titles.
 - `body` and `rscLine` — *(optional)* a raw request body for `POST`, and, for sites whose answer is a Next.js "server action" (`1:{...}` lines), which line holds the JSON (AIIMS). Such sites break if the site is rebuilt (the `Next-Action` id changes): you would then get the usual "failed 3 runs" warning.
 - `titleReplace` — *(optional)* `["regex", "replacement"]` to tidy long row titles (PNB).
-- `render` — *(optional)* `true` for a page whose list only appears after JavaScript has run (FCI): the page is opened in the Chrome (or Edge) already installed on this PC, headless, with no login. `clickText` (a button to click first, e.g. `"English"`), `waitFor` (a selector to wait for) and `browserChannel` (`"chrome"` or `"msedge"`) go with it. It is never used to get past a captcha or bot check.
+- `render` — *(optional)* `true` for a page whose list only appears after JavaScript has run (FCI): the page is opened headless, with no login, in Playwright's own pinned Chromium (falling back to installed Chrome, then Edge; the one used is logged). See "Reinstall the pinned browser" below. `clickText` (a button to click first, e.g. `"English"`), `waitFor` (a selector to wait for) and `browserChannel` (`"chrome"` or `"msedge"`) go with it. It is never used to get past a captcha or bot check.
 - `rowEndDate` — *(optional)* selector of the "end date" a list shows for each notice (DRDO). If the PDF itself names no last date, that date drives the ✅/⛔ line, labelled "(site list)".
 - `allowedHosts` — *(optional)* extra file hosts the **Send to agents** button may download from (BSF, EPFO).
 - `group`, `groupName`, `region` — *(optional)* sites that post similar notices are announced as one alert with the region shown (the 21 RRBs and the RRC zones).
@@ -222,3 +222,13 @@ To stop it and remove the automatic start: double-click **`listener\uninstall-li
 Only one listener can run at a time, and nothing else in this project uses Telegram's `getUpdates` or a webhook.
 
 Test without touching Telegram: `npm run test:listener` (uses a fake Telegram and real downloads from SSC).
+
+## Reinstall the pinned browser
+
+Sources with `"render": true` (FCI) are read with Playwright's own Chromium, whose version is fixed by the pinned `playwright-core` in `package.json`, so Chrome updates cannot break it. It is stored outside the project, in `C:\ProgramData\sarkari-alerts\browsers` (any account, including the runner service, can read it; the runner wipes its checkout folder each run, so it cannot live there). If that folder is ever deleted, run in the project folder:
+
+```
+npm run install-browser
+```
+
+Until then the monitor falls back to installed Chrome, then Edge. If all three fail, the usual "failed 3 runs in a row" warning appears and says **browser could not start**. Set `SARKARI_BROWSERS_PATH` to use another folder. Only change the `playwright-core` version on purpose, then run `npm run install-browser` again.

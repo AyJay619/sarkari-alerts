@@ -42,11 +42,11 @@ check("isoDate reads three formats and rejects impossible dates", isoDate("15/10
 items = await fetchItems({ type: "html", url: B + "/end", rowSelector: "li.b", rowTitle: ".t", rowLink: "a", rowEndDate: ".e", minTitle: 10 });
 check("rowEndDate is read from each entry (bad date -> none)", items[0].endDate === "2026-10-15" && items[1].endDate === undefined, JSON.stringify(items.map(i => i.endDate)));
 
-// a page whose list only exists after JavaScript ran and a button was clicked (FCI), read with the installed Chrome/Edge
+// a page whose list only exists after JavaScript ran and a button was clicked (FCI), read with the pinned Chromium (falling back to Chrome, then Edge)
 try {
   items = await fetchItems({ type: "html", url: B + "/js", render: true, clickText: "English", waitFor: ".box", rowSelector: ".box", rowTitle: "h2", rowLink: "a", minTitle: 10 });
   check("render: true reads a JavaScript-built list after a click", items.length === 1 && items[0].title === "Built by JavaScript after a click" && items[0].link === B + "/f.pdf", JSON.stringify(items));
-} catch (e) { check("render: true reads a JavaScript-built list after a click", /No Chrome or Edge/.test(e.message), "skipped: " + e.message.slice(0, 80)); }
+} catch (e) { check("render: true reads a JavaScript-built list after a click", /browser could not start/.test(e.message), "skipped: " + e.message.slice(0, 80)); }
 
 server.closeAllConnections(); server.close();
 console.log(`\n${n - bad}/${n} checks passed`);

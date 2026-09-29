@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/monitor.mjs",
+    "install-browser": "node src/install-browser.mjs",
     "dry": "node src/monitor.mjs --dry-run",
     "listener": "node --env-file=.env src/listener.mjs",
     "listener:status": "node src/listener-status.mjs",
@@ -13,7 +14,7 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0",
-    "playwright-core": "^1.63.0",
+    "playwright-core": "1.63.0",
     "undici": "^7.29.1",
     "unpdf": "^1.8.1"
   }
