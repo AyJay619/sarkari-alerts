@@ -20,6 +20,8 @@ export function keywordVerdict(title) {
   return "unclear";
 }
 
+export const NO_FILE_LINE = "📄 PDF not read (site doesn't allow automated downloads)";
+
 export class Classifier {
   // cacheFile / logFile: where the cache and the review log are kept (null = never write them; used by test mode)
   constructor(cfg, { apiKey, cacheFile = null, logFile = null, force = false, mergeCacheFrom = null, rules = null, now = Date.now, readPdf = pdfSnippet } = {}) {
@@ -90,6 +92,11 @@ export class Classifier {
   async decide(src, item) {
     const verdict = keywordVerdict(item.title);
     const keywordCategory = categorize(item.title);
+    // "noFileDownload" sources (robots.txt forbids the files): never open the PDF, no AI read of it. Title and link only.
+    if (src.noFileDownload) {
+      if (!this.force && verdict === "irrelevant") { this.log(src, item, "skipped", "keyword: clearly irrelevant"); return { send: false, how: "keywords" }; }
+      return { send: true, category: null, flag: null, extra: { body: [NO_FILE_LINE], skip: null }, how: "keywords (file not read)" };
+    }
     if (!this.force) {
       if (verdict === "irrelevant") { this.log(src, item, "skipped", "keyword: clearly irrelevant"); return { send: false, how: "keywords" }; }
       if (verdict === "relevant" && !NEEDS_DATES.has(keywordCategory)) return { send: true, category: null, flag: null, how: "keywords" };

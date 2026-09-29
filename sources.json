@@ -2288,5 +2288,19 @@
     "exclude": "compassionate|qualified|roll no|unique id",
     "minTitle": 15,
     "limit": 40
+  },
+  {
+    "id": "nalco",
+    "name": "NALCO Recruitment Portal",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://mudira.nalcoindia.co.in/rec_portal/Default.aspx",
+    "selector": "a.news-link",
+    "include": "Uploaded_Data",
+    "exclude": "shortlist|compassionate|qualified|roll no|unique id",
+    "noFileDownload": true,
+    "minTitle": 15,
+    "limit": 60
   }
 ]

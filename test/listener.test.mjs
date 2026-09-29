@@ -111,6 +111,14 @@ await wait(() => said(/Download failed/));
 check("failed download: '❌ Download failed: …'", said(/❌ Download failed: .*404/), calls.filter(c => /Download failed/.test(c.text ?? "")).map(c => c.text.split("\n")[0]).join(" | "));
 check("failed download: button left in place for a retry", calls.filter(c => c.method === "editMessageReplyMarkup").length === editsBefore);
 
+// 8) NALCO: robots.txt forbids the files, so nothing is downloaded and I am told to do it by hand
+const nalcoLink = "https://mudira.nalcoindia.co.in/iorms/Uploaded_Data/Notices/Notice_1_test.pdf";
+const savedBefore = pending().length;
+queue.push(cbq(106, alertText(formatItem("NALCO Recruitment Portal", "Job", "Recruitment of Non-Executive Personnel", nalcoLink, null, "central", { body: ["📄 PDF not read (site doesn't allow automated downloads)"] }))));
+await wait(() => said(/doesn't allow automated downloads/));
+check("NALCO tap: reply says download it yourself, with the link", said(/⛔ NALCO Recruitment Portal doesn't allow automated downloads[\s\S]*download the notice yourself[\s\S]*Notice_1_test\.pdf/));
+check("NALCO tap: nothing saved, and the button is left as it was", pending().length === savedBefore && !calls.some(c => c.method === "editMessageReplyMarkup" && c.message_id === 106));
+
 listener.kill();
 server.close();
 console.log(`\nInbox files (${inboxDir}\\pending):`);

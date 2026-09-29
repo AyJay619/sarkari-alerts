@@ -34,6 +34,13 @@ export function sourceForHost(hostname, sources) {
   });
 }
 
+// Sources marked "noFileDownload" (their robots.txt forbids fetching the notice files, e.g. NALCO): NOTHING is downloaded for them,
+// neither by the monitor (to read the PDF) nor by the listener (📥 Send to agents). Matched by the alert's source name or by the link's host.
+export function noAutoDownload(sourceName, url, sources) {
+  if (sources.some(s => s.noFileDownload && s.name === sourceName)) return true;
+  try { return !!sourceForHost(new URL(url).hostname, sources.filter(s => s.noFileDownload)); } catch { return false; }
+}
+
 // ---- reading an alert message (the plain text Telegram gives back with the button press) ----
 // Layout (see formatItem / formatGroup in telegram.mjs):
 //   [🧪 TEST]

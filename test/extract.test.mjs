@@ -170,6 +170,16 @@ const full = formatItem("Test site", "Job", SAMPLES.fresh.title, "https://x.gov.
 console.log("\n" + full.replace(/<\/?b>/g, "") + "\n");
 const parsed = parseAlert(full.replace(/<\/?b>/g, ""));
 check("listener still reads title/source/category/link", parsed?.title === SAMPLES.fresh.title && parsed.source === "Test site" && parsed.category === "Job" && parsed.link === "https://x.gov.in/0.pdf");
+// a "noFileDownload" source (NALCO): the PDF is never opened, no AI call, alert says so instead of the date lines
+{ let opened = 0; const ai4 = mk({ readPdf: async () => { opened++; return { text: "x", scanned: false }; } });
+  const nsrc = { name: "NALCO Recruitment Portal", noFileDownload: true };
+  const dn = await ai4.decide(nsrc, { title: "Recruitment of Non-Executive Personnel - M&R Complex, Damanjodi (Advt 10260213)", link: "https://mudira.nalcoindia.co.in/iorms/Uploaded_Data/Notices/a.pdf" });
+  check("noFileDownload: PDF not opened and no AI call", opened === 0 && ai4.calls === 0 && dn.send === true);
+  check("noFileDownload: body is the 'PDF not read' line only", dn.extra.body.length === 1 && dn.extra.body[0] === "📄 PDF not read (site doesn't allow automated downloads)", dn.extra?.body?.join(" / "));
+  const nalertText = formatItem("NALCO Recruitment Portal", "Job", "Recruitment of X", "https://mudira.nalcoindia.co.in/iorms/Uploaded_Data/Notices/a.pdf", null, "central", dn.extra);
+  check("noFileDownload: the alert shows the line under the title, with the link", nalertText.includes("Recruitment of X\n\n📄 PDF not read (site doesn't allow automated downloads)\n\n🔗 https://mudira"), "\n" + nalertText);
+  const dn2 = await ai4.decide(nsrc, { title: "Tender for supply of stationery", link: "https://mudira.nalcoindia.co.in/iorms/Uploaded_Data/Notices/b.pdf" });
+  check("noFileDownload: clearly irrelevant titles are still skipped", dn2.send === false); }
 check("listener also reads the details lines", parsed.details.includes("✅ Open till 15 Oct"));
 const skipParsed = parseAlert(skipAlert.replace(/<\/?b>/g, ""));
 check("listener reads the skip mark", skipParsed?.skip === "consultant under 5 posts" && skipParsed.title === SAMPLES.skipRule.title);

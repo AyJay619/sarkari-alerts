@@ -5,7 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { apiBase, DONE_BUTTON } from "./telegram.mjs";
 import { getBuffer } from "./fetchers.mjs";
-import { allowedHosts, baseName, hostAllowed, Inbox, parseAlert, sourceForHost } from "./inbox.mjs";
+import { allowedHosts, baseName, hostAllowed, Inbox, noAutoDownload, parseAlert, sourceForHost } from "./inbox.mjs";
 
 const token = process.env.TELEGRAM_BOT_TOKEN, chatId = process.env.TELEGRAM_CHAT_ID;
 if (!token || !chatId) { console.error("TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be in the .env file."); process.exit(1); }
@@ -80,6 +80,11 @@ async function handleTap(cb) {
   log(`Tap: [${alert.source}] ${alert.title.slice(0, 80)} -> ${alert.link}`);
 
   const sources = readSources(), hosts = allowedHosts(sources);
+  if (noAutoDownload(alert.source, alert.link, sources)) {   // robots.txt forbids automated downloads from this site
+    log(`Not downloading (site doesn't allow automated downloads): ${alert.link}`);
+    await reply(msg, `⛔ ${alert.source} doesn't allow automated downloads (its robots.txt forbids them), so nothing was downloaded.\nPlease download the notice yourself from this link:\n${alert.link}`);
+    return;
+  }
   const refuse = url => {
     const host = new URL(url).hostname;
     if (!/^https?:$/.test(new URL(url).protocol) || !hostAllowed(host, hosts)) {
