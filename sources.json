@@ -1035,6 +1035,7 @@
     "rowSelector": ".vacanciess-box",
     "rowTitle": ".vacanciess-title",
     "rowLink": ".vacanciess-view-node a",
+    "rowEndDate": ".vacanciess-due-date-content",
     "minTitle": 15,
     "limit": 30
   },
@@ -1170,5 +1171,180 @@
     "group": "rrc",
     "groupName": "RRC",
     "region": "SER Kolkata"
+  },
+  {
+    "id": "iaf-agniveervayu",
+    "name": "Air Force Agniveervayu",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://iafrecruitment.edcil.co.in/agniveervayu/index.html",
+    "rowSelector": "li",
+    "rowTitle": "self",
+    "rowLink": "a[href]",
+    "include": "pdffiles|digialm",
+    "titleReplace": [
+      "\\s*\\[?\\s*click here\\s*\\]?.*$",
+      ""
+    ],
+    "minTitle": 40,
+    "limit": 40
+  },
+  {
+    "id": "iaf-airmen",
+    "name": "Air Force Airmen",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://iafrecruitment.edcil.co.in/airmen/",
+    "rowSelector": "li, b",
+    "rowTitle": "self",
+    "rowLink": "a[href]",
+    "include": "pdfforms|digialm",
+    "titleReplace": [
+      "\\s*\\[?\\s*click here\\s*\\]?.*$",
+      ""
+    ],
+    "minTitle": 40,
+    "limit": 40
+  },
+  {
+    "id": "iaf-afcat",
+    "name": "Air Force AFCAT",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://afcat.edcil.co.in/",
+    "rowSelector": "#newsUp li",
+    "rowTitle": "self",
+    "rowLink": "a[href]",
+    "titleReplace": [
+      "\\s*\\[?\\s*click here\\s*\\]?.*$",
+      ""
+    ],
+    "minTitle": 30,
+    "limit": 40
+  },
+  {
+    "id": "cisf",
+    "name": "CISF",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://www.cisf.gov.in/home.php",
+    "rowSelector": ".news-card",
+    "rowTitle": "h5",
+    "rowLink": "a[href]",
+    "exclude": "message|memorandum|mou\\b|service medal|flag code|posh|handbook",
+    "minTitle": 12,
+    "limit": 30
+  },
+  {
+    "id": "assam-rifles",
+    "name": "Assam Rifles",
+    "runner": "india",
+    "level": "central",
+    "type": "json",
+    "url": "https://assamrifles.gov.in/api/recruitment",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json, text/plain, */*",
+      "Referer": "https://assamrifles.gov.in/join-assam-rifles"
+    },
+    "body": "{\"eventID\":\"1004\",\"addInfo\":{}}",
+    "itemsPath": "rData.rData",
+    "titleField": "SUBJECT",
+    "fallbackLink": "https://assamrifles.gov.in/join-assam-rifles",
+    "exclude": "compassionate|[\\u0900-\\u097F]",
+    "limit": 40
+  },
+  {
+    "id": "fci",
+    "name": "FCI Recruitment",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://fci.gov.in/recruitment",
+    "render": true,
+    "clickText": "English",
+    "waitFor": ".recruitment-box-area",
+    "rowSelector": ".recruitment-box-area",
+    "rowTitle": "h2",
+    "rowLink": "a[href*='fci-storage']",
+    "minTitle": 15,
+    "limit": 30
+  },
+  {
+    "id": "employment-news",
+    "name": "Employment News (adverts)",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://employmentnews.gov.in/NewEmp/MoreContentS.aspx?n=WebAdvertisement",
+    "include": "Issue no",
+    "titleReplace": [
+      "^(.+)$",
+      "Advertisement: $1"
+    ],
+    "minTitle": 20,
+    "limit": 60
+  },
+  {
+    "id": "rrc-ecr",
+    "name": "RRC ECR Hajipur",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://ecr.indianrailways.gov.in/view_section.jsp?lang=0&id=0,2,2039,2040",
+    "include": "uploads/files",
+    "minTitle": 20,
+    "limit": 40,
+    "group": "rrc",
+    "groupName": "RRC",
+    "region": "ECR Hajipur"
+  },
+  {
+    "id": "rrc-secr",
+    "name": "RRC SECR Bilaspur",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://secr.indianrailways.gov.in/view_section.jsp?lang=0&id=0,2,1903,2194,2693",
+    "include": "uploads/files",
+    "exclude": "qualified|notice in (hindi|english)",
+    "minTitle": 20,
+    "limit": 40,
+    "group": "rrc",
+    "groupName": "RRC",
+    "region": "SECR Bilaspur"
+  },
+  {
+    "id": "rrc-scr",
+    "name": "RRC SCR Secunderabad",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://203.153.33.92/",
+    "include": "[.]pdf|etrpindia",
+    "minTitle": 20,
+    "limit": 40,
+    "group": "rrc",
+    "groupName": "RRC",
+    "region": "SCR Secunderabad"
+  },
+  {
+    "id": "rrc-cr",
+    "name": "RRC CR Mumbai",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://rrccr.com/Home/Home",
+    "include": "/rrwc/Files",
+    "minTitle": 20,
+    "limit": 40,
+    "group": "rrc",
+    "groupName": "RRC",
+    "region": "CR Mumbai"
   }
 ]

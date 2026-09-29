@@ -154,6 +154,17 @@ const ai5 = mk({ now: () => NOW + 86400000 });
 ai5.cache = ai4.cache;   // yesterday's counter
 check("daily counter starts again the next day", (await decide(ai5, SAMPLES.closesSoon)).flag !== "limit");
 
+// the site's own end date (DRDO): used only when the PDF names no last date
+const drdoAi = mk();
+const listOnly = await drdoAi.decide(src, { title: "PXE, Balasore invites eligible candidates for the engagement of Apprentices", link: "https://drdo.gov.in/drdo/en/offerings/vacancies/pxe", endDate: "2026-10-12" });
+check("web-page notice with a list end date: verdict from the list, no AI call", drdoAi.calls === 0 && listOnly.extra.body.join("|") === "📅 Last date: 12 Oct (site list)|✅ Open till 12 Oct", listOnly.extra.body.join(" / "));
+const listPassed = await drdoAi.decide(src, { title: "DIPR invites applications for the engagement of Apprentices", link: "https://drdo.gov.in/drdo/en/offerings/vacancies/dipr", endDate: "2026-09-20" });
+check("list end date already passed -> ⛔", listPassed.extra.body.includes("⛔ Last date passed (20 Sep)"), listPassed.extra.body.join(" / "));
+const pdfWins = await mk().decide(src, { title: SAMPLES.dotted.title, link: urlOf(SAMPLES.dotted), endDate: "2026-11-30" });
+check("a last date found in the PDF wins over the list date", pdfWins.extra.body.includes("✅ Open till 15 Oct") && !pdfWins.extra.body.join().includes("site list"));
+const pdfNone = await mk().decide(src, { title: SAMPLES.noDates.title, link: urlOf(SAMPLES.noDates), endDate: "2026-10-20" });
+check("PDF with no date: the list date is used and labelled", pdfNone.extra.body.includes("📅 Last date: 20 Oct (site list)") && pdfNone.extra.body.includes("✅ Open till 20 Oct"), pdfNone.extra.body.join(" / "));
+
 // alert layout + listener parser
 const full = formatItem("Test site", "Job", SAMPLES.fresh.title, "https://x.gov.in/0.pdf", null, "central", (await decide(ai, SAMPLES.fresh)).extra);
 console.log("\n" + full.replace(/<\/?b>/g, "") + "\n");

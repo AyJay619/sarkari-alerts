@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0",
+    "playwright-core": "^1.63.0",
     "undici": "^7.29.1",
     "unpdf": "^1.8.1"
   }

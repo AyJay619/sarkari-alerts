@@ -79,7 +79,7 @@ export class Classifier {
     }
     const category = verdict === "relevant" ? categorize(item.title) : data.category;
     const wantsDates = NEEDS_DATES.has(category);
-    const extra = { body: wantsDates ? detailLines(data, today, { scanned }) : [], skip: data.verdict === "skip" ? (data.rule ?? "no rule named") : null };
+    const extra = { body: wantsDates ? detailLines(data, today, { scanned, listDate: item.endDate }) : [], skip: data.verdict === "skip" ? (data.rule ?? "no rule named") : null };
     if (extra.skip) this.log(src, item, "ai-skip-marked", "AI says skip: " + extra.skip);
     return { send: true, category: verdict === "relevant" ? null : category, flag: scanned && !wantsDates ? "scanned" : null, extra, how: noText ? "AI (title only)" : "AI" };
   }
@@ -105,7 +105,7 @@ export class Classifier {
     }
 
     // A web page (not a PDF) cannot be read for dates. Titles the keywords already trust are not sent to the AI for that alone.
-    if (!isPdf && verdict === "relevant") return { send: true, category: null, flag: null, extra: { body: detailLines(null, today, { notPdf: true }), skip: null }, how: "keywords" };
+    if (!isPdf && verdict === "relevant") return { send: true, category: null, flag: null, extra: { body: detailLines(null, today, { notPdf: true, listDate: item.endDate }), skip: null }, how: "keywords" };
 
     if (this.broken) return { send: true, category: null, flag: "unchecked", how: "AI stopped" };
     if (this.calls >= this.cfg.maxAiCallsPerRun || this.usage.calls >= this.cfg.maxAiCallsPerDay)
@@ -124,7 +124,7 @@ export class Classifier {
       const entry = { data, scanned, noText };
       this.cache[item.link] = entry;
       const d = this.fromEntry(src, item, entry, verdict);
-      if (d.extra && noText && !isPdf) d.extra.body = detailLines(null, today, { notPdf: true });
+      if (d.extra?.body.length && noText && !isPdf) d.extra.body = detailLines(data, today, { notPdf: true, listDate: item.endDate });
       return d;
     } catch (e) {
       console.error(`  AI problem: ${e.message}`);

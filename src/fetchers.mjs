@@ -96,6 +96,15 @@ const htmlFromScriptStrings = text => {
   return parts.join("\n");
 };
 
+// "15/10/2026", "15-10-2026" or "15.10.2026" -> "2026-10-15" (null when it is not a real date)
+export function isoDate(s) {
+  const m = String(s ?? "").match(/(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})/);
+  if (!m) return null;
+  const iso = `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  const d = new Date(iso + "T00:00:00Z");
+  return isNaN(d) || d.toISOString().slice(0, 10) !== iso ? null : iso;
+}
+
 function fromHtml(src, text, finalUrl) {
   const $ = cheerio.load(src.fromScript ? htmlFromScriptStrings(text) : text);
   // "titleReplace": ["regex", "replacement"] (optional) tidies a row title, e.g. turns "... Publish Date -: 20-Apr-2026 ..." into "... (published 20-Apr-2026)"
@@ -118,7 +127,9 @@ function fromHtml(src, text, finalUrl) {
       const hay = title + " " + link;
       if (include && !include.test(hay)) return;
       if (exclude && exclude.test(hay)) return;
-      items.push({ title, link });
+      // "rowEndDate": selector of the row's own "end date" (e.g. 15/10/2026); used later if the PDF names no last date
+      const endDate = src.rowEndDate ? isoDate($row.find(src.rowEndDate).first().text()) : null;
+      items.push(endDate ? { title, link, endDate } : { title, link });
     });
     return items;
   }
@@ -126,7 +137,7 @@ function fromHtml(src, text, finalUrl) {
     const $el = $(el);
     const href = $el.attr("href");
     if (!href || href.startsWith("#") || /^(javascript|mailto|tel):/i.test(href)) return;
-    let title = tidyTitle(clean($el.text()) || clean($el.attr("title")));
+    let title = retitle(tidyTitle(clean($el.text()) || clean($el.attr("title"))));
     const linkText = title;
     if (title.length < minTitle) return;
     let link;
@@ -191,8 +202,27 @@ function fromJson(src, text) {
 }
 
 // Returns [{title, link}] in page order (newest first on most sites). Throws on any problem.
+// For pages that only show their list after JavaScript has run (FCI): opens the page in the Chrome (or Edge) that is installed on
+// this PC, headless, optionally clicks a button by its text ("clickText", e.g. "English"), and returns the finished page.
+// Only used when the source says "render": true. No login, no captcha: if a page ever shows a bot check, that source is not added.
+async function getRendered(src) {
+  const { chromium } = await import("playwright-core");
+  let browser, lastError;
+  for (const channel of src.browserChannel ? [src.browserChannel] : ["chrome", "msedge"]) {
+    try { browser = await chromium.launch({ channel, headless: true }); break; } catch (e) { lastError = e; }
+  }
+  if (!browser) throw new Error("No Chrome or Edge found for a rendered page: " + String(lastError?.message ?? "").split("\n")[0]);
+  try {
+    const page = await browser.newPage({ locale: "en-IN" });
+    await page.goto(src.url, { waitUntil: "networkidle", timeout: src.timeoutMs ?? 45000 });
+    if (src.clickText) { await page.locator(`text=${src.clickText}`).first().click({ timeout: 8000 }).catch(() => {}); await page.waitForTimeout(2500); }
+    if (src.waitFor) await page.waitForSelector(src.waitFor, { timeout: 15000 });
+    return { text: await page.content(), finalUrl: page.url() };
+  } finally { await browser.close(); }
+}
+
 export async function fetchItems(src) {
-  const { text, finalUrl } = await getText(src.url, src);
+  const { text, finalUrl } = src.render ? await getRendered(src) : await getText(src.url, src);
   const items = src.type === "json" ? fromJson(src, text) : fromHtml(src, text, finalUrl);
   // de-duplicate identical title+link within one page
   const seen = new Set();

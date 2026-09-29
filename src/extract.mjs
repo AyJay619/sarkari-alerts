@@ -120,14 +120,18 @@ export function dateStatus(last, today) {
   return { left, kind: left < 0 ? "passed" : left === 0 ? "today" : left <= 3 ? "soon" : "open" };
 }
 
-// data: parseReply() result; opts: { scanned, notPdf }. Returns the lines shown under the alert title.
-export function detailLines(data, today, { scanned = false, notPdf = false } = {}) {
+// data: parseReply() result; opts: { scanned, notPdf, listDate }. Returns the lines shown under the alert title.
+// listDate: the "end date" the site itself shows next to the notice; used only when the PDF names no last date.
+export function detailLines(data, today, { scanned = false, notPdf = false, listDate = null } = {}) {
+  data = data ?? { type: "fresh" };
+  let fromList = false;
+  if (!data.last && listDate) { data = { ...data, last: listDate }; fromList = true; }
   const lines = [];
-  if (notPdf) return ["⚠️ Dates not checked — the link is a web page, not a PDF"];
-  if (scanned) return ["📷 scanned — dates not found"];
+  if (!data.last && notPdf) return ["⚠️ Dates not checked — the link is a web page, not a PDF"];
+  if (!data.last && scanned) return ["📷 scanned — dates not found"];
   if (data.post) lines.push(`🧾 Post: ${data.post}`);
   if (data.vacancies) lines.push(`👥 Vacancies: ${data.vacancies.toLocaleString("en-IN")}`);
-  const dates = [data.start && `Start: ${fmtDate(data.start, today)}`, data.last && `Last date: ${fmtDate(data.last, today)}`].filter(Boolean);
+  const dates = [data.start && `Start: ${fmtDate(data.start, today)}`, data.last && `Last date: ${fmtDate(data.last, today)}${fromList ? " (site list)" : ""}`].filter(Boolean);
   if (dates.length) lines.push("📅 " + dates.join(" · "));
 
   if (!data.last) { lines.push("⚠️ Dates not found — check PDF"); return lines; }

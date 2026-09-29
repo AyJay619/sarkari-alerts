@@ -104,6 +104,8 @@ Open `sources.json` and copy one of the blocks. The simple kind (a page with a l
 - `jsonInPage` — *(optional, with `"type": "json"`)* the list is a JavaScript variable inside the page, e.g. `"glblMasterCareerDetails"` (Bank of Baroda). `include`/`exclude` also work on JSON titles.
 - `body` and `rscLine` — *(optional)* a raw request body for `POST`, and, for sites whose answer is a Next.js "server action" (`1:{...}` lines), which line holds the JSON (AIIMS). Such sites break if the site is rebuilt (the `Next-Action` id changes): you would then get the usual "failed 3 runs" warning.
 - `titleReplace` — *(optional)* `["regex", "replacement"]` to tidy long row titles (PNB).
+- `render` — *(optional)* `true` for a page whose list only appears after JavaScript has run (FCI): the page is opened in the Chrome (or Edge) already installed on this PC, headless, with no login. `clickText` (a button to click first, e.g. `"English"`), `waitFor` (a selector to wait for) and `browserChannel` (`"chrome"` or `"msedge"`) go with it. It is never used to get past a captcha or bot check.
+- `rowEndDate` — *(optional)* selector of the "end date" a list shows for each notice (DRDO). If the PDF itself names no last date, that date drives the ✅/⛔ line, labelled "(site list)".
 - `allowedHosts` — *(optional)* extra file hosts the **Send to agents** button may download from (BSF, EPFO).
 - `group`, `groupName`, `region` — *(optional)* sites that post similar notices are announced as one alert with the region shown (the 21 RRBs and the RRC zones).
 - `rowTitle` — normally the CSS selector of the title inside a table row; `"self"` uses the whole row text.
@@ -151,6 +153,20 @@ Chosen by words in the title (see `src/categorize.mjs`): **Answer Key**, **Admit
 - If Telegram itself fails, the notice is *not* marked as seen, so it is retried on the next run.
 - If the repo has no activity for 60 days GitHub may pause scheduled runs; the state commits normally keep it active,
   and you can always press **Run workflow**.
+
+## Sites not added yet (retry later)
+
+Each was tested from this PC. "Retry" means: look again in a few weeks, or when the site changes.
+
+| Site | Why it is not added |
+|---|---|
+| Army Agniveer / officer entry pages (`joinindianarmy.nic.in/AgnipathScheme.htm`, `/officers-notifications.htm`) | Both pages send you to a login page with a captcha. Not read. (The Army's public news page is covered by `army-notices`.) |
+| IOCL (`iocl.com`) | Behind a bot check (Sucuri: "JavaScript is required"). Not read. Retry if IOCL publishes notices on a page without it. |
+| DRDO CEPTAM (`drdo.gov.in/drdo/en/offerings/vacancies/ceptam`) | The page exists but shows "No Content" (an empty list would count as a failure). The general DRDO vacancies list is covered. Retry when CEPTAM posts. |
+| RRC Eastern, North Eastern, North Frontier, West Central, Kolkata Metro | No current recruitment-cell notice list found on their official sites (the NFR RRC page is from 2015; the NER and WCR pages had no notices). Retry. |
+| `www.indianoil.in`, `rrcecr.gov.in` (old RRC ECR address), `jointerritorialarmy.gov.in` | Did not answer from this PC (timeouts), even with `classicTls`. |
+
+Added on a "may break" basis: **AIIMS** (its internal request id changes if the site is rebuilt), **Air Force**, **AFCAT** and **RRC SCR** (the last one lives at an IP address, `203.153.33.92`, which is the address the official SCR site links to).
 
 ## Optional: AI check of new notices (costs money — OFF by default)
 
