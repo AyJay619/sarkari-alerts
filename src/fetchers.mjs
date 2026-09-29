@@ -243,6 +243,9 @@ async function getRendered(src) {
 export async function fetchItems(src) {
   const { text, finalUrl } = src.render ? await getRendered(src) : await getText(src.url, src);
   const items = src.type === "json" ? fromJson(src, text) : fromHtml(src, text, finalUrl);
+  // "extraUrls" (optional): more pages read the same way, for sites that split their notices over several pages (the railway zones).
+  // Any page failing fails the whole source, so a quietly missing page cannot hide new notices.
+  for (const u of src.extraUrls ?? []) { const more = await getText(u, src); items.push(...fromHtml(src, more.text, more.finalUrl)); }
   // de-duplicate identical title+link within one page
   const seen = new Set();
   const unique = items.filter(i => { const k = i.title + "|" + i.link; if (seen.has(k)) return false; seen.add(k); return true; });
