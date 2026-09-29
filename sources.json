@@ -2132,5 +2132,65 @@
     "exclude": "compassionate|qualified|roll no|unique id",
     "minTitle": 15,
     "limit": 400
+  },
+  {
+    "id": "cwc",
+    "name": "CWC Careers (e-portal)",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://www.cwceportal.com/cwc_careers.html",
+    "rowSelector": "li:has(a[href*='Guidelines'])",
+    "rowTitle": "self",
+    "rowLink": "a[href*='Guidelines']",
+    "titleReplace": [
+      "\\s*Click here to know more\\s*$",
+      ""
+    ],
+    "exclude": "compassionate|qualified|roll no|unique id",
+    "minTitle": 10,
+    "limit": 40
+  },
+  {
+    "id": "icar",
+    "name": "ICAR Vacancies",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://icar.org.in/en/vacancy",
+    "rowSelector": "tr:has(a[href])",
+    "rowTitle": "td:nth-child(2)",
+    "rowLink": "a[href]",
+    "allowEmpty": true,
+    "exclude": "compassionate|qualified|roll no|unique id",
+    "minTitle": 10,
+    "limit": 40
+  },
+  {
+    "id": "thdc",
+    "name": "THDC Job Opportunities",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://www.thdc.co.in/en/career/job-opportunities",
+    "extraUrls": [
+      "https://www.thdc.co.in/en/career/new-job-opening"
+    ],
+    "include": "sites/default/files/career",
+    "allowEmpty": true,
+    "exclude": "compassionate|qualified|roll no|unique id",
+    "limit": 40
+  },
+  {
+    "id": "nia",
+    "name": "NIA Recruitment Notices",
+    "runner": "india",
+    "level": "central",
+    "type": "html",
+    "url": "https://nia.gov.in/recruitment-notices",
+    "include": "secure-pdf|writereaddata/Portal/Recruitment|sites/default/files",
+    "allowEmpty": true,
+    "exclude": "compassionate|qualified|roll no|unique id",
+    "limit": 40
   }
 ]

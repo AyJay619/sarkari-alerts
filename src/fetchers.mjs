@@ -257,7 +257,8 @@ export async function fetchItems(src) {
   const seen = new Set();
   const unique = items.filter(i => { const k = i.title + "|" + i.link; if (seen.has(k)) return false; seen.add(k); return true; });
   const limited = unique.slice(0, src.limit ?? 40);
-  if (limited.length === 0) throw new Error("Page loaded but no notices were found (site layout may have changed)");
+  // "allowEmpty": a page that is legitimately empty between postings (THDC, NIA) is not a failure; real errors (network, HTTP, TLS) still are
+  if (limited.length === 0 && !src.allowEmpty) throw new Error("Page loaded but no notices were found (site layout may have changed)");
   return limited;
 }
 

@@ -17,6 +17,7 @@ const server = http.createServer((req, res) => {
       <ul><li><a href="/p1.pdf">Engagement of graduate apprentices [NEW]</a></li><li><a href="/p2.pdf">Old notice about engagement of staff</a></li></ul>`);
     if (req.url === "/h4") return send("text/html", `<div class="c"><h4>Recruitment of Economists</h4><ul><li><a href="/e1.pdf">Recruitment Notification</a></li></ul><h4>Apprentices 2026</h4><ul><li><a href="/e2.pdf">Apprenticeship Notification</a></li><li><a href="/e3.pdf">List of shortlisted candidates</a></li></ul></div><a href="/nav.pdf">Menu item outside</a>`);
     if (req.url === "/generic") return send("text/html", `<ul><li><a href="/files/2026-09-Advt%20Dir%20Mktg.pdf">Click Here</a></li><li><a href="/files/Secretarial_advertisement.pdf">Click Here</a></li></ul>`);
+    if (req.url === "/empty") return send("text/html", `<ul><li>nothing posted</li></ul>`);
     if (req.url === "/pageA") return send("text/html", `<ul><li><a href="/a1.pdf">Notice from page A about engagement</a></li></ul>`);
     if (req.url === "/pageB") return send("text/html", `<ul><li><a href="/b1.pdf">Notice from page B about engagement</a></li></ul>`);
     res.statusCode = 404; res.end("no");
@@ -49,6 +50,12 @@ check("titleFromHref names a 'Click Here' link after its file", items.map(i => i
 items = await fetchItems({ type: "html", url: B + "/pageA", extraUrls: [B + "/pageB"], selector: "li a", minTitle: 10 });
 check("extraUrls merges several pages into one list", items.map(i => i.link).join() === B + "/a1.pdf," + B + "/b1.pdf", JSON.stringify(items.map(i => i.link)));
 try { await fetchItems({ type: "html", url: B + "/pageA", extraUrls: [B + "/missing"], selector: "li a", minTitle: 10 }); check("a failing extra page fails the whole source", false); } catch (e) { check("a failing extra page fails the whole source", /404/.test(e.message)); }
+
+// an empty list: a failure normally, fine with allowEmpty; real errors still fail either way
+try { await fetchItems({ type: "html", url: B + "/empty", include: "[.]pdf" }); check("an empty list is a failure by default", false); } catch (e) { check("an empty list is a failure by default", /no notices were found/.test(e.message)); }
+items = await fetchItems({ type: "html", url: B + "/empty", include: "[.]pdf", allowEmpty: true });
+check("allowEmpty: an empty list is fine", Array.isArray(items) && items.length === 0);
+try { await fetchItems({ type: "html", url: B + "/missing", allowEmpty: true }); check("allowEmpty does not hide real errors", false); } catch (e) { check("allowEmpty does not hide real errors", /404/.test(e.message)); }
 
 // the site's own end date per list entry
 check("isoDate reads three formats and rejects impossible dates", isoDate("15/10/2026") === "2026-10-15" && isoDate(" 5-1-2027 ") === "2027-01-05" && isoDate("31.02.2026") === null && isoDate("soon") === null);
