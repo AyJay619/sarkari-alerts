@@ -273,4 +273,6 @@ if (SAVES_STATE) {
   fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
   fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 1) + "\n");
 }
-process.exit(telegramProblem ? 1 : 0);
+// (not process.exit(): on Windows, exiting while an HTTP connection is still closing can abort Node with a libuv assertion and a
+// wrong exit code 3221226505. Setting exitCode lets the last connections close, then the process ends by itself.)
+process.exitCode = telegramProblem ? 1 : 0;

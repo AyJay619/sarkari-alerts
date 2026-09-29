@@ -3,7 +3,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { categorize } from "./categorize.mjs";
-import { CATEGORIES, NEEDS_DATES, buildPrompt, detailLines, parseReply, pdfSnippet, todayIST } from "./extract.mjs";
+import { CATEGORIES, NEEDS_DATES, buildPrompt, detailLines, isVacancyUpdateTitle, parseReply, pdfSnippet, todayIST } from "./extract.mjs";
+
+// Bump when the prompt or the reading of answers changes: older cached answers are then asked again instead of trusted.
+export const CACHE_VERSION = 2;
 
 const readJson = f => JSON.parse(fs.readFileSync(new URL("../" + f, import.meta.url), "utf8"));
 export const loadConfig = () => readJson("config.json");
@@ -61,13 +64,15 @@ export class Classifier {
   }
 
   // One question to the AI. Returns its raw answer text.
-  async ask(title, text) {
-    const prompt = buildPrompt({ title, text, today: todayIST(this.now()), rules: this.rules });
+  // pdfBase64 (optional): the notice's first pages as a PDF, sent to the AI as a document to read visually (for PDFs that are only pictures)
+  async ask(title, text, pdfBase64 = null) {
+    const prompt = buildPrompt({ title, text, today: todayIST(this.now()), rules: this.rules, visual: !!pdfBase64 });
+    const content = pdfBase64 ? [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: pdfBase64 } }, { type: "text", text: prompt }] : prompt;
     const res = await fetch((process.env.ANTHROPIC_BASE_URL ?? "https://api.anthropic.com") + "/v1/messages", {
       method: "POST",
       headers: { "x-api-key": this.apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: this.cfg.model, max_tokens: this.cfg.maxTokens, messages: [{ role: "user", content: prompt }] }),
-      signal: AbortSignal.timeout(30000),
+      body: JSON.stringify({ model: this.cfg.model, max_tokens: this.cfg.maxTokens, messages: [{ role: "user", content }] }),
+      signal: AbortSignal.timeout(pdfBase64 ? 90000 : 30000),
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw Object.assign(new Error(`API ${res.status}: ${body.error?.message ?? "unknown"}`), { status: res.status });
@@ -85,11 +90,15 @@ export class Classifier {
       this.log(src, item, "not-relevant", "AI said Not Relevant");
       return { send: false, how: "AI" };
     }
-    const category = verdict === "relevant" ? categorize(item.title) : data.category;
+    let category = verdict === "relevant" ? categorize(item.title) : data.category;
+    // a cancellation, or an updated/revised vacancy table or annexure of an existing recruitment, is a Correction (never a Job)
+    const forceCorrection = data.cancelled || (category === "Job" && isVacancyUpdateTitle(item.title));
+    if (forceCorrection) category = "Correction";
     const wantsDates = NEEDS_DATES.has(category);
-    const extra = { body: wantsDates ? detailLines(data, today, { scanned, listDate: item.endDate }) : [], skip: data.verdict === "skip" ? (data.rule ?? "no rule named") : null };
+    const skipRule = data.cancelled ? null : data.verdict === "skip" ? (data.rule ?? "no rule named") : null;
+    const extra = { body: wantsDates ? detailLines(data, today, { scanned, listDate: item.endDate }) : [], skip: skipRule };
     if (extra.skip) this.log(src, item, "ai-skip-marked", "AI says skip: " + extra.skip);
-    return { send: true, category: verdict === "relevant" ? null : category, flag: scanned && !wantsDates ? "scanned" : null, extra, how: noText ? "AI (title only)" : "AI" };
+    return { send: true, category: forceCorrection ? "Correction" : verdict === "relevant" ? null : category, flag: scanned && !wantsDates ? "scanned" : null, extra, how: noText ? "AI (title only)" : entry.visual ? "AI (read visually)" : "AI" };
   }
 
   // Returns { send, category (null = keep the keyword category), flag (null | "unchecked" | "capped" | "limit" | "scanned"),
@@ -108,7 +117,7 @@ export class Classifier {
     const today = todayIST(this.now());
 
     const cached = this.cache[item.link];
-    if (cached && typeof cached === "object" && cached.data) return this.fromEntry(src, item, cached, verdict);
+    if (cached && typeof cached === "object" && cached.data && cached.v === CACHE_VERSION) return this.fromEntry(src, item, cached, verdict);
     if (typeof cached === "string" && !NEEDS_DATES.has(cached)) {   // an older answer (category only) that needs no dates
       if (cached === "Not Relevant") this.log(src, item, "not-relevant", "cached AI answer");
       return { send: cached !== "Not Relevant", category: cached, flag: null, how: "cache" };
@@ -121,17 +130,34 @@ export class Classifier {
     if (this.calls >= this.cfg.maxAiCallsPerRun || this.usage.calls >= this.cfg.maxAiCallsPerDay)
       return { send: true, category: null, flag: verdict === "relevant" ? "limit" : "capped", how: "call limit reached" };
 
-    let text = "", scanned = false, noText = false;
+    let text = "", scanned = false, noText = false, pdfBase64 = null;
     if (isPdf) {
-      try { ({ text, scanned } = await this.readPdf(item.link, this.cfg, src)); }
+      try { ({ text, scanned, pdfBase64 = null } = await this.readPdf(item.link, this.cfg, src)); }
       catch (e) { noText = true; console.log(`  (PDF text unavailable for "${item.title.slice(0, 50)}": ${e.message}; using the title only)`); }
     } else noText = true;
 
     this.calls++; this.usage.calls++;
     try {
-      const data = parseReply(await this.ask(item.title, text), today);
-      if (!text) Object.assign(data, { start: null, last: null, oldLast: null });   // no document text: any date would be a guess
-      const entry = { data, scanned, noText };
+      let raw, visual = false;
+      if (pdfBase64 && !text) {
+        // no real text layer (a scan / pictures): let the AI READ the first pages visually. Costs more tokens, counts in the daily limit.
+        const in0 = this.inTokens, out0 = this.outTokens;
+        try {
+          raw = await this.ask(item.title, "", pdfBase64); visual = true;
+          const c = this.cfg.pricePerMillionTokens, dIn = this.inTokens - in0, dOut = this.outTokens - out0;
+          this.usage.visual = (this.usage.visual ?? 0) + 1; this.visualReads = (this.visualReads ?? 0) + 1;
+          this.log(src, item, "visual-read", `PDF has no real text: first pages read visually; tokens in ${dIn}, out ${dOut}, approx $${((dIn * c.input + dOut * c.output) / 1e6).toFixed(5)}`);
+        } catch (e) {
+          if ([401, 402, 403, 429].includes(e.status)) throw e;
+          console.log(`  (visual reading failed: ${e.message}; using the title only)`);   // -> "📷 scanned — dates not found"
+          this.usage.calls++;   // the title-only question below is a second call
+        }
+      }
+      if (raw === undefined) raw = await this.ask(item.title, text);
+      const data = parseReply(raw, today, { rules: this.rules, text, visual });
+      if (!text && !visual) Object.assign(data, { start: null, last: null, oldLast: null });   // no document text: any date would be a guess
+      if (visual) scanned = !data.last;   // read visually: only "scanned — dates not found" when it really found no last date
+      const entry = { v: CACHE_VERSION, data, scanned, noText, ...(visual ? { visual: true } : {}) };
       this.cache[item.link] = entry;
       const d = this.fromEntry(src, item, entry, verdict);
       if (d.extra?.body.length && noText && !isPdf) d.extra.body = detailLines(data, today, { notPdf: true, listDate: item.endDate });
@@ -145,7 +171,7 @@ export class Classifier {
   }
 
   summary() {
-    return `AI calls: ${this.calls}/${this.cfg.maxAiCallsPerRun} (today ${this.usage.calls}/${this.cfg.maxAiCallsPerDay}) | tokens in ${this.inTokens}, out ${this.outTokens} | approx cost $${this.cost.toFixed(5)}` +
+    return `AI calls: ${this.calls}/${this.cfg.maxAiCallsPerRun} (today ${this.usage.calls}/${this.cfg.maxAiCallsPerDay}) | tokens in ${this.inTokens}, out ${this.outTokens} | approx cost $${this.cost.toFixed(5)}` + (this.visualReads ? ` | visual PDF reads: ${this.visualReads}` : "") +
       (this.broken ? ` | AI stopped: ${this.broken}` : "");
   }
 
