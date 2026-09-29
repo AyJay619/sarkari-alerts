@@ -22,6 +22,12 @@ export function keywordVerdict(title) {
 
 export const NO_FILE_LINE = "📄 PDF not read (site doesn't allow automated downloads)";
 
+// A "noFileDownload" source (robots.txt forbids the files): title and link only, the PDF is never opened. Works with the AI off, too.
+export function noFileDecision(item, force = false) {
+  if (!force && keywordVerdict(item.title) === "irrelevant") return { send: false, how: "keywords" };
+  return { send: true, category: null, flag: null, extra: { body: [NO_FILE_LINE], skip: null }, how: "keywords (file not read)" };
+}
+
 export class Classifier {
   // cacheFile / logFile: where the cache and the review log are kept (null = never write them; used by test mode)
   constructor(cfg, { apiKey, cacheFile = null, logFile = null, force = false, mergeCacheFrom = null, rules = null, now = Date.now, readPdf = pdfSnippet } = {}) {
@@ -93,10 +99,7 @@ export class Classifier {
     const verdict = keywordVerdict(item.title);
     const keywordCategory = categorize(item.title);
     // "noFileDownload" sources (robots.txt forbids the files): never open the PDF, no AI read of it. Title and link only.
-    if (src.noFileDownload) {
-      if (!this.force && verdict === "irrelevant") { this.log(src, item, "skipped", "keyword: clearly irrelevant"); return { send: false, how: "keywords" }; }
-      return { send: true, category: null, flag: null, extra: { body: [NO_FILE_LINE], skip: null }, how: "keywords (file not read)" };
-    }
+    if (src.noFileDownload) return noFileDecision(item, this.force);
     if (!this.force) {
       if (verdict === "irrelevant") { this.log(src, item, "skipped", "keyword: clearly irrelevant"); return { send: false, how: "keywords" }; }
       if (verdict === "relevant" && !NEEDS_DATES.has(keywordCategory)) return { send: true, category: null, flag: null, how: "keywords" };

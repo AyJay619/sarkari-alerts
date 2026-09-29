@@ -6,7 +6,7 @@ import { emptyReminder } from "./emptycheck.mjs";
 import { categorize } from "./categorize.mjs";
 import { formatItem, formatGroup, makeSender, apiBase } from "./telegram.mjs";
 import { buildPlan, levelOf } from "./order.mjs";
-import { Classifier, keywordVerdict, loadConfig } from "./classify.mjs";
+import { Classifier, keywordVerdict, loadConfig, noFileDecision } from "./classify.mjs";
 
 const args = process.argv.slice(2);
 const flag = n => args.includes(n);
@@ -182,7 +182,7 @@ for (const src of sources) {
   const toSend = fresh.slice().reverse();
   const skipped = Math.max(0, toSend.length - MAX_ALERTS_PER_SOURCE);
   for (const i of toSend.slice(skipped)) {
-    const d = ai ? await ai.decide(src, i) : NO_AI;
+    const d = src.noFileDownload ? noFileDecision(i) : ai ? await ai.decide(src, i) : NO_AI;   // noFileDownload: never open the file, AI on or off
     if (!d.send) { st.seen[keyOf(i)] = now; continue; }   // "Not Relevant": not sent, written to the review log
     const category = d.category ?? categorize(i.title), level = levelOf(src);
     // marked as seen only once it is really sent; if sending fails it is retried next run

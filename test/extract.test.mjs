@@ -4,7 +4,7 @@
 // Run:  node test/extract.test.mjs
 import http from "node:http";
 import { buildSnippet, dateStatus, detailLines, parseReply, todayIST } from "../src/extract.mjs";
-import { Classifier, loadConfig } from "../src/classify.mjs";
+import { Classifier, loadConfig, noFileDecision } from "../src/classify.mjs";
 import { formatItem } from "../src/telegram.mjs";
 import { parseAlert } from "../src/inbox.mjs";
 
@@ -179,6 +179,7 @@ check("listener still reads title/source/category/link", parsed?.title === SAMPL
   const nalertText = formatItem("NALCO Recruitment Portal", "Job", "Recruitment of X", "https://mudira.nalcoindia.co.in/iorms/Uploaded_Data/Notices/a.pdf", null, "central", dn.extra);
   check("noFileDownload: the alert shows the line under the title, with the link", nalertText.includes("Recruitment of X\n\n📄 PDF not read (site doesn't allow automated downloads)\n\n🔗 https://mudira"), "\n" + nalertText);
   const dn2 = await ai4.decide(nsrc, { title: "Tender for supply of stationery", link: "https://mudira.nalcoindia.co.in/iorms/Uploaded_Data/Notices/b.pdf" });
+  check("noFileDownload: works without any AI (what the monitor calls)", noFileDecision({ title: "Recruitment of X", link: "https://a/b.pdf" }).extra.body[0].startsWith("📄 PDF not read"));
   check("noFileDownload: clearly irrelevant titles are still skipped", dn2.send === false); }
 check("listener also reads the details lines", parsed.details.includes("✅ Open till 15 Oct"));
 const skipParsed = parseAlert(skipAlert.replace(/<\/?b>/g, ""));
