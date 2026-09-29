@@ -13,12 +13,15 @@ const HEADERS = {
 // sources.json lists PEM files (in certs/) that are trusted on top of the normal list. Checking stays ON.
 // "timeoutMs" (optional, per source) allows slow sites longer, both to connect and to answer. Other sources keep the defaults.
 const agents = new Map();
-function agentFor(extraCerts = [], timeoutMs) {
-  const key = extraCerts.join("|") + "@" + (timeoutMs ?? "");
+// "classicTls": true for sites whose (old) firewall drops Node's modern TLS hello (it offers a post-quantum key that some servers
+// cannot read, so the connection just hangs until it times out, while a normal browser or curl connects at once).
+function agentFor(extraCerts = [], timeoutMs, classicTls = false) {
+  const key = extraCerts.join("|") + "@" + (timeoutMs ?? "") + (classicTls ? "@classic" : "");
   if (!agents.has(key)) {
     const connect = {};
     if (extraCerts.length) connect.ca = [...tls.rootCertificates, ...extraCerts.map(f => fs.readFileSync(new URL("../" + f, import.meta.url), "utf8"))];
     if (timeoutMs) connect.timeout = timeoutMs;
+    if (classicTls) connect.ecdhCurve = "X25519:prime256v1:secp384r1";
     const opts = { connect };
     if (timeoutMs) Object.assign(opts, { headersTimeout: timeoutMs, bodyTimeout: timeoutMs });
     agents.set(key, new Agent(opts));
@@ -29,10 +32,10 @@ function agentFor(extraCerts = [], timeoutMs) {
 // One HTTP request, honouring the source's extraCerts / timeoutMs.
 // Optional per source: "method": "POST" + "form": {...} for the few sites whose list comes from a POST request (e.g. HAL),
 // and "headers": {...} to change a header for that site only (HAL refuses the normal Accept header on POST).
-function request(url, { extraCerts, timeoutMs, method, form, headers } = {}, redirect = "follow") {
+function request(url, { extraCerts, timeoutMs, classicTls, method, form, body, headers } = {}, redirect = "follow") {
   const opts = { headers: { ...HEADERS, ...headers }, signal: AbortSignal.timeout(timeoutMs ?? 30000), redirect };
-  if (method === "POST") Object.assign(opts, { method, body: new URLSearchParams(form ?? {}) });
-  return extraCerts?.length || timeoutMs ? undiciFetch(url, { ...opts, dispatcher: agentFor(extraCerts, timeoutMs) }) : fetch(url, opts);
+  if (method === "POST") Object.assign(opts, { method, body: body ?? new URLSearchParams(form ?? {}) });   // "body": a raw text body instead of "form" (AIIMS)
+  return extraCerts?.length || timeoutMs || classicTls ? undiciFetch(url, { ...opts, dispatcher: agentFor(extraCerts, timeoutMs, classicTls) }) : fetch(url, opts);
 }
 const explain = (e, started, url) => {
   const cause = e.cause ? ` | cause: ${[e.cause.code, e.cause.message].filter(Boolean).join(" ")}` : "";
@@ -78,6 +81,7 @@ export async function getBuffer(url, { allow = () => {}, optsFor = () => ({}), m
 const clean = s => String(s ?? "").replace(/\s+/g, " ").trim();
 // Removes leftovers like "Read More" or "(1.68 MB)" / "PDF size:(251 KB)" so titles read cleanly.
 const tidyTitle = t => t
+  .replace(/\s*\[\s*new\s*\]\s*/gi, " ")   // a "[NEW]" badge comes and goes, which would make an old notice look new
   .replace(/\s*\(\s*[\d.,]+\s*[KM]B\s*\|.*$/i, "")   // "( 1.72 MB | PDF | open in Adobe Reader )"
   .replace(/\s*(read more|click here|download)\W*$/i, "")
   .replace(/\s*(pdf\s*)?(size:)?\s*\(\s*[\d.,]+\s*[KM]B\s*\)\s*[.\d\/]*\s*$/i, "")
@@ -94,6 +98,8 @@ const htmlFromScriptStrings = text => {
 
 function fromHtml(src, text, finalUrl) {
   const $ = cheerio.load(src.fromScript ? htmlFromScriptStrings(text) : text);
+  // "titleReplace": ["regex", "replacement"] (optional) tidies a row title, e.g. turns "... Publish Date -: 20-Apr-2026 ..." into "... (published 20-Apr-2026)"
+  const retitle = t => (src.titleReplace ? t.replace(new RegExp(src.titleReplace[0], "i"), src.titleReplace[1]).trim() : t);
   const include = src.include ? new RegExp(src.include, "i") : null;
   const exclude = src.exclude ? new RegExp(src.exclude, "i") : null;
   const minTitle = src.minTitle ?? 12;
@@ -103,7 +109,7 @@ function fromHtml(src, text, finalUrl) {
     $(src.rowSelector).each((_, row) => {
       const $row = $(row);
       // rowTitle "self" = the whole row text (for rows that are just a few plain cells, e.g. an admit-card schedule)
-      const title = tidyTitle(clean(src.rowTitle === "self" ? $row.text() : src.rowTitle ? $row.find(src.rowTitle).first().text() : $row.find("td").first().text()));
+      const title = retitle(tidyTitle(clean(src.rowTitle === "self" ? $row.text() : src.rowTitle ? $row.find(src.rowTitle).first().text() : $row.find("td").first().text())));
       const href = $row.find(src.rowLink || "a[href]").first().attr("href");
       if (title.length < minTitle) return;
       let link = finalUrl;
@@ -152,8 +158,28 @@ function fromHtml(src, text, finalUrl) {
   return items;
 }
 
+// For pages that carry their list as a JavaScript variable (e.g. `var glblMasterCareerDetails = [...]`, Bank of Baroda):
+// returns the JSON text of that variable's value (found by matching brackets, so strings containing brackets are fine).
+function jsonFromPageVariable(text, name) {
+  const m = new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*=\\s*").exec(text);
+  if (!m) throw new Error(`Page loaded but the variable '${name}' was not found (site layout may have changed)`);
+  const start = m.index + m[0].length, open = text[start], close = open === "[" ? "]" : "}";
+  let depth = 0, inString = false;
+  for (let i = start; i < text.length; i++) {
+    const c = text[i];
+    if (inString) { if (c === "\\") i++; else if (c === '"') inString = false; }
+    else if (c === '"') inString = true;
+    else if (c === open) depth++;
+    else if (c === close && --depth === 0) return text.slice(start, i + 1);
+  }
+  throw new Error(`Variable '${name}' is not complete JSON`);
+}
+
 function fromJson(src, text) {
-  const data = JSON.parse(text);
+  // "rscLine": the answer is a Next.js server-action reply, several "N:{json}" lines; take the JSON of line N (AIIMS)
+  if (src.rscLine) text = text.split("\n").find(l => l.startsWith(src.rscLine + ":"))?.slice(src.rscLine.length + 1) ?? "";
+  const data = JSON.parse(src.jsonInPage ? jsonFromPageVariable(text, src.jsonInPage) : text);
+  const include = src.include ? new RegExp(src.include, "i") : null, exclude = src.exclude ? new RegExp(src.exclude, "i") : null;
   const list = src.itemsPath ? pick(data, src.itemsPath) : data;
   if (!Array.isArray(list)) throw new Error("JSON: items list not found at '" + src.itemsPath + "'");
   return list.map(row => {
@@ -161,7 +187,7 @@ function fromJson(src, text) {
     let link = src.linkField ? pick(row, src.linkField) : "";
     link = link ? (src.linkPrefix || "") + String(link).replaceAll("\\", "/") : src.fallbackLink || src.url;
     return { title, link };
-  }).filter(i => i.title);
+  }).filter(i => i.title && (!include || include.test(i.title)) && !(exclude && exclude.test(i.title)));   // include / exclude work on the title, as for html sources
 }
 
 // Returns [{title, link}] in page order (newest first on most sites). Throws on any problem.

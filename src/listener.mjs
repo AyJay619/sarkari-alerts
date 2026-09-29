@@ -96,7 +96,7 @@ async function handleTap(cb) {
       allow: refuse,
       optsFor: url => {
         const s = sourceForHost(new URL(url).hostname, sources);
-        return { extraCerts: s?.extraCerts, timeoutMs: s?.timeoutMs };
+        return { extraCerts: s?.extraCerts, timeoutMs: s?.timeoutMs, classicTls: s?.classicTls };
       },
     });
     const isPdf = buf.subarray(0, 1024).includes("%PDF");

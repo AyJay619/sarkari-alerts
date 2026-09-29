@@ -100,6 +100,12 @@ Open `sources.json` and copy one of the blocks. The simple kind (a page with a l
 - `titleTemplate` — *(optional)* builds a clearer title from the link text and the link's web-address parameters, e.g. `"RRB Patna CEN {cennum}: {text}"`.
 - `pageLink` — *(optional)* `true` if the site's file links change on every visit (NTPC does): every notice then points to the page itself.
 - `method` / `form` / `headers` — *(optional)* for the rare site whose list comes from a POST request (HAL does): `"method": "POST", "form": {"lang": "en"}`. `headers` changes a header for that site only.
+- `classicTls` — *(optional)* `true` for a site that hangs until it times out on the PC but opens fine in a browser (an old firewall that cannot read the modern security handshake Node offers). Checking stays on.
+- `jsonInPage` — *(optional, with `"type": "json"`)* the list is a JavaScript variable inside the page, e.g. `"glblMasterCareerDetails"` (Bank of Baroda). `include`/`exclude` also work on JSON titles.
+- `body` and `rscLine` — *(optional)* a raw request body for `POST`, and, for sites whose answer is a Next.js "server action" (`1:{...}` lines), which line holds the JSON (AIIMS). Such sites break if the site is rebuilt (the `Next-Action` id changes): you would then get the usual "failed 3 runs" warning.
+- `titleReplace` — *(optional)* `["regex", "replacement"]` to tidy long row titles (PNB).
+- `allowedHosts` — *(optional)* extra file hosts the **Send to agents** button may download from (BSF, EPFO).
+- `group`, `groupName`, `region` — *(optional)* sites that post similar notices are announced as one alert with the region shown (the 21 RRBs and the RRC zones).
 - `rowTitle` — normally the CSS selector of the title inside a table row; `"self"` uses the whole row text.
 - `contextClosest` / `contextFind` / `contextAttr` — *(optional)* for pages where a link's text is just "Result" or "English": puts the heading of the surrounding box in front of it (PowerGrid, BPCL). `contextAttr` takes that heading from an attribute instead of its text, for headings whose wording changes (SBI).
 - `rebaseline` — *(optional)* `true` on an existing site whose `url`/filter you have just changed: its first run afterwards silently records everything on the page as "seen".
