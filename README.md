@@ -104,6 +104,8 @@ Open `sources.json` and copy one of the blocks. The simple kind (a page with a l
 - `jsonInPage` — *(optional, with `"type": "json"`)* the list is a JavaScript variable inside the page, e.g. `"glblMasterCareerDetails"` (Bank of Baroda). `include`/`exclude` also work on JSON titles.
 - `body` and `rscLine` — *(optional)* a raw request body for `POST`, and, for sites whose answer is a Next.js "server action" (`1:{...}` lines), which line holds the JSON (AIIMS). Such sites break if the site is rebuilt (the `Next-Action` id changes): you would then get the usual "failed 3 runs" warning.
 - `titleReplace` — *(optional)* `["regex", "replacement"]` to tidy long row titles (PNB).
+- `titleFromHref` — *(optional)* `true` for a page where every link just says "Detailed Advertisement" or "Click Here": the title is made from the file name in the link instead (IDBI, RCF, BSNL).
+- `contextPrev` — *(optional)* a heading tag such as `"h4"`: for pages laid out as a heading followed by a list of links, the nearest heading above the link is put in front of the link text (Bank of Maharashtra).
 - `extraUrls` — *(optional)* more pages read with the same settings and merged into one list. Used for the railway zone sites, which split their notices over several pages (CEN, apprentices, sports, scouts & guides). A section-list source ("new sections") watches the zone's RRC menu so a brand-new CEN section is announced too. If any page fails, the whole source counts as failed.
 - `render` — *(optional)* `true` for a page whose list only appears after JavaScript has run (FCI): the page is opened headless, with no login, in Playwright's own pinned Chromium (falling back to installed Chrome, then Edge; the one used is logged). See "Reinstall the pinned browser" below. `clickText` (a button to click first, e.g. `"English"`), `waitFor` (a selector to wait for) and `browserChannel` (`"chrome"` or `"msedge"`) go with it. It is never used to get past a captcha or bot check.
 - `rowEndDate` — *(optional)* selector of the "end date" a list shows for each notice (DRDO). If the PDF itself names no last date, that date drives the ✅/⛔ line, labelled "(site list)".
@@ -155,6 +157,17 @@ Chosen by words in the title (see `src/categorize.mjs`): **Answer Key**, **Admit
 - If the repo has no activity for 60 days GitHub may pause scheduled runs; the state commits normally keep it active,
   and you can always press **Run workflow**.
 
+## Manual check
+
+These are not read by the monitor. Look at them yourself now and then:
+
+| Site | Why it is manual |
+|---|---|
+| IOCL (`iocl.com`) | Behind a bot check (Sucuri: "JavaScript is required"). Not bypassed. |
+| Army Agniveer and officer entries (`joinindianarmy.nic.in`) | The pages send you to a login with a captcha. Not bypassed. (The Army's public news page is covered by `army-notices`.) |
+| RRC Eastern Railway (`er.indianrailways.gov.in`) | To do later: the zone site has no recruitment-cell notice list (only Howrah-division staff notices). |
+| Metro Railway Kolkata (`mtp.indianrailways.gov.in`) | To do later: the site has no recruitment section. |
+
 ## Sites not added yet (retry later)
 
 Each was tested from this PC. "Retry" means: look again in a few weeks, or when the site changes.
@@ -165,6 +178,13 @@ Each was tested from this PC. "Retry" means: look again in a few weeks, or when 
 | IOCL (`iocl.com`) | Behind a bot check (Sucuri: "JavaScript is required"). Not read. Retry if IOCL publishes notices on a page without it. |
 | DRDO CEPTAM (`drdo.gov.in/drdo/en/offerings/vacancies/ceptam`) | The page exists but shows "No Content" (an empty list would count as a failure). The general DRDO vacancies list is covered. Retry when CEPTAM posts. |
 | RRC / zonal notices for Eastern Railway (`er.indianrailways.gov.in`) and Kolkata Metro (`mtp.indianrailways.gov.in`) | Their sites have no recruitment-cell notice list: ER only has Howrah-division staff notices (TBT, hospital tenders) and a 2018 Traffic Apprentice page; Metro has no recruitment section. Retry. |
+| Bank of India (`bankofindia.bank.in/career`, `bankofindia.co.in/career`) | Answers 403 and shows a reCAPTCHA "Checking your browser" page. Not bypassed. |
+| IRDAI (`irdai.gov.in/notifications/vacancies`), MRPL (`mrpl.co.in/careers`) | A firewall blocks automated visitors ("The request is blocked" / a 503 bot-check redirect). Not bypassed. |
+| DVC (`dvc.gov.in/cms-web/recruitment-notices`) | Its robots.txt allows only Google and Bing and says `User-agent: * Disallow: /`. Respected. |
+| NFL (`nationalfertilizers.com`) | Its robots.txt says `User-agent: * Disallow: /`. Respected. |
+| THDC (`thdc.co.in/en/career/job-opportunities`, `/new-job-opening`), NIA (`nia.gov.in/recruitment-notices`, `/recruitment`) | The pages work but list nothing right now (an empty list would count as a failure). Retry when they post. |
+| NLC India (`nlcindia.in/website/en/careers/jobs/currentopenings.html`), CWC (`cewacor.nic.in`), ASRB (`asrb.org.in`), NIMHANS notices (`notifications.nimhans.ac.in`) | The site returns a server error or times out, even with the pinned Chromium. Retry. |
+| NALCO (`nalcoindia.com/career/careers/`, `/Career/`), EIL (`engineersindia.com/applying-to-eil`), HSL (`hslvizag.in/content/200_1_careers.aspx` is a 404; `hslvizag.in/en/`), Cochin Shipyard (`cochinshipyard.in/Careers`), MTNL (`mtnl.in`), ICAR (`icar.org.in/en/vacancy`, `/en/taxonomy/term/36`), NIMHANS (`nimhans.ac.in/announcements/nimhans-recruitment-and-notifications-announcement`), BMRCL (`bmrc.co.in/career/`), MMRCL (`corporate.mmrcl.com/en/careers` is a 404; `recruitment.mmrcl.com/en`), Kochi Metro (`corporate.kochimetro.org/careers`) | No notice list a monitor can read: the page shows no links to notices (the list comes from a login or a script), or it is a stub/404. Retry. |
 | `www.indianoil.in`, `rrcecr.gov.in` (old RRC ECR address), `jointerritorialarmy.gov.in` | Did not answer from this PC (timeouts), even with `classicTls`. |
 
 Added on a "may break" basis: **AIIMS** (its internal request id changes if the site is rebuilt), **Air Force**, **AFCAT** and **RRC SCR** (the last one lives at an IP address, `203.153.33.92`, which is the address the official SCR site links to).

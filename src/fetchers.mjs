@@ -45,7 +45,7 @@ const explain = (e, started, url) => {
 };
 
 // One attempt, with a detailed error message so the GitHub log shows exactly what went wrong.
-async function getText(url, srcOpts = {}) {
+export async function getText(url, srcOpts = {}) {
   const started = Date.now();
   try {
     const res = await request(url, srcOpts);
@@ -141,13 +141,20 @@ function fromHtml(src, text, finalUrl) {
     if (!href || href.startsWith("#") || /^(javascript|mailto|tel):/i.test(href)) return;
     let title = retitle(tidyTitle(clean($el.text()) || clean($el.attr("title"))));
     const linkText = title;
-    if (title.length < minTitle) return;
+    if (title.length < minTitle && !src.titleFromHref) return;
     let link;
     try { link = new URL(href.trim(), finalUrl).href; } catch { return; }
+    // "titleFromHref": for pages whose links all read "Detailed Advertisement" / "Click here": use the file name in the link instead (IDBI)
+    if (src.titleFromHref) title = decodeURIComponent(link.split("?")[0].split("/").pop()).replace(/[.][a-z0-9]{2,4}$/i, "").replace(/[-_+]+/g, " ").trim();
     // "contextClosest" + "contextFind" (optional): put the heading of the surrounding box in front of a bare link text,
     // e.g. "Recruitment of Officer Trainee (Law) 2025: Notice 5 - Shortlisted for interview".
     // "contextAttr" (optional) uses that element's attribute (e.g. an advertisement number) instead of its text,
     // for headings whose wording changes over time (which would make old notices look new).
+    // "contextPrev" (optional): the nearest heading BEFORE the list this link sits in (e.g. "h4"), for pages laid out as <h4>Post</h4><ul><li><a>Notification</a>... (Bank of Maharashtra)
+    if (src.contextPrev) {
+      const head = clean($el.closest("ul,ol,table").prevAll(src.contextPrev).first().text());
+      if (head) title = `${head}: ${title}`;
+    }
     if (src.contextClosest) {
       const $ctx = $el.closest(src.contextClosest).find(src.contextFind || "h4").first();
       const ctx = clean(src.contextAttr ? $ctx.attr(src.contextAttr) : $ctx.text()).replace(/^\d+\.\s+/, "");   // drop list numbers ("22. ..."): they shift when the list grows

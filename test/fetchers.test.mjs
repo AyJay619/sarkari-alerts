@@ -15,6 +15,10 @@ const server = http.createServer((req, res) => {
     if (req.url === "/js") return send("text/html", `<button id="b">English</button><div id="out"></div><script>setTimeout(() => { document.getElementById("b").onclick = () => { document.getElementById("out").innerHTML = '<div class="box"><h2>Built by JavaScript after a click</h2><a href="/f.pdf">file</a></div>'; }; }, 200);</script>`);
     if (req.url === "/rows") return send("text/html", `<table><tr><td>Advt for X</td><td>DETAILED ADVERTISEMENT (ENGLISH) Publish Date -: 20-Apr-2026 06:30 PM End Date -: 01-Jun-2026 File Size -: 1 MB</td></tr></table>
       <ul><li><a href="/p1.pdf">Engagement of graduate apprentices [NEW]</a></li><li><a href="/p2.pdf">Old notice about engagement of staff</a></li></ul>`);
+    if (req.url === "/h4") return send("text/html", `<div class="c"><h4>Recruitment of Economists</h4><ul><li><a href="/e1.pdf">Recruitment Notification</a></li></ul><h4>Apprentices 2026</h4><ul><li><a href="/e2.pdf">Apprenticeship Notification</a></li><li><a href="/e3.pdf">List of shortlisted candidates</a></li></ul></div><a href="/nav.pdf">Menu item outside</a>`);
+    if (req.url === "/generic") return send("text/html", `<ul><li><a href="/files/2026-09-Advt%20Dir%20Mktg.pdf">Click Here</a></li><li><a href="/files/Secretarial_advertisement.pdf">Click Here</a></li></ul>`);
+    if (req.url === "/pageA") return send("text/html", `<ul><li><a href="/a1.pdf">Notice from page A about engagement</a></li></ul>`);
+    if (req.url === "/pageB") return send("text/html", `<ul><li><a href="/b1.pdf">Notice from page B about engagement</a></li></ul>`);
     res.statusCode = 404; res.end("no");
   });
 }).listen(8814);
@@ -36,6 +40,15 @@ items = await fetchItems({ type: "html", url: B + "/rows", rowSelector: "tr", ro
 check("titleReplace shortens a row title", items[0].title === "DETAILED ADVERTISEMENT (ENGLISH) (published 20-Apr-2026)", items[0]?.title);
 items = await fetchItems({ type: "html", url: B + "/rows", selector: "li a", minTitle: 10 });
 check("a [NEW] badge is not part of the title", items[0].title === "Engagement of graduate apprentices", items[0]?.title);
+
+// heading-above-the-list pages (Bank of Maharashtra), links that all say "Click Here" (RCF, IDBI), and notices split over several pages
+items = await fetchItems({ type: "html", url: B + "/h4", selector: "div.c a[href]", contextPrev: "h4", exclude: "shortlisted", minTitle: 8 });
+check("contextPrev puts the heading above the list in front of the link text", items.map(i => i.title).join() === "Recruitment of Economists: Recruitment Notification,Apprentices 2026: Apprenticeship Notification", JSON.stringify(items.map(i => i.title)));
+items = await fetchItems({ type: "html", url: B + "/generic", include: "/files/", titleFromHref: true, minTitle: 6 });
+check("titleFromHref names a 'Click Here' link after its file", items.map(i => i.title).join() === "2026 09 Advt Dir Mktg,Secretarial advertisement", JSON.stringify(items.map(i => i.title)));
+items = await fetchItems({ type: "html", url: B + "/pageA", extraUrls: [B + "/pageB"], selector: "li a", minTitle: 10 });
+check("extraUrls merges several pages into one list", items.map(i => i.link).join() === B + "/a1.pdf," + B + "/b1.pdf", JSON.stringify(items.map(i => i.link)));
+try { await fetchItems({ type: "html", url: B + "/pageA", extraUrls: [B + "/missing"], selector: "li a", minTitle: 10 }); check("a failing extra page fails the whole source", false); } catch (e) { check("a failing extra page fails the whole source", /404/.test(e.message)); }
 
 // the site's own end date per list entry
 check("isoDate reads three formats and rejects impossible dates", isoDate("15/10/2026") === "2026-10-15" && isoDate(" 5-1-2027 ") === "2027-01-05" && isoDate("31.02.2026") === null && isoDate("soon") === null);
