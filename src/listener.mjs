@@ -106,7 +106,7 @@ async function handleTap(cb) {
     const when = new Date((msg.date ?? Date.now() / 1000) * 1000);
     const name = inbox.save(baseName(when, alert.source, alert.title), isPdf ? buf : null, {
       source: alert.source, title: alert.title, category: alert.category, link: alert.link,
-      alertDate: when.toISOString(), flag: alert.flag, ...(alert.test ? { test: true } : {}),
+      alertDate: when.toISOString(), flag: alert.flag, ...(alert.skip ? { aiSkip: alert.skip } : {}), ...(alert.details ? { details: alert.details } : {}), ...(alert.test ? { test: true } : {}),
       ...(finalUrl !== alert.link ? { finalUrl } : {}), contentType,
     });
     log(`Saved: ${name}${isPdf ? "" : " (link only)"}`);

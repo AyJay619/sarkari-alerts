@@ -102,7 +102,7 @@ if (TEST_AI) {
     const category = d.category ?? categorize(i.title);
     rows.push({ title: i.title.slice(0, 70), keywords: keywordVerdict(i.title), "AI chose": d.how === "AI" ? d.category : "(" + d.how + ")", flag: d.flag ?? "", "live mode": d.send ? "sends" : "would NOT send" });
     const note = d.send ? "" : "\n\n(Live mode would NOT send this: AI said Not Relevant)";
-    if (!(await send(formatItem(src.name, category, i.title, i.link, d.flag) + note, true))) console.error("Telegram send failed");
+    if (!(await send(formatItem(src.name, category, i.title, i.link, d.flag, levelOf(src), d.extra) + note, true))) console.error("Telegram send failed");
   }
   console.table(rows);
   console.log(test.summary());
@@ -181,7 +181,7 @@ for (const src of sources) {
     if (!d.send) { st.seen[keyOf(i)] = now; continue; }   // "Not Relevant": not sent, written to the review log
     const category = d.category ?? categorize(i.title), level = levelOf(src);
     // marked as seen only once it is really sent; if sending fails it is retried next run
-    pendingAlerts.push({ level, category, html: formatItem(src.name, category, i.title, i.link, d.flag, level), onSent: () => (st.seen[keyOf(i)] = now) });
+    pendingAlerts.push({ level, category, html: formatItem(src.name, category, i.title, i.link, d.flag, level, d.extra), onSent: () => (st.seen[keyOf(i)] = now) });
   }
   if (skipped) pendingNotes.push({ html: `ℹ️ <b>${src.name}</b>: ${skipped} more new notices not shown individually (too many at once). Check the site: ${src.url}`, onSent: () => toSend.slice(0, skipped).forEach(i => (st.seen[keyOf(i)] = now)) });
 
@@ -227,7 +227,7 @@ for (const [group, members] of Object.entries(pendingGroups)) {
     const d = ai ? await ai.decide(hits[0].mem.src, { title: k, link: `group:${group}:${k}` }) : NO_AI;
     if (!d.send) { gs.seen[k] = now; markSeen(hits, now); continue; }
     const category = d.category ?? categorize(k), level = levelOf(hits[0].mem.src);
-    pendingAlerts.push({ level, category, html: formatGroup(hits[0].mem.src.groupName ?? group, category, k, regions, members.length, hits[0].i.link, d.flag, level), onSent: () => { gs.seen[k] = now; markSeen(hits, now); } });
+    pendingAlerts.push({ level, category, html: formatGroup(hits[0].mem.src.groupName ?? group, category, k, regions, members.length, hits[0].i.link, d.flag, level, d.extra), onSent: () => { gs.seen[k] = now; markSeen(hits, now); } });
   }
   if (skipped) pendingNotes.push({ html: `ℹ️ <b>${group}</b>: ${skipped} more new notices not shown individually (too many at once).`, onSent: () => toAnnounce.slice(0, skipped).forEach(([k, hits]) => { gs.seen[k] = now; markSeen(hits, now); }) });
   const gk = Object.keys(gs.seen);

@@ -151,11 +151,13 @@ Chosen by words in the title (see `src/categorize.mjs`): **Answer Key**, **Admit
 Set `"aiEnabled": true` in `config.json` to turn it on (and add a GitHub secret `ANTHROPIC_API_KEY`). With it **off**, nothing changes.
 When on, only **new** notices are looked at:
 
-1. Free word check on the title (`keywords.json`): clearly relevant → sent; clearly irrelevant (tender, circular…) → skipped and logged.
-2. Unclear ones: the first 2 pages of the PDF are read as text (max ~2000 characters, never the file itself) and `claude-haiku-4-5` answers with one word.
-3. At most `maxAiCallsPerRun` (20) AI calls per run. Extra notices are still sent, marked **🤖 AI skipped: cap reached**. If the AI fails or credit runs out, notices are also sent as ❓ unchecked — never dropped.
-4. **Not Relevant** answers are not sent; see `state/ai-log-<runner>.jsonl`. Scanned PDFs are judged by title only (**📷 scanned**). Answers are remembered per link in `state/ai-cache-<runner>.json`.
-5. The run log shows the number of AI calls and the approximate cost.
+1. Free word check on the title (`keywords.json`): clearly irrelevant (tender, circular…) → skipped and logged.
+2. **Job and Correction notices always get the AI read** (even when the title is clearly relevant). Haiku gets the first ~3000 characters of the PDF plus every line anywhere in it that mentions a date (last date, closing date, अंतिम तिथि …), max ~6000 characters, today's date in India, and the text of `editorial-rules.md`. It returns a small JSON: category, post, vacancies, start date, last date, notice type (fresh / corrigendum / extension), and a post/skip verdict with the rule used.
+3. **The date verdict is worked out by our code**, not the AI: ✅ Open till … / ⏳ Closes today / ⚠️ Closes in N days / ⛔ Last date passed / 🔁 Last date extended … Dates the AI is unsure of stay empty: **⚠️ Dates not found — check PDF** (**📷 scanned — dates not found** for scans).
+4. `editorial-rules.md` is plain text you can edit. For now a "skip" verdict still sends the alert, marked **🙈 AI says skip: <rule>**, so you can check the AI's judgement (also logged in `state/ai-log-<runner>.jsonl`).
+5. Admit cards, results and answer keys that the title already identifies use no AI. Unclear titles are still classified by the AI.
+6. At most `maxAiCallsPerRun` calls per run and `maxAiCallsPerDay` (150, Indian date) per day. Beyond that a Job/Correction goes out marked **🤖 dates not checked (limit)**. If the AI fails, or its answer is broken, notices go out as ❓ unchecked — never dropped.
+7. **Not Relevant** answers for unclear titles are not sent. Answers (with the extracted facts) are remembered per link in `state/ai-cache-<runner>.json`, together with today's call count. The run log shows calls and approximate cost.
 
 **Test it first** (changes no files; messages start with 🧪 TEST; add `--dry-run` to print instead of sending):
 

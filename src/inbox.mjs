@@ -37,10 +37,12 @@ export function sourceForHost(hostname, sources) {
 // ---- reading an alert message (the plain text Telegram gives back with the button press) ----
 // Layout (see formatItem / formatGroup in telegram.mjs):
 //   [🧪 TEST]
-//   <icon> <Category> · <Source>
-//   [❓ unchecked | 🤖 AI skipped: cap reached | 📷 scanned]
+//   <tag> · <icon> <Category> · <Source>
+//   [❓ unchecked | 🤖 AI skipped: cap reached | 🤖 dates not checked (limit) | 📷 scanned]
+//   [🙈 AI says skip: <rule>]
 //   <blank>
 //   <title>
+//   [<blank> + lines: post, vacancies, dates, date verdict]
 //   <blank>
 //   🔗 <link> [(Patna copy)]
 export function parseAlert(text) {
@@ -53,10 +55,13 @@ export function parseAlert(text) {
   const linkBlock = blocks.findIndex(b => b.startsWith("🔗"));
   if (!header || linkBlock < 1) return null;
   const link = blocks[linkBlock].match(/^🔗\s*(\S+)/u)?.[1];
-  const title = blocks.slice(1, linkBlock).join(" ").trim();
+  const title = blocks[1].replace(/\s+/g, " ").trim();
+  const details = blocks.slice(2, linkBlock).join("\n").trim() || null;   // post / vacancies / dates / verdict lines, when the alert has them
   if (!link || !title) return null;
-  const flag = /unchecked/.test(blocks[0]) ? "unchecked" : /AI skipped/.test(blocks[0]) ? "capped" : /scanned/.test(blocks[0]) ? "scanned" : null;
-  return { category: header[1], source: header[2].trim(), title, link, flag, test };
+  const head = blocks[0];
+  const flag = /unchecked/.test(head) ? "unchecked" : /AI skipped/.test(head) ? "capped" : /dates not checked/.test(head) ? "limit" : /📷 scanned/.test(head) ? "scanned" : null;
+  const skip = head.match(/🙈 AI says skip: (.+)/u)?.[1] ?? null;
+  return { category: header[1], source: header[2].trim(), title, link, flag, skip, details, test };
 }
 
 // ---- file names: 2026-09-26_SSC_CGL-2026-Tentative-Vacancy ----

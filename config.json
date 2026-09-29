@@ -1,11 +1,17 @@
 {
   "inboxDir": "C:\\Dev\\sarkari-inbox",
   "aiEnabled": true,
-  "maxAiCallsPerRun": 20,
+  "maxAiCallsPerRun": 60,
+  "maxAiCallsPerDay": 150,
   "model": "claude-haiku-4-5",
-  "maxTokens": 8,
-  "pdfPages": 2,
-  "pdfMaxChars": 2000,
+  "maxTokens": 400,
+  "pdfHeadChars": 3000,
+  "pdfMaxChars": 6000,
+  "pdfScanPages": 40,
   "pdfMaxMegabytes": 15,
-  "pricePerMillionTokens": { "input": 1.0, "output": 5.0 }
+  "editorialFile": "editorial-rules.md",
+  "pricePerMillionTokens": {
+    "input": 1,
+    "output": 5
+  }
 }

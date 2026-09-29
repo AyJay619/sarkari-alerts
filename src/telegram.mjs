@@ -10,31 +10,34 @@ const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(
 
 const ICONS = { "Job": "💼", "Admit Card": "🎫", "Result": "📊", "Answer Key": "🔑", "Correction": "✏️", "Other": "📌" };
 
-// flag: null | "unchecked" (the AI could not check it) | "capped" (this run already used its AI calls) | "scanned" (PDF is a scan, judged by title only)
-const FLAGS = { unchecked: "❓ unchecked", capped: "🤖 AI skipped: cap reached", scanned: "📷 scanned" };
-const flagLine = flag => (FLAGS[flag] ? "\n" + FLAGS[flag] : "");
+// flag: null | "unchecked" (the AI could not check it) | "capped" (this run already used its AI calls) | "limit" (daily AI limit reached,
+// so a Job/Correction has no dates) | "scanned" (PDF is a scan, judged by title only)
+const FLAGS = { unchecked: "❓ unchecked", capped: "🤖 AI skipped: cap reached", limit: "🤖 dates not checked (limit)", scanned: "📷 scanned" };
+// extra (optional): { body: [lines under the title: post, vacancies, dates, verdict], skip: editorial rule name | null }
+const flagLine = (flag, extra) => (FLAGS[flag] ? "\n" + FLAGS[flag] : "") + (extra?.skip ? "\n🙈 AI says skip: " + esc(extra.skip) : "");
+const bodyBlock = extra => (extra?.body?.length ? "\n\n" + extra.body.map(esc).join("\n") : "");
 
 // First-line tag: "🏛️ Central · " or "🗺️ State · " (parseAlert in inbox.mjs skips it)
 const tag = level => (level === "state" ? "🗺️ State · " : "🏛️ Central · ");
 
-export function formatItem(sourceName, category, title, link, flag = null, level = "central") {
+export function formatItem(sourceName, category, title, link, flag = null, level = "central", extra = null) {
   const shown = title.length > 400 ? title.slice(0, 397) + "…" : title;
-  return `${tag(level)}${ICONS[category] || "📌"} <b>${esc(category)}</b> · ${esc(sourceName)}${flagLine(flag)}
+  return `${tag(level)}${ICONS[category] || "📌"} <b>${esc(category)}</b> · ${esc(sourceName)}${flagLine(flag, extra)}
 
-${esc(shown)}
+${esc(shown)}${bodyBlock(extra)}
 
 🔗 ${esc(link)}`;
 }
 
 // One notice posted on several sites: "RRB CEN 03/2026: Exam Schedule — 21 regions".
-export function formatGroup(groupName, category, groupTitle, regions, totalRegions, link, flag = null, level = "central") {
+export function formatGroup(groupName, category, groupTitle, regions, totalRegions, link, flag = null, level = "central", extra = null) {
   const where = regions.length === 1 ? `${regions[0]} only`
     : regions.length === totalRegions ? `${regions.length} regions`
     : `${regions.join(", ")} (${regions.length} of ${totalRegions} regions)`;
   const first = regions.length > 1 ? ` (${regions[0]} copy)` : "";
-  return `${tag(level)}${ICONS[category] || "📌"} <b>${esc(category)}</b> · ${esc(groupName)}${flagLine(flag)}
+  return `${tag(level)}${ICONS[category] || "📌"} <b>${esc(category)}</b> · ${esc(groupName)}${flagLine(flag, extra)}
 
-${esc(groupTitle)} — ${esc(where)}
+${esc(groupTitle)} — ${esc(where)}${bodyBlock(extra)}
 
 🔗 ${esc(link)}${esc(first)}`;
 }
