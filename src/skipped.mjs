@@ -2,7 +2,7 @@
 // Pure functions (no I/O) so the tests can drive them with fixed clocks.
 import { esc } from "./telegram.mjs";
 
-export const DIGEST_FROM_MINUTES = 20 * 60 + 30;   // the digest is due from 8:30 pm Indian time
+export const DIGEST_FROM_MINUTES = 21 * 60;   // the digest is due from 9:00 pm Indian time: the last run of the day (about 9:30 pm) is the one that sends it
 const MAX_ITEMS_PER_DAY = 500;
 
 // Indian date (YYYY-MM-DD) and minutes since midnight there
@@ -23,7 +23,7 @@ export function recordSkips(state, items, nowMs = Date.now()) {
   return state.skippedDays;
 }
 
-// The days that owe a digest now: a past day never sent (the PC was off in the evening), or today once it is 8:30 pm or later.
+// The days that owe a digest now: a past day never sent (the PC was off at the last run), or today once it is 9:00 pm or later (the last run of the day).
 // Each has NEW items (after sentCount) to list. Returns [{ day, date, items }].
 export function digestsDue(state, nowMs = Date.now()) {
   const today = istDate(nowMs), late = istMinutes(nowMs) >= DIGEST_FROM_MINUTES;

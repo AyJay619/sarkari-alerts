@@ -1,6 +1,6 @@
 # Sarkari Alerts — notice monitor
 
-Every 30 minutes this checks a list of government recruitment websites and sends **new** notices
+Five times a day (about 9:30 am, 12:30 pm, 3:30 pm, 6:30 pm and 9:30 pm India time) this checks a list of government recruitment websites and sends **new** notices
 (jobs, admit cards, results, answer keys, corrections) to you on Telegram.
 It only *sends alerts*. It never touches your website or Sanity.
 
@@ -56,20 +56,23 @@ Repo → **Actions** tab → **Check for new notices** → **Run workflow** (gre
 ## Everything runs on your PC
 
 All sites are checked by the GitHub runner installed on your PC (a Windows service that starts by itself when Windows starts).
-- **PC off (night):** the timer keeps ticking, but only ONE run can wait in line; a newer one replaces the older waiting one
-  (the replaced ones show as "cancelled" in the Actions tab — normal). When the PC starts, that one run catches everything posted overnight.
+- **Schedule:** the timer fires at 03:55, 06:55, 09:55, 12:55 and 15:55 **UTC** (cron is always UTC; India is UTC+5:30), which is 9:25 am, 12:25 pm, 3:25 pm, 6:25 pm and 9:25 pm IST: five minutes before the times you want, because GitHub usually starts a scheduled run a few minutes late. **Run workflow** (manual) always works too.
+- **PC off or asleep:** the timer keeps ticking, but only ONE run can wait in line; a newer one replaces the older waiting one
+  (the replaced ones show as "cancelled" in the Actions tab — normal). When the PC comes on, that one run catches everything posted meanwhile. The "duration" of a run in the Actions list includes the time it waited for the PC.
+- **Missed-run note:** if a run starts between 9 am and 10 pm and the last successful scan is more than 4 hours back **and** a scheduled time has clearly passed without a run, you get one note: "⚠️ Last scan was at 3:30 pm — a scheduled run may have been missed. Use Run workflow if needed." (The normal night gap never triggers it.)
+- **Windows must stay awake:** a sleeping PC runs nothing. Sleep is the most common reason for late or missing runs. In Power Options set "Put the computer to sleep" to **Never** (plugged in), and do not use Start → Sleep. Optionally, a Task Scheduler task with "Wake the computer to run this task" a few minutes before each run time (9:20 am, 12:20 pm, 3:20 pm, 6:20 pm, 9:20 pm) can wake it.
 - **No internet right after boot:** the monitor waits up to ~4 minutes for it, then stops quietly. A lost connection is never counted as a site failing.
-- **Morning message:** the first run each day (after 6 am India time) ends with "☀️ Morning check done: N sites, X new notices, Y failed".
+- **Morning message:** the first run each day (after 6 am India time, so normally the 9:30 am run) ends with "☀️ Morning check done: N sites, X new notices, Y failed".
 - The old GitHub-cloud job is gone. The file `state/seen-cloud.json` is only kept so its memory can be carried over once; the PC ignores it afterwards.
 - Want a site checked from GitHub's servers again? Test it with **Test sites from GitHub cloud**; then you would need to add a cloud job back.
 
 ## Check that it is working
 
-- Repo → **Actions** tab: a green tick every ~30 minutes means it ran. Click a run to read the log —
+- Repo → **Actions** tab: a green tick for each of the 5 daily runs means it ran. Click a run to read the log —
   each source shows a line like `OK ISRO: 22 on page, 0 new`.
 - The file `state/seen.json` gets a new commit whenever something was recorded.
 - If a website stops working for **3 runs in a row** you get **one** ⚠️ warning message, and one ✅ message when it recovers.
-- Note: GitHub sometimes runs "every 30 minutes" jobs a few minutes late. That is normal.
+- Note: GitHub often starts a scheduled run a few minutes late (that is why the timer fires 5 minutes early), sometimes much later at busy times. That is normal.
 
 ## Add a new website
 
@@ -213,7 +216,7 @@ When on, only **new** notices are looked at:
 4. `editorial-rules.md` is plain text you can edit. Each SKIP rule is written `- Name: explanation`; the AI may skip **only** with one of them and must name it exactly (the code changes an invented reason into "post"). **A notice skipped by a rule is NOT alerted**: it is written to the AI log (`state/ai-log-<runner>.jsonl`) and listed in the daily digest below. "Ex-servicemen only" and "Retired personnel only" apply only when the post is *exclusively* for them: a normal public recruitment that merely reserves a quota for ex-servicemen is still alerted. Rename a rule in the file and the new name appears in the digest. Old cached answers from before this version are asked again (the cache has a version number).
    - **Free title pre-check** (`keywords.json` → `skipTitles`): a title that clearly belongs to a skip rule (ex-servicemen on contract, retired / superannuated / ex-employees / re-employment, deputation, departmental exam / LDCE / GDCE / internal promotion, tender) is skipped without downloading the PDF or calling the AI. Each rule has `patterns` and `unless` (a title that also matches an `unless` word, such as *reservation* or *quota*, is NOT skipped). Edit the lists freely; delete a pattern to stop it skipping.
    - **Forms are not notices** (`keywords.json` → `formTitles`): titles like *Application Form / Format*, *Annexure* (without vacancy/corrigendum/advt), *Declaration*, *Undertaking*, *Biodata*, *Proforma* are Not Relevant: no alert, no download, no AI. Links to `.doc`, `.docx`, `.xls`, `.xlsx` files are Not Relevant too, unless the title itself is clearly a notice (advertisement, recruitment ...): then it is alerted with **📄 Word/Excel file — not read**.
-   - **Daily skipped digest:** everything skipped by the rules is collected per Indian day and sent as ONE message (source, title, rule, link; split if long) by the first run after **8:30 pm IST**. If the PC was off in the evening it goes out at the first run of the next day. Anything skipped later that evening comes as a short extra digest. Nothing skipped = nothing sent. The run summary carries the line **🙈 Skipped by rules: N** (0 when none).
+   - **Daily skipped digest:** everything skipped by the rules is collected per Indian day and sent as ONE message (source, title, rule, link; split if long) with the **last run of the day** (the 9:30 pm run; any run from 9:00 pm IST). If the PC was off then, it goes out with the first run of the next day. Anything skipped later that evening comes as a short extra digest. Nothing skipped = nothing sent. The run summary carries the line **🙈 Skipped by rules: N** (0 when none).
 5. Admit cards, results and answer keys that the title already identifies use no AI. Unclear titles are still classified by the AI.
 6. At most `maxAiCallsPerRun` calls per run and `maxAiCallsPerDay` (150, Indian date) per day. Beyond that a Job/Correction goes out marked **🤖 dates not checked (limit)**. If the AI fails, or its answer is broken, notices go out as ❓ unchecked — never dropped.
 7. **Not Relevant** answers for unclear titles are not sent. Answers (with the extracted facts) are remembered per link in `state/ai-cache-<runner>.json`, together with today's call count. The run log shows calls and approximate cost.

@@ -3,8 +3,12 @@ name: Check for new notices
 # Only a timer and the manual button can start this. Never add pull_request or other
 # triggers a stranger could fire: the job runs on your own PC.
 on:
+  # 5 runs a day, timed 5 minutes BEFORE the times you want, because GitHub usually starts a scheduled run a few minutes late.
+  # Times are UTC (cron always is); India is UTC+5:30, so 03:55 UTC = 9:25 am IST, and so on:
+  #   03:55 UTC = 9:25 am IST (aim: 9:30 am)     06:55 UTC = 12:25 pm IST (aim: 12:30 pm)   09:55 UTC = 3:25 pm IST (aim: 3:30 pm)
+  #   12:55 UTC = 6:25 pm IST (aim: 6:30 pm)     15:55 UTC = 9:25 pm IST (aim: 9:30 pm, the last run of the day)
   schedule:
-    - cron: "*/30 * * * *"   # every 30 minutes
+    - cron: "55 3,6,9,12,15 * * *"
   workflow_dispatch:          # the manual "Run workflow" button
 
 permissions:
@@ -12,9 +16,11 @@ permissions:
 
 jobs:
   # Every site is checked here, on your own PC ("runner": "india" in sources.json).
-  # When the PC is off, the runs simply wait. Because of the "concurrency" block below, only ONE run can be waiting:
+  # When the PC is off or asleep, the runs simply wait. Because of the "concurrency" block below, only ONE run can be waiting:
   # each new timer tick replaces the older waiting one (the old one shows as "cancelled", which is normal, not a failure).
-  # So when the PC starts in the morning, exactly one run starts, and it catches everything posted overnight.
+  # So when the PC comes on, exactly one run starts, and it catches everything posted meanwhile.
+  # (A run's "duration" in the Actions list includes the time it waited for the PC: 3 hours long usually means "the PC was asleep".
+  #  If the PC stays off for about a day, GitHub gives up on the waiting run.)
   india:
     runs-on: [self-hosted, india]
     defaults:

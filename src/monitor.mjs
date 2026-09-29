@@ -8,6 +8,7 @@ import { formatItem, formatGroup, makeSender, apiBase } from "./telegram.mjs";
 import { buildPlan, levelOf } from "./order.mjs";
 import { Classifier, keywordVerdict, loadConfig, noFileDecision, preFilter } from "./classify.mjs";
 import { digestHtml, digestsDue, markDigestSent, recordSkips } from "./skipped.mjs";
+import { missedRunNote } from "./schedule.mjs";
 
 const args = process.argv.slice(2);
 const flag = n => args.includes(n);
@@ -149,6 +150,13 @@ const prune = st => {
 };
 const summaries = [];
 
+// Missed-run warning: this run starts between 9 am and 10 pm IST and the last successful run is more than 4 hours back (only the
+// 9 am - 10 pm hours count, so the first run of the morning does not warn about the night). One short note; a failed note never fails the run.
+if (!ONLY) {
+  const note = missedRunNote(state, clockMs());
+  if (note && !(await send(note))) console.error("Could not deliver the missed-run note.");
+}
+
 for (const src of sources) {
   const st = (state.sources[src.id] ??= { initialized: false, seen: {}, fails: 0, warned: false });
   let items;
@@ -262,7 +270,8 @@ for (const m of buildPlan(pendingAlerts, skippedRun.length)) {
 }
 for (const n of pendingNotes) { if (await send(n.html)) n.onSent(); else telegramProblem = true; }
 
-// Daily digest of everything skipped by the rules: from 8:30 pm Indian time (or the next morning if the PC was off then). Nothing skipped = nothing sent.
+// Daily digest of everything skipped by the rules: with the last run of the day (from 9:00 pm Indian time: the 9:30 pm run), or with the first run of the
+// next day if the PC was off then. Nothing skipped = nothing sent.
 // A failed digest is not marked as sent, so the next run tries again; it never fails the run.
 if (!ONLY) for (const due of digestsDue(state, clockMs())) {
   if (await send(digestHtml(due))) markDigestSent(due); else console.error("Could not deliver the skipped digest (it will be tried again next run).");
@@ -277,13 +286,14 @@ if (summaries.length) {
 
 // Morning check: once per day (Indian time), on the first complete run at or after 06:00, so you know the system started.
 if (!ONLY && !networkDown) {
-  const ist = new Date(Date.now() + 5.5 * 3600 * 1000), today = ist.toISOString().slice(0, 10);
-  if (ist.getUTCHours() >= 6 && state.morning !== today) {
+  const ist = new Date(clockMs() + 5.5 * 3600 * 1000), today = ist.toISOString().slice(0, 10);
+  if (ist.getUTCHours() >= 6 && state.morning !== today) {   // the first complete run of the day sends it
     const msg = `☀️ Morning check done: ${sources.length} sites, ${alertsSent} new notice${alertsSent === 1 ? "" : "s"}, ${failures.length} failed`;
     if (await send(msg)) state.morning = today; else telegramProblem = true;
   }
 }
 
+if (!ONLY && !networkDown) state.lastRunAt = new Date(clockMs()).toISOString();   // for the missed-run warning
 if (ai) { console.log(ai.summary()); if (SAVES_STATE) ai.save(); }
 if (SAVES_STATE) {
   fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
