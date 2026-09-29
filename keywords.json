@@ -11,5 +11,62 @@
     "tender", "quotation", "e-auction", "auction", "rate contract",
     "circular", "office order", "office memorandum", "holiday", "gazette", "rti", "annual report", "press release",
     "newsletter", "supply of", "procurement"
+  ],
+  "_skipTitles_help": "FREE TITLE PRE-CHECK (no PDF download, no AI). A notice whose TITLE matches one of a rule's patterns (regular expressions, case-insensitive) and NONE of its 'unless' patterns is skipped silently: no alert, written to the AI log and to the daily skipped digest. 'rule' is the name shown in the digest (same names as in editorial-rules.md). A title that only mentions an ex-servicemen QUOTA or reservation must NOT match: that is what 'unless' is for. To stop a pattern from skipping, delete it here.",
+  "skipTitles": [
+    {
+      "rule": "Ex-servicemen only",
+      "patterns": [
+        "\\bex[- ]?servicem[ae]n\\b.{0,40}\\b(only|on\\s+contract|contractual|contract\\s+basis)\\b",
+        "\\b(recruitment|engagement|hiring|appointment|selection|vacanc\\w*|posts?)\\s+(of|for|from|among)\\s+(the\\s+)?(retired\\s+)?ex[- ]?servicem[ae]n\\b",
+        "\\bfor\\s+ex[- ]?servicem[ae]n\\s+only\\b",
+        "\\bESM\\s+only\\b"
+      ],
+      "unless": ["reserv", "quota", "relaxation", "preference", "concession", "percent", "%", "\\bagainst\\s+(the\\s+)?ex", "\\balso\\b"]
+    },
+    {
+      "rule": "Retired personnel only",
+      "patterns": [
+        "\\bretired\\b", "\\bsuperannuated\\b", "\\bretirees?\\b", "\\bex-?employees?\\b",
+        "\\bre-?employ(ment|ed)\\b", "\\bre-?engage(ment|d)\\b", "\\bpost[- ]retirement\\b", "\\bPRCE\\b"
+      ],
+      "unless": ["reserv", "quota", "relaxation", "\\balso\\b"]
+    },
+    {
+      "rule": "Deputation only",
+      "patterns": ["\\bdeputation\\b", "\\babsorption\\b"],
+      "unless": ["direct\\s+recruitment", "open\\s+market", "lateral", "\\bpublic\\b", "\\bor\\s+direct\\b", "/\\s*direct\\b"]
+    },
+    {
+      "rule": "Internal promotion or departmental exam",
+      "patterns": [
+        "\\b(limited\\s+)?departmental\\s+(competitive\\s+)?(exam|examination|selection|test)",
+        "\\bgeneral\\s+departmental\\b", "\\bLDCE\\b", "\\bGDCE\\b", "\\bLDE\\b",
+        "\\binternal\\s+(promotion|selection|recruitment|candidates|exam)",
+        "\\bpromotion(al)?\\s+(quota|exam|examination|test|selection)", "\\bfor\\s+promotion\\b"
+      ],
+      "unless": []
+    },
+    {
+      "rule": "Tender",
+      "patterns": [
+        "\\btenders?\\b", "\\be-?tender", "\\bexpression\\s+of\\s+interest\\b", "\\bEOI\\b", "\\bRFP\\b",
+        "\\brequest\\s+for\\s+proposals?\\b", "\\bnotice\\s+inviting\\s+(bids?|quotations?)\\b"
+      ],
+      "unless": ["recruit", "vacanc", "engag", "hiring", "appoint", "post\\s+of"]
+    }
+  ],
+  "_formTitles_help": "FORMS, NOT NOTICES: a title matching any of these patterns (regular expressions, case-insensitive) is treated as Not Relevant: no alert, no PDF download, no AI call.",
+  "formTitles": [
+    "\\bapplication\\s+form(at)?\\b",
+    "\\bapplication\\s+format\\b",
+    "\\bformat\\s+(of|for)\\s+(the\\s+)?(application|certificate|undertaking|declaration|affidavit)",
+    "\\bcertificate\\s+format\\b",
+    "^(?!.*(vacanc|corrigendum|advt|advertisement)).*\\bannexure\\b",
+    "\\b(self[- ]?)?declaration\\b(?!\\s+of\\s+(result|marks|final|provisional|selection|merit))",
+    "(?<!(sector|india|government)\\s)\\bundertaking\\b",
+    "\\bbio-?data\\b",
+    "\\bpro-?forma\\b",
+    "\\bperforma\\b"
   ]
 }

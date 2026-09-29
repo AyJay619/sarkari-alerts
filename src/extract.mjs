@@ -1,4 +1,4 @@
-// Reading the key facts (post, vacancies, dates) of Job / Correction notices: the text sent to the AI, the reply, and the
+// Reading the key facts (post, dates) of Job / Correction notices: the text sent to the AI, the reply, and the
 // date verdict. The verdict is worked out HERE, in plain code, from the dates the AI found: the AI never judges "open or closed".
 import { extractText, getDocumentProxy } from "unpdf";
 import { PDFDocument } from "pdf-lib";
@@ -132,12 +132,11 @@ HOW TO USE THE RULES:
 - Each SKIP rule has a NAME: the words before the colon. Use "skip" ONLY when one of those SKIP rules clearly applies to this notice. Then "rule" must be that NAME copied EXACTLY, word for word, with nothing added or changed.
 - If no SKIP rule clearly applies, "verdict" is "post" and "rule" is null. NEVER invent a reason or a new rule name. A notice is never skipped for a reason that is not in the list.
 - The English and the Hindi version of one notice must get the same verdict and the same rule name.
+- "Ex-servicemen only" and "Retired personnel only" apply ONLY when the post can be filled EXCLUSIVELY by such people. A normal public recruitment (SSC, RRB, banks, police, PSUs...) that merely RESERVES seats, a quota, age relaxation or preference for ex-servicemen / ex-Agniveers / retired persons is NOT covered by those rules: answer "post". The same holds for the other SKIP rules: they are for notices that are ONLY that kind (only deputation, only an internal exam), not for a recruitment that also has such a route.
 
 Reply with ONLY one JSON object, no other text:
 {"category": one of "Job", "Admit Card", "Result", "Answer Key", "Correction", "Not Relevant",
  "post": name of the post(s) as a short string, or null,
- "vacancies": total number of vacancies as an integer, or null,
- "vacancies_quote": the exact words of the notice that state that TOTAL (max 150 characters), or null,
  "eligibility": the exact words of the notice about WHO may apply (eligibility, e.g. "Retired employees of ...", "Any graduate"), max 150 characters, or null. Find this BEFORE you decide the verdict, and compare it with every SKIP rule,
  "start": date online applications open, "YYYY-MM-DD" or null,
  "last": last date to apply, "YYYY-MM-DD" or null,
@@ -151,7 +150,6 @@ Meanings: Job = a NEW recruitment/vacancy/engagement advertisement. Correction =
 and ALSO: a notice that CANCELS an advertisement, and an updated / revised vacancy table, annexure or revised vacancy list of an existing recruitment (never "Job").
 Not Relevant = tenders, circulars, office orders, policies, anything not about recruitment or exams.
 For a corrigendum or extension, "last" is the NEW last date. "last" is the last date for submitting the application, not for paying the fee.
-"vacancies": fill it ONLY when the notice clearly states a TOTAL number of vacancies for the whole advertisement (for example "Total vacancies: 24" or a "Total" row). Never take one row, one state, one category or one post of a table as the total: if there is no clearly stated total, use null. "vacancies_quote" must be copied from the notice and contain that number.
 Dates: write YYYY-MM-DD. Convert formats like 15.10.2026, 15/10/2026, "15th October 2026" and Hindi text or Devanagari digits (१५ अक्टूबर २०२६).
 Use null for anything not clearly stated. NEVER guess or calculate a date; if the year is not written and not obvious, use null.`;
 }
@@ -165,20 +163,10 @@ const validDate = (s, today) => {
   return diff < -400 || diff > 800 ? null : s;   // a year far away from today is a misreading, not a date
 };
 
-const digitsOnly = s => String(s).replace(/[,\s]/g, "");
-// Was this vacancy total really written in the notice? The quote must appear in the text we sent (whitespace-insensitive) and contain the number.
-// Without document text (title only) there is nothing to check against, so no total is accepted.
-function vacanciesConfirmed(vac, quote, text) {
-  if (!vac) return false;
-  if (typeof quote !== "string" || !quote.trim() || !text) return false;
-  const flat = s => s.replace(/\s+/g, " ").trim().toLowerCase();
-  return flat(text).includes(flat(quote)) && digitsOnly(quote).includes(String(vac));
-}
 
 // Turns the AI's answer into a clean object. Throws when it is not usable (the caller then falls back to "unchecked").
 // opts.rules: the editorial rules text: a "skip" is only kept when "rule" is the exact name of one of its SKIP rules.
-// opts.text: the document text that was sent (used to confirm the vacancy total). opts.visual: the PDF itself was sent instead of text.
-export function parseReply(raw, today, { rules = null, text = "", visual = false } = {}) {
+export function parseReply(raw, today, { rules = null } = {}) {
   const m = String(raw).match(/\{[\s\S]*\}/);
   if (!m) throw new Error("no JSON in the answer");
   let j;
@@ -187,9 +175,6 @@ export function parseReply(raw, today, { rules = null, text = "", visual = false
   if (!category) throw new Error(`unexpected category "${String(j.category).slice(0, 30)}"`);
   let type = ["fresh", "corrigendum", "extension", "other"].includes(j.type) ? j.type : "other";
   const str = (s, n) => (typeof s === "string" && s.trim() ? s.trim().slice(0, n) : null);
-  const vac = Number.isInteger(j.vacancies) && j.vacancies > 0 && j.vacancies < 10_000_000 ? j.vacancies : null;
-  const vacancies = visual ? (vac && typeof j.vacancies_quote === "string" && j.vacancies_quote.trim() && digitsOnly(j.vacancies_quote).includes(String(vac)) ? vac : null)
-    : vacanciesConfirmed(vac, j.vacancies_quote, text) ? vac : null;
   // the skip verdict: only with the exact name of a SKIP rule (when the rules can be read); anything else is "post"
   let verdict = String(j.verdict).toLowerCase() === "skip" ? "skip" : "post", rule = str(j.rule, 80);
   if (verdict === "skip") {
@@ -202,7 +187,7 @@ export function parseReply(raw, today, { rules = null, text = "", visual = false
   const cancelled = j.cancelled === true;
   if (cancelled) { category = "Correction"; type = "corrigendum"; verdict = "post"; rule = null; }
   return {
-    category, type, post: str(j.post, 120), vacancies, cancelled,
+    category, type, post: str(j.post, 120), cancelled,
     start: validDate(j.start, today), last: validDate(j.last, today), oldLast: validDate(j.old_last, today),
     verdict, rule,
   };
@@ -221,16 +206,16 @@ export function dateStatus(last, today) {
 
 // data: parseReply() result; opts: { scanned, notPdf, listDate }. Returns the lines shown under the alert title.
 // listDate: the "end date" the site itself shows next to the notice; used only when the PDF names no last date.
-export function detailLines(data, today, { scanned = false, notPdf = false, listDate = null } = {}) {
+export function detailLines(data, today, { scanned = false, notPdf = false, wordExcel = false, listDate = null } = {}) {
   data = data ?? { type: "fresh" };
   if (data.cancelled) return [...(data.post ? [`🧾 Post: ${data.post}`] : []), "❌ Advertisement cancelled"];
   let fromList = false;
   if (!data.last && listDate) { data = { ...data, last: listDate }; fromList = true; }
   const lines = [];
+  if (!data.last && wordExcel) return ["📄 Word/Excel file — not read"];
   if (!data.last && notPdf) return ["⚠️ Dates not checked — the link is a web page, not a PDF"];
   if (!data.last && scanned) return ["📷 scanned — dates not found"];
   if (data.post) lines.push(`🧾 Post: ${data.post}`);
-  if (data.vacancies) lines.push(`👥 Vacancies: ${data.vacancies.toLocaleString("en-IN")}`);
   const dates = [data.start && `Start: ${fmtDate(data.start, today)}`, data.last && `Last date: ${fmtDate(data.last, today)}${fromList ? " (site list)" : ""}`].filter(Boolean);
   if (dates.length) lines.push("📅 " + dates.join(" · "));
 

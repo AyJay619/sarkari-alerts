@@ -6,7 +6,7 @@ import { categorize } from "./categorize.mjs";
 import { CATEGORIES, NEEDS_DATES, buildPrompt, detailLines, isVacancyUpdateTitle, parseReply, pdfSnippet, todayIST } from "./extract.mjs";
 
 // Bump when the prompt or the reading of answers changes: older cached answers are then asked again instead of trusted.
-export const CACHE_VERSION = 2;
+export const CACHE_VERSION = 3;
 
 const readJson = f => JSON.parse(fs.readFileSync(new URL("../" + f, import.meta.url), "utf8"));
 export const loadConfig = () => readJson("config.json");
@@ -21,6 +21,24 @@ export function keywordVerdict(title) {
   if (rel && !irr) return "relevant";
   if (irr && !rel) return "irrelevant";
   return "unclear";
+}
+
+// ---- free pre-check on the TITLE (and the link's file type), before any PDF download or AI call ----
+// skipTitles (keywords.json): titles that clearly belong to a skip rule. formTitles: forms, not notices. Both editable there.
+const SKIP_TITLES = (KEYWORDS.skipTitles ?? []).map(r => ({ rule: r.rule, patterns: r.patterns.map(p => new RegExp(p, "i")), unless: (r.unless ?? []).map(p => new RegExp(p, "i")) }));
+const FORM_TITLES = (KEYWORDS.formTitles ?? []).map(p => new RegExp(p, "i"));
+export const titleSkipRule = title => SKIP_TITLES.find(r => r.patterns.some(p => p.test(title)) && !r.unless.some(u => u.test(title)))?.rule ?? null;
+export const isFormTitle = title => FORM_TITLES.some(p => p.test(title));
+export const isWordExcelLink = link => /[.](docx?|xlsx?)([?#]|$)/i.test(String(link));
+// -> null (go on), or a decision that is NOT sent: { send:false, how, skipped?: { rule, by } }
+//   - a form / format / annexure title, or a .doc/.docx/.xls/.xlsx file whose title the keywords do not trust: Not Relevant
+//   - a title that clearly matches a skip rule: skipped by that rule (recorded for the log and the daily digest)
+export function preFilter(item) {
+  if (isFormTitle(item.title)) return { send: false, how: "form", reason: "a form / format, not a notice" };
+  const rule = titleSkipRule(item.title);
+  if (rule) return { send: false, how: "title-rule", skipped: { rule, by: "title" }, reason: "title matches skip rule: " + rule };
+  if (isWordExcelLink(item.link) && keywordVerdict(item.title) !== "relevant") return { send: false, how: "word-excel", reason: "Word/Excel file: a form, not a notice" };
+  return null;
 }
 
 export const NO_FILE_LINE = "📄 PDF not read (site doesn't allow automated downloads)";
@@ -97,16 +115,23 @@ export class Classifier {
     const wantsDates = NEEDS_DATES.has(category);
     const skipRule = data.cancelled ? null : data.verdict === "skip" ? (data.rule ?? "no rule named") : null;
     const extra = { body: wantsDates ? detailLines(data, today, { scanned, listDate: item.endDate }) : [], skip: skipRule };
-    if (extra.skip) this.log(src, item, "ai-skip-marked", "AI says skip: " + extra.skip);
+    if (skipRule) {   // skipped by an editorial rule: no alert. Logged here, and recorded for the daily digest by the caller.
+      // (extra is kept so the test command can still show what the alert would have looked like)
+      this.log(src, item, "ai-skip", "skipped by rule: " + skipRule);
+      return { send: false, how: entry.visual ? "AI (read visually)" : "AI", skipped: { rule: skipRule, by: "AI" }, category: forceCorrection ? "Correction" : verdict === "relevant" ? null : category, extra };
+    }
     return { send: true, category: forceCorrection ? "Correction" : verdict === "relevant" ? null : category, flag: scanned && !wantsDates ? "scanned" : null, extra, how: noText ? "AI (title only)" : entry.visual ? "AI (read visually)" : "AI" };
   }
 
   // Returns { send, category (null = keep the keyword category), flag (null | "unchecked" | "capped" | "limit" | "scanned"),
   //           extra ({ body: lines shown under the title, skip: rule name or null }), how }
-  // Job and Correction notices always get the AI read of the PDF (post, vacancies, dates); other kinds keep the old rules.
+  // Job and Correction notices always get the AI read of the PDF (post, dates); other kinds keep the old rules.
   async decide(src, item) {
     const verdict = keywordVerdict(item.title);
     const keywordCategory = categorize(item.title);
+    // free pre-check on the title / file type: forms and clear skip-rule titles never reach the PDF download or the AI
+    const pre = preFilter(item);
+    if (pre) { this.log(src, item, pre.skipped ? "title-skip" : "not-relevant", pre.reason); return pre; }
     // "noFileDownload" sources (robots.txt forbids the files): never open the PDF, no AI read of it. Title and link only.
     if (src.noFileDownload) return noFileDecision(item, this.force);
     if (!this.force) {
@@ -124,7 +149,7 @@ export class Classifier {
     }
 
     // A web page (not a PDF) cannot be read for dates. Titles the keywords already trust are not sent to the AI for that alone.
-    if (!isPdf && verdict === "relevant") return { send: true, category: null, flag: null, extra: { body: detailLines(null, today, { notPdf: true, listDate: item.endDate }), skip: null }, how: "keywords" };
+    if (!isPdf && verdict === "relevant") return { send: true, category: null, flag: null, extra: { body: detailLines(null, today, { notPdf: true, wordExcel: isWordExcelLink(item.link), listDate: item.endDate }), skip: null }, how: "keywords" };
 
     if (this.broken) return { send: true, category: null, flag: "unchecked", how: "AI stopped" };
     if (this.calls >= this.cfg.maxAiCallsPerRun || this.usage.calls >= this.cfg.maxAiCallsPerDay)
@@ -160,7 +185,7 @@ export class Classifier {
       const entry = { v: CACHE_VERSION, data, scanned, noText, ...(visual ? { visual: true } : {}) };
       this.cache[item.link] = entry;
       const d = this.fromEntry(src, item, entry, verdict);
-      if (d.extra?.body.length && noText && !isPdf) d.extra.body = detailLines(data, today, { notPdf: true, listDate: item.endDate });
+      if (d.extra?.body.length && noText && !isPdf) d.extra.body = detailLines(data, today, { notPdf: true, wordExcel: isWordExcelLink(item.link), listDate: item.endDate });
       return d;
     } catch (e) {
       console.error(`  AI problem: ${e.message}`);

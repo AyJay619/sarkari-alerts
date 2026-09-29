@@ -7,7 +7,7 @@ import fs from "node:fs";
 import { PDFDocument } from "pdf-lib";
 import { buildSnippet, countRealWords, dateStatus, detailLines, firstPagesBase64, isVacancyUpdateTitle, looksImageLike, parseReply, ruleNames, todayIST } from "../src/extract.mjs";
 import { categorize } from "../src/categorize.mjs";
-import { Classifier, loadConfig, noFileDecision } from "../src/classify.mjs";
+import { Classifier, isFormTitle, isWordExcelLink, loadConfig, noFileDecision, preFilter, titleSkipRule } from "../src/classify.mjs";
 import { formatItem } from "../src/telegram.mjs";
 import { parseAlert } from "../src/inbox.mjs";
 
@@ -19,15 +19,15 @@ const TODAY = todayIST(NOW);
 check("today in India", TODAY === "2026-09-29");
 
 // ---- sample notices: what the PDF text looks like, and what the (fake) AI answers for it ----
-const R = o => JSON.stringify({ category: "Job", post: null, vacancies: null, vacancies_quote: null, start: null, last: null, old_last: null, type: "fresh", cancelled: false, verdict: "post", rule: null, ...o });
+const R = o => JSON.stringify({ category: "Job", post: null, start: null, last: null, old_last: null, type: "fresh", cancelled: false, verdict: "post", rule: null, ...o });
 // the editorial rules the tests use: same layout as editorial-rules.md ("- Name: explanation" under SKIP)
 const RULES = "SKIP these:\n- Consultant under 5 posts: consultant or advisor roles with fewer than 5 posts.\n- Retired personnel only: posts open only to retired employees.\n- Ex-servicemen only: posts open only to ex-servicemen.\n- Tender: tenders.\n\nPOST these:\n- Open public recruitment.\n";
 const filler = "General instructions and eligibility conditions apply to all candidates. ".repeat(60);   // ~4,000 characters
 const SAMPLES = {
   fresh: {
     title: "Recruitment of Junior Engineer 2026 (Advt No. 05/2026)", pages: ["Advertisement for 120 posts of Junior Engineer.\nOnline application opens on 20/09/2026.", filler, "Last date for submission of online application: 15 October 2026."],
-    reply: R({ post: "Junior Engineer", vacancies: 120, vacancies_quote: "Advertisement for 120 posts of Junior Engineer", start: "2026-09-20", last: "2026-10-15" }),
-    expect: ["🧾 Post: Junior Engineer", "👥 Vacancies: 120", "📅 Start: 20 Sep · Last date: 15 Oct", "✅ Open till 15 Oct"],
+    reply: R({ post: "Junior Engineer", start: "2026-09-20", last: "2026-10-15" }),
+    expect: ["🧾 Post: Junior Engineer", "📅 Start: 20 Sep · Last date: 15 Oct", "✅ Open till 15 Oct"],
   },
   extendsPassed: {
     title: "Corrigendum: extension of last date for Advt 03/2026", pages: ["Corrigendum. The last date to apply, earlier 12.09.2026, is extended up to 30.10.2026."],
@@ -46,8 +46,8 @@ const SAMPLES = {
   },
   dotted: {
     title: "Recruitment of Clerk 2026", pages: ["Vacancy notice. Total vacancies: 1,250\nLast date: 15.10.2026 (till 11:59 PM)"],
-    reply: R({ post: "Clerk", vacancies: 1250, vacancies_quote: "Total vacancies: 1,250", last: "2026-10-15" }),
-    expect: ["👥 Vacancies: 1,250", "✅ Open till 15 Oct"],
+    reply: R({ post: "Clerk", vacancies: 1250, vacancies_quote: "Total vacancies: 1,250", last: "2026-10-15" }),   // (an AI that still answers "vacancies": it is ignored)
+    expect: ["🧾 Post: Clerk", "✅ Open till 15 Oct"],
   },
   noDates: {
     title: "Recruitment of Assistant 2026", pages: ["Applications are invited for the post of Assistant. Details will be available on the website."],
@@ -120,11 +120,12 @@ check("AI gets the date line from page 3", lastPrompt.includes("Last date for su
 check("Hindi line reaches the AI", prompts.some(p => p.includes("१५ अक्टूबर २०२६")));
 check("prompt is not longer than ~6,000 characters of notice text plus the instructions", Math.max(...prompts.map(p => p.length)) < 11000);
 
-// skip verdict: still sent, marked
+// skip verdict: NOT alerted any more; the rule name travels with the decision (for the log and the daily digest)
 const d1 = await decide(ai, SAMPLES.skipRule);
-check("skip verdict: still sent", d1.send === true);
+check("skip verdict: not sent, with the rule name", d1.send === false && d1.skipped?.rule === "Consultant under 5 posts" && d1.skipped.by === "AI", JSON.stringify(d1.skipped));
+check("skip verdict: written to the log", ai.logRows.some(r => r.decision === "ai-skip" && r.reason.includes("Consultant under 5 posts")));
 const skipAlert = formatItem("Test site", "Job", SAMPLES.skipRule.title, "https://x.gov.in/9.pdf", d1.flag, "central", d1.extra);
-check("skip verdict: marked with the rule", skipAlert.includes("🙈 AI says skip: Consultant under 5 posts"), "\n" + skipAlert);
+check("skip verdict: the test command can still preview it, marked with the rule", skipAlert.includes("🙈 AI says skip: Consultant under 5 posts"), "\n" + skipAlert);
 
 // broken JSON -> old behaviour + unchecked
 const d2 = await decide(ai, SAMPLES.brokenJson);
@@ -217,19 +218,11 @@ const addPdf = (link, o) => { pdfs[link] = o; bySample.push(o); return link; };
   const d2 = await aiJob.decide(src, { title: "CRP CSA XVI vacancy table (revised vacancy position)", link: "https://x.gov.in/rev.pdf" }); prompts.length;
   check("classifier guard: AI 'Job' + a revised-vacancy title becomes Correction", d2.category === "Correction" || d2.category === null, String(d2.category)); }
 
-// 4) vacancies: only a clearly stated total, confirmed against the notice text; never a table row; otherwise empty
-{ const table = "State-wise vacancies\nHaryana 19\nPunjab 41\nTotal vacancies: 250\nLast date 10.10.2026";
-  const ok = parseReply(R({ vacancies: 250, vacancies_quote: "Total vacancies: 250" }), TODAY, { rules: RULES, text: table });
-  check("a stated total (quote found in the notice, with the number) is kept", ok.vacancies === 250);
-  const row = parseReply(R({ vacancies: 19, vacancies_quote: "Haryana 19" }), TODAY, { rules: RULES, text: "State-wise vacancies\nHaryana 19\nPunjab 41\nLast date 10.10.2026" });
-  check("a row of a table without a total is not accepted when the AI gives no proper total quote", parseReply(R({ vacancies: 19, vacancies_quote: null }), TODAY, { rules: RULES, text: table }).vacancies === null && row.vacancies === 19 /* quote present: kept only if the AI quoted it; the prompt forbids rows */);
-  check("no quote: no total", parseReply(R({ vacancies: 250, vacancies_quote: null }), TODAY, { rules: RULES, text: table }).vacancies === null);
-  check("a quote that is not in the notice: no total", parseReply(R({ vacancies: 250, vacancies_quote: "Total vacancies: 250 (approx)" }), TODAY, { rules: RULES, text: table }).vacancies === null);
-  check("a quote that does not contain the number: no total (HPCL: '22 + 1 + 1' is not '24')", parseReply(R({ vacancies: 24, vacancies_quote: "Total 22 [+ 1 Grade 10F + 1 Grade 10G]" }), TODAY, { rules: RULES, text: "Total 22 [+ 1 Grade 10F + 1 Grade 10G]" }).vacancies === null);
-  check("title only (no text): no total", parseReply(R({ vacancies: 250, vacancies_quote: "Total vacancies: 250" }), TODAY, { rules: RULES, text: "" }).vacancies === null);
-  check("the prompt forbids taking a table row as the total", prompts.some(p => p.includes("Never take one row, one state, one category or one post of a table as the total")));
-  const alertLines = detailLines(parseReply(R({ post: "Office Assistant", vacancies: 19, vacancies_quote: null, last: "2026-10-10" }), TODAY, { rules: RULES, text: table }), TODAY);
-  check("no total: the alert has no Vacancies line", !alertLines.some(l => l.startsWith("👥"))); }
+// 4) vacancies are no longer asked for (saves tokens) and never shown, even if an AI still answers them
+{ check("the prompt no longer asks for vacancies", prompts.length > 0 && prompts.every(p => !/vacancies_quote|"vacancies"|total number of vacancies/i.test(p)));
+  const parsed = parseReply(R({ post: "Office Assistant", vacancies: 19, vacancies_quote: "Haryana 19", last: "2026-10-10" }), TODAY, { rules: RULES });
+  check("the reply has no vacancies field", !("vacancies" in parsed));
+  check("no Vacancies line in the alert, even if the AI answered one", !detailLines(parsed, TODAY).some(l => /vacanc|👥/i.test(l)), detailLines(parsed, TODAY).join(" / ")); }
 
 // 5) date lines that wrap onto the next line (the exact BEL Sr. DGM case; its Hindi text is garbled by an old font encoding)
 { const belPage7 = "कारोबार# जVरत8 और कारोबार# :वकास\nदन करने कH अं तम\nतार#ख 06-10-2026 है।\nCandidates who are desirous of applying for the post indicated in the advertisement may\napply online by clicking the link provided against the advertisement. The last date to submit\nonline application is 06-10-2026.\n• अNय+थ=य8 को :वPापन म\u001e 4दए गए सभी अनुदेश8 को पढ़ना होगा और ऑनलाइन आवेदन प/ म\u001e सभी\nजानकार# सह# ढंग से देनी होगी और जमा करने से पहले उसका स\u0019यापन करन";
@@ -281,6 +274,72 @@ const addPdf = (link, o) => { pdfs[link] = o; bySample.push(o); return link; };
   // over the daily limit: no visual read either
   const capped = mk({}, { ...cfg, maxAiCallsPerDay: 0 }); const cd = await ask(capped, "Advertisement for Engagement of TA Consultant 2026", link);
   check("daily limit reached: no visual read is made", cd.flag === "capped" || cd.flag === "limit"); }
+
+// ===== What gets alerted: silent rule skips, title pre-check, forms and Word/Excel files =====
+{ // 1) "Ex-servicemen only" / "Retired personnel only": ONLY when exclusively for them. A public recruitment with an ESM quota is still alerted.
+  const rules = fs.readFileSync(new URL("../editorial-rules.md", import.meta.url), "utf8");
+  check("editorial-rules.md says 'only' means EXCLUSIVELY, and quota/reservation recruitments must be posted", /Ex-servicemen only: .*EXCLUSIVELY/.test(rules) && /merely reserves seats/.test(rules) && /Retired personnel only: .*EXCLUSIVELY/.test(rules));
+  check("the AI prompt says so too", prompts.some(p => p.includes("ONLY when the post can be filled EXCLUSIVELY") && p.includes("merely RESERVES seats")));
+  // exclusive: skipped, silently
+  const exclusive = addPdf("https://x.gov.in/esm-only.pdf", { title: "Recruitment of Security Guards 2026 (Advt 04/2026)", pages: ["Applications are invited for Security Guards. Open only to ex-servicemen (ESM). Last date 20.10.2026."],
+    reply: R({ post: "Security Guard", last: "2026-10-20", eligibility: "Open only to ex-servicemen", verdict: "skip", rule: "Ex-servicemen only" }) });
+  const dEx = await ask(mk(), "Recruitment of Security Guards 2026 (Advt 04/2026)", exclusive);
+  check("exclusive to ex-servicemen: skipped by 'Ex-servicemen only' (no alert)", dEx.send === false && dEx.skipped?.rule === "Ex-servicemen only", JSON.stringify(dEx.skipped));
+  // quota only: posted
+  const quota = addPdf("https://x.gov.in/ssc-quota.pdf", { title: "SSC Constable (GD) 2026 Recruitment (Advt 05/2026)", pages: ["Open to all graduates. 10% of vacancies are reserved for ex-servicemen. Last date 25.10.2026."],
+    reply: R({ post: "Constable (GD)", last: "2026-10-25", eligibility: "Any graduate; 10% reserved for ex-servicemen", verdict: "post", rule: null }) });
+  const dQ = await ask(mk(), "SSC Constable (GD) 2026 Recruitment (Advt 05/2026)", quota);
+  check("public recruitment with an ex-servicemen quota: still alerted", dQ.send === true && !dQ.skipped && dQ.extra.body.includes("✅ Open till 25 Oct"), JSON.stringify(dQ.extra));
+  // a wrong 'skip' with a rule that is not exclusive-looking still needs an exact rule name; an invented one is a post
+  const inv = addPdf("https://x.gov.in/inv.pdf", { title: "Recruitment of Junior Clerk 2026 (Advt 06/2026)", pages: ["Junior Clerk. Last date 25.10.2026. 10% reserved for ex-servicemen."], reply: R({ post: "Junior Clerk", last: "2026-10-25", verdict: "skip", rule: "Has ex-servicemen quota" }) });
+  const dInv = await ask(mk(), "Recruitment of Junior Clerk 2026 (Advt 06/2026)", inv);
+  check("an invented reason ('Has ex-servicemen quota') is not a skip: alerted", dInv.send === true); }
+
+{ // 3) the free title pre-check: no PDF download, no AI call
+  let downloads = 0; const spy = mk({ readPdf: async () => { downloads++; return { text: "x", scanned: false }; } });
+  const before = docCalls.length, promptsBefore = prompts.length;
+  const cases = [
+    ["Recruitment of Ex-Servicemen on contract basis", "Ex-servicemen only"],
+    ["Engagement of retired officers as consultants", "Retired personnel only"],
+    ["Recruitment of Superannuated Engineers 2026", "Retired personnel only"],
+    ["Re-employment of retired defence officers (Advt 3/2026)", "Retired personnel only"],
+    ["Engagement of Ex-employees on contract", "Retired personnel only"],
+    ["Recruitment of Manager on deputation basis", "Deputation only"],
+    ["General Departmental Competitive Examination GDCE-01/2023", "Internal promotion or departmental exam"],
+    ["Limited Departmental Competitive Examination (LDCE) 2026 for promotion", "Internal promotion or departmental exam"],
+    ["Tender for supply of chairs", "Tender"],
+    ["Notice inviting quotation for painting work", "Tender"],
+  ];
+  for (const [title, rule] of cases) {
+    const d = await spy.decide(src, { title, link: "https://x.gov.in/t.pdf" });
+    if (rule) check(`title pre-check: "${title.slice(0, 48)}" -> ${rule}`, d.send === false && d.skipped?.rule === rule && d.skipped.by === "title" && d.how === "title-rule", JSON.stringify(d.skipped));
+  }
+  check("title pre-check: no PDF was downloaded and no AI call was made", downloads === 0 && spy.calls === 0 && docCalls.length === before && prompts.length === promptsBefore);
+  check("title pre-check: written to the log", spy.logRows.filter(r => r.decision === "title-skip").length === cases.filter(c => c[1]).length);
+  // titles that only mention an ex-servicemen QUOTA / reservation must NOT be skipped
+  for (const title of ["SSC GD Constable 2026 (reservation for ex-servicemen)", "Recruitment of Constables: 10% vacancies reserved for ex-servicemen", "Recruitment of Clerks 2026: age relaxation for ex-servicemen", "Recruitment on Deputation/Direct Recruitment basis (Advt 4/2026)", "Recruitment of Manager (open market and deputation)", "Expression of Interest for engagement of consultants", "Recruitment in a Public Sector Undertaking 2026"]) {
+    check(`not title-skipped: "${title.slice(0, 55)}"`, titleSkipRule(title) === null && preFilter({ title, link: "https://x.gov.in/a.pdf" }) === null, String(titleSkipRule(title)));
+  }
+  check("the pattern list lives in keywords.json (editable)", Array.isArray(JSON.parse(fs.readFileSync(new URL("../keywords.json", import.meta.url), "utf8")).skipTitles) && JSON.parse(fs.readFileSync(new URL("../keywords.json", import.meta.url), "utf8")).skipTitles.length >= 5); }
+
+{ // 5) forms are not notices; Word/Excel files
+  for (const title of ["Download Application Form for Clerk", "Application Format for Sports Quota", "Annexure-III List of documents to be uploaded", "Self Declaration format", "Declaration by the candidate", "Undertaking by candidate", "Biodata form", "Proforma for NOC", "Performa for caste certificate", "Certificate format for OBC (NCL)"])
+    check(`form title -> Not Relevant: "${title}"`, isFormTitle(title) && preFilter({ title, link: "https://x.gov.in/f.pdf" })?.send === false && preFilter({ title, link: "https://x.gov.in/f.pdf" }).how === "form");
+  for (const title of ["Declaration of Result of Clerk exam", "Updated Vacancies Annexure for CRP-CSA-XVI", "Annexure to Advt 05/2026", "Recruitment in a Public Sector Undertaking", "Recruitment of Junior Engineer 2026"])
+    check(`not a form: "${title}"`, !isFormTitle(title));
+  check("isWordExcelLink: .doc .docx .xls .xlsx (with a query string too), not .pdf", ["a.doc", "a.DOCX", "a.xls", "a.xlsx?v=2", "https://x/y.docx#p"].every(isWordExcelLink) && !isWordExcelLink("a.pdf") && !isWordExcelLink("https://x/docs/page"));
+  const spy = mk({ readPdf: async () => { throw new Error("must not be downloaded"); } });
+  const dForm = await spy.decide(src, { title: "Download Application Form for Clerk", link: "https://x.gov.in/form.pdf" });
+  check("a form: no alert, no download, no AI, logged as not relevant", dForm.send === false && !dForm.skipped && spy.calls === 0 && spy.logRows.some(r => r.decision === "not-relevant"));
+  const dDoc = await spy.decide(src, { title: "Format of Proposal Received", link: "https://x.gov.in/a.docx" });
+  check("a .docx with an unclear title: Not Relevant, no alert", dDoc.send === false && spy.calls === 0);
+  const dXls = await spy.decide(src, { title: "List of candidates", link: "https://x.gov.in/a.xlsx" });
+  check("a .xlsx with a title the keywords do not trust: Not Relevant", dXls.send === false && spy.calls === 0);
+  const dReal = await spy.decide(src, { title: "Advertisement for the post of Junior Engineer (Advt 07/2026)", link: "https://x.gov.in/advt.docx" });
+  check("a real notice that is a Word file: alerted with '📄 Word/Excel file — not read' (not 'link is a web page')", dReal.send === true && dReal.extra.body.join() === "📄 Word/Excel file — not read", JSON.stringify(dReal.extra));
+  const dWeb = await spy.decide(src, { title: "Advertisement for the post of Junior Engineer (Advt 08/2026)", link: "https://x.gov.in/advt-page.html" });
+  check("a web page still says the link is a web page", dWeb.extra.body[0].startsWith("⚠️ Dates not checked — the link is a web page"), JSON.stringify(dWeb.extra));
+  check("detailLines: Word/Excel line", detailLines(null, TODAY, { wordExcel: true }).join() === "📄 Word/Excel file — not read"); }
 
 // a "noFileDownload" source (NALCO): the PDF is never opened, no AI call, alert says so instead of the date lines
 { let opened = 0; const ai4 = mk({ readPdf: async () => { opened++; return { text: "x", scanned: false }; } });

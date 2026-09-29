@@ -6,7 +6,7 @@ export const apiBase = () => process.env.TELEGRAM_API_BASE || "https://api.teleg
 export const SEND_BUTTON = { inline_keyboard: [[{ text: "📥 Send to agents", callback_data: "send" }]] };
 export const DONE_BUTTON = { inline_keyboard: [[{ text: "✅ Sent to agents", callback_data: "done" }]] };
 
-const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+export const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const ICONS = { "Job": "💼", "Admit Card": "🎫", "Result": "📊", "Answer Key": "🔑", "Correction": "✏️", "Other": "📌" };
 

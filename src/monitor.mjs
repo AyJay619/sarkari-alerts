@@ -6,7 +6,8 @@ import { emptyReminder } from "./emptycheck.mjs";
 import { categorize } from "./categorize.mjs";
 import { formatItem, formatGroup, makeSender, apiBase } from "./telegram.mjs";
 import { buildPlan, levelOf } from "./order.mjs";
-import { Classifier, keywordVerdict, loadConfig, noFileDecision } from "./classify.mjs";
+import { Classifier, keywordVerdict, loadConfig, noFileDecision, preFilter } from "./classify.mjs";
+import { digestHtml, digestsDue, markDigestSent, recordSkips } from "./skipped.mjs";
 
 const args = process.argv.slice(2);
 const flag = n => args.includes(n);
@@ -106,7 +107,7 @@ if (TEST_AI) {
     const d = await test.decide(src, i);
     const category = d.category ?? categorize(i.title);
     rows.push({ title: i.title.slice(0, 70), keywords: keywordVerdict(i.title), "AI chose": d.how === "AI" ? d.category : "(" + d.how + ")", flag: d.flag ?? "", "live mode": d.send ? "sends" : "would NOT send" });
-    const note = d.send ? "" : "\n\n(Live mode would NOT send this: AI said Not Relevant)";
+    const note = d.send ? "" : "\n\n(Live mode would NOT alert this: " + (d.skipped ? "skipped by rule: " + d.skipped.rule : d.reason ?? "AI said Not Relevant") + ")";
     if (!(await send(formatItem(src.name, category, i.title, i.link, d.flag, levelOf(src), d.extra) + note, true))) console.error("Telegram send failed");
   }
   console.table(rows);
@@ -130,6 +131,12 @@ if (!(await waitForInternet())) {
 }
 
 let telegramProblem = false;
+const clockMs = () => (process.env.TEST_NOW_ISO ? Date.parse(process.env.TEST_NOW_ISO) : Date.now());   // (TEST_NOW_ISO: only the tests set it)
+const skippedRun = [];   // notices skipped by a rule in this run: { source, title, rule, link, by }
+function noteSkip(sourceName, item, d) {
+  if (d.skipped) skippedRun.push({ source: sourceName, title: item.title, rule: d.skipped.rule, link: item.link, by: d.skipped.by });
+  if (!ai) console.log(`  [${d.skipped ? "title-skip" : "not-relevant"}] ${sourceName}: ${item.title.slice(0, 90)} (${d.reason ?? d.how})`);   // (with the AI on, the classifier logs it itself)
+}
 let alertsSent = 0;         // notices announced in this run (for the morning message)
 const failures = [];        // sites that could not be read in this run
 const pendingAlerts = [];   // notices found in this run; sent together at the end, ordered by level and category (see order.mjs)
@@ -186,8 +193,9 @@ for (const src of sources) {
   const toSend = fresh.slice().reverse();
   const skipped = Math.max(0, toSend.length - MAX_ALERTS_PER_SOURCE);
   for (const i of toSend.slice(skipped)) {
-    const d = src.noFileDownload ? noFileDecision(i) : ai ? await ai.decide(src, i) : NO_AI;   // noFileDownload: never open the file, AI on or off
-    if (!d.send) { st.seen[keyOf(i)] = now; continue; }   // "Not Relevant": not sent, written to the review log
+    // free title/file-type pre-check first (the classifier does it itself when the AI is on). noFileDownload: never open the file, AI on or off
+    const d = src.noFileDownload ? (preFilter(i) ?? noFileDecision(i)) : ai ? await ai.decide(src, i) : (preFilter(i) ?? NO_AI);
+    if (!d.send) { st.seen[keyOf(i)] = now; noteSkip(src.name, i, d); continue; }   // skipped by a rule / Not Relevant / a form: no alert (logged; rule skips go in the daily digest)
     const category = d.category ?? categorize(i.title), level = levelOf(src);
     // marked as seen only once it is really sent; if sending fails it is retried next run
     pendingAlerts.push({ level, category, html: formatItem(src.name, category, i.title, i.link, d.flag, level, d.extra), onSent: () => (st.seen[keyOf(i)] = now) });
@@ -233,8 +241,9 @@ for (const [group, members] of Object.entries(pendingGroups)) {
   for (const [k, hits] of toAnnounce.slice(skipped)) {
     const regions = [...new Set(hits.map(h => h.mem.src.region ?? h.mem.src.name))];
     // One AI decision for the whole group (cached under the group's title, not one region's link)
-    const d = ai ? await ai.decide(hits[0].mem.src, { title: k, link: `group:${group}:${k}` }) : NO_AI;
-    if (!d.send) { gs.seen[k] = now; markSeen(hits, now); continue; }
+    const gItem = { title: k, link: `group:${group}:${k}` };
+    const d = ai ? await ai.decide(hits[0].mem.src, gItem) : (preFilter(gItem) ?? NO_AI);
+    if (!d.send) { gs.seen[k] = now; markSeen(hits, now); noteSkip(hits[0].mem.src.groupName ?? group, gItem, d); continue; }
     const category = d.category ?? categorize(k), level = levelOf(hits[0].mem.src);
     pendingAlerts.push({ level, category, html: formatGroup(hits[0].mem.src.groupName ?? group, category, k, regions, members.length, hits[0].i.link, d.flag, level, d.extra), onSent: () => { gs.seen[k] = now; markSeen(hits, now); } });
   }
@@ -245,12 +254,19 @@ for (const [group, members] of Object.entries(pendingGroups)) {
 
 // Send everything found in this run: one summary, then Central (Jobs, Admit Cards, Results, Other), then State. Nothing new = nothing sent.
 // If the summary or a level/category header cannot be sent, the notices are still tried (their own send decides "seen").
-for (const m of buildPlan(pendingAlerts)) {
+recordSkips(state, skippedRun, clockMs());   // remembered for the daily digest
+for (const m of buildPlan(pendingAlerts, skippedRun.length)) {
   const ok = await send(m.html, !!m.alert);
   if (m.alert) { if (ok) { m.alert.onSent(); alertsSent++; } else telegramProblem = true; }
   else if (!ok) console.error("Could not deliver a summary/heading message (the notices themselves are unaffected).");
 }
 for (const n of pendingNotes) { if (await send(n.html)) n.onSent(); else telegramProblem = true; }
+
+// Daily digest of everything skipped by the rules: from 8:30 pm Indian time (or the next morning if the PC was off then). Nothing skipped = nothing sent.
+// A failed digest is not marked as sent, so the next run tries again; it never fails the run.
+if (!ONLY) for (const due of digestsDue(state, clockMs())) {
+  if (await send(digestHtml(due))) markDigestSent(due); else console.error("Could not deliver the skipped digest (it will be tried again next run).");
+}
 
 if (summaries.length) {
   if (!(await send("👀 " + summaries.join("\n")))) {

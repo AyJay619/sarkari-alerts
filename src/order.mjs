@@ -20,14 +20,14 @@ export const levelTag = key => { const l = levelInfo(key); return `${l.icon} ${l
 
 // alerts: [{ level, category, ... }]. Returns the messages to send, in order: [{ html, alert? }]
 // (alert is set for the notice messages, which get the "Send to agents" button).
-export function buildPlan(alerts) {
+export function buildPlan(alerts, skippedCount) {
   if (!alerts.length) return [];   // nothing new: send nothing at all
   const count = (lvl, b) => alerts.filter(a => a.level === lvl && bucketOf(a.category) === b).length;
   const line = (b, n) => `${b.icon} ${b.name}: ${n}` + (n ? "" : " — none");
   const plan = [];
 
   const parts = l => BUCKETS.map(b => `${b.icon} ${b.name} ${count(l.key, b.key)}`).join(" · ");
-  plan.push({ html: [`📋 <b>New this run: ${alerts.length}</b>`, ...LEVELS.map(l => `${l.icon} ${l.label} Govt: ${alerts.filter(a => a.level === l.key).length} (${parts(l)})`)].join("\n") });
+  plan.push({ html: [`📋 <b>New this run: ${alerts.length}</b>`, ...LEVELS.map(l => `${l.icon} ${l.label} Govt: ${alerts.filter(a => a.level === l.key).length} (${parts(l)})`), ...(Number.isInteger(skippedCount) ? [`🙈 Skipped by rules: ${skippedCount}`] : [])].join("\n") });
 
   for (const l of LEVELS) {
     const total = alerts.filter(a => a.level === l.key).length;
