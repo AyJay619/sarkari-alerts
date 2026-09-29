@@ -132,7 +132,10 @@ HOW TO USE THE RULES:
 - Each SKIP rule has a NAME: the words before the colon. Use "skip" ONLY when one of those SKIP rules clearly applies to this notice. Then "rule" must be that NAME copied EXACTLY, word for word, with nothing added or changed.
 - If no SKIP rule clearly applies, "verdict" is "post" and "rule" is null. NEVER invent a reason or a new rule name. A notice is never skipped for a reason that is not in the list.
 - The English and the Hindi version of one notice must get the same verdict and the same rule name.
-- "Ex-servicemen only" and "Retired personnel only" apply ONLY when the post can be filled EXCLUSIVELY by such people. A normal public recruitment (SSC, RRB, banks, police, PSUs...) that merely RESERVES seats, a quota, age relaxation or preference for ex-servicemen / ex-Agniveers / retired persons is NOT covered by those rules: answer "post". The same holds for the other SKIP rules: they are for notices that are ONLY that kind (only deputation, only an internal exam), not for a recruitment that also has such a route.
+- "Ex-servicemen only": use it when ANY of these holds: (a) the reservation / vacancies are 100% for ex-servicemen, or "(ESM)" is part of the post or grade name (e.g. "Executives in E-I GRADE (ESM)"); (b) the eligibility requires a military rank (JWO, Havildar, Naib Subedar, Subedar ...) or years of service in the Armed Forces (Army, Navy, Air Force) and a discharge certificate; (c) only serving or retired defence personnel / defence officers can apply.
+- "Retired personnel only": use it when ANY of these holds: only retired / superannuated persons or ex-employees can apply; only retired (or serving) officers or scientists of any organisation can apply (e.g. "retired Scientist-G / Scientist-F / Outstanding Scientist / Director from DRDO or other national R&D labs", retired bank officers, retired PSU executives); a superannuation / relieving / pension certificate is required.
+- Read the eligibility with these tests BEFORE you answer "post". But a QUOTA inside a normal public recruitment (SSC, RRB, banks, police, PSUs ... where anyone eligible can apply and e.g. "10% vacancies are reserved for ex-servicemen", age relaxation, preference) is NOT a skip: answer "post".
+- The other SKIP rules follow the same idea: they are for notices that are ONLY that kind (only deputation, only an internal exam), not for a recruitment that also has such a route.
 
 Reply with ONLY one JSON object, no other text:
 {"category": one of "Job", "Admit Card", "Result", "Answer Key", "Correction", "Not Relevant",
@@ -140,6 +143,7 @@ Reply with ONLY one JSON object, no other text:
  "eligibility": the exact words of the notice about WHO may apply (eligibility, e.g. "Retired employees of ...", "Any graduate"), max 150 characters, or null. Find this BEFORE you decide the verdict, and compare it with every SKIP rule,
  "start": the date online applications / registration OPEN (start date, opening date, "registration starts", "commencement of online application", "apply online from ..."), "YYYY-MM-DD" or null. If the notice says applications are accepted "from X to Y" or "between X and Y", start is X. Always look for it,
  "last": last date to apply, "YYYY-MM-DD" or null,
+ "advt_date": the date of the advertisement / notice itself (the date printed on it, e.g. "Dated 24.09.2026" or "Advt. No. 05/2026 dated ..."), "YYYY-MM-DD" or null,
  "old_last": for a corrigendum/extension only: the previous last date if the notice states it, else null,
  "type": one of "fresh" (a new advertisement), "corrigendum" (changes to an earlier notice), "extension" (only extends a date), "other",
  "cancelled": true if the notice cancels or withdraws an advertisement / recruitment, else false,
@@ -188,7 +192,7 @@ export function parseReply(raw, today, { rules = null } = {}) {
   if (cancelled) { category = "Correction"; type = "corrigendum"; verdict = "post"; rule = null; }
   return {
     category, type, post: str(j.post, 120), cancelled,
-    start: validDate(j.start, today), last: validDate(j.last, today), oldLast: validDate(j.old_last, today),
+    start: validDate(j.start, today), last: validDate(j.last, today), oldLast: validDate(j.old_last, today), advtDate: validDate(j.advt_date, today),
     verdict, rule,
   };
 }
@@ -214,7 +218,7 @@ export function dateStatus(last, today) {
 export function detailLines(data, today, { scanned = false, notPdf = false, wordExcel = false, listDate = null, listStart = null } = {}) {
   data = data ?? { type: "fresh" };
   if (data.cancelled) return [...(data.post ? [`🧾 Post: ${data.post}`] : []), "❌ Advertisement cancelled"];
-  let lastFromList = false, startFromList = false;
+  let lastFromList = false, startFromList = false, startFromAdvt = false;
   if (!data.last && listDate) { data = { ...data, last: listDate }; lastFromList = true; }
   if (!data.start && listStart) { data = { ...data, start: listStart }; startFromList = true; }
   const lines = [];
@@ -224,9 +228,11 @@ export function detailLines(data, today, { scanned = false, notPdf = false, word
   if (data.post) lines.push(`🧾 Post: ${data.post}`);
   if (!data.last && !data.start) { lines.push("⚠️ Dates not found — check PDF"); return lines; }
 
-  const shown = (d, fromList) => (d ? fmtDate(d, today) + (fromList ? " (site list)" : "") : "?");
-  lines.push(`🟢 Start date: ${shown(data.start, startFromList)}`);
-  lines.push(`🔴 Last date: ${shown(data.last, lastFromList)}`);
+  // no application start date (typical for offline / by-post applications): use the advertisement date and say so; "?" only if there is neither
+  if (!data.start && data.last && data.advtDate) { data = { ...data, start: data.advtDate }; startFromAdvt = true; }
+  const shown = (d, note) => (d ? fmtDate(d, today) + (note ? ` (${note})` : "") : "?");
+  lines.push(`🟢 Start date: ${shown(data.start, startFromList ? "site list" : startFromAdvt ? "advt date" : "")}`);
+  lines.push(`🔴 Last date: ${shown(data.last, lastFromList ? "site list" : "")}`);
 
   const changed = data.type === "corrigendum" || data.type === "extension";
   if (changed && data.last) lines.push(data.oldLast && data.oldLast !== data.last ? `🔁 Extended: ${fmtDate(data.oldLast, today)} → ${fmtDate(data.last, today)}` : `🔁 New last date: ${fmtDate(data.last, today)}`);

@@ -3,10 +3,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { categorize } from "./categorize.mjs";
-import { CATEGORIES, NEEDS_DATES, buildPrompt, detailLines, isVacancyUpdateTitle, parseReply, pdfSnippet, todayIST } from "./extract.mjs";
+import { CATEGORIES, NEEDS_DATES, buildPrompt, detailLines, isVacancyUpdateTitle, parseReply, pdfSnippet, ruleNames, todayIST } from "./extract.mjs";
 
 // Bump when the prompt or the reading of answers changes: older cached answers are then asked again instead of trusted.
-export const CACHE_VERSION = 3;
+export const CACHE_VERSION = 4;
 
 const readJson = f => JSON.parse(fs.readFileSync(new URL("../" + f, import.meta.url), "utf8"));
 export const loadConfig = () => readJson("config.json");
@@ -38,6 +38,28 @@ export function preFilter(item) {
   const rule = titleSkipRule(item.title);
   if (rule) return { send: false, how: "title-rule", skipped: { rule, by: "title" }, reason: "title matches skip rule: " + rule };
   if (isWordExcelLink(item.link) && keywordVerdict(item.title) !== "relevant") return { send: false, how: "word-excel", reason: "Word/Excel file: a form, not a notice" };
+  return null;
+}
+
+// ---- safety net for the two "exclusive" rules ----
+// If the notice TEXT plainly says the post is exclusive (100% reservation for ex-servicemen, "(ESM)" in the post name, "eligible retired
+// Scientist-G ...") but the AI answered "post", the verdict is turned into a skip. A quota inside a normal recruitment ("10% reserved
+// for ex-servicemen") matches none of these.
+const ESM_SIGNS = [
+  /\(ESM\)/i,
+  /reservation\s+(is|of|shall\s+be|will\s+be)\s+100\s*%[^.\n]{0,30}ex[- ]?servicem/i,
+  /100\s*%\s+(of\s+(the\s+)?)?(vacancies|posts|seats)?\s*(is|are)?\s*(reserved\s+)?for\s+ex[- ]?servicem/i,
+  /\bonly\s+(for\s+)?ex[- ]?servicem[ae]n\b/i,
+];
+const RETIRED_SIGNS = [
+  /\b(interested\s+and\s+)?eligible\s+retired\s+[A-Z]/,
+  /\bshould\s+have\s+retired\b/i,
+  /\bonly\s+(the\s+)?retired\b/i,
+];
+export function exclusiveSignal(title, text) {
+  const all = title + "\n" + (text ?? "");
+  if (ESM_SIGNS.some(re => re.test(all))) return "Ex-servicemen only";
+  if (RETIRED_SIGNS.some(re => re.test(all))) return "Retired personnel only";
   return null;
 }
 
@@ -180,7 +202,11 @@ export class Classifier {
       }
       if (raw === undefined) raw = await this.ask(item.title, text);
       const data = parseReply(raw, today, { rules: this.rules, text, visual });
-      if (!text && !visual) Object.assign(data, { start: null, last: null, oldLast: null });   // no document text: any date would be a guess
+      if (!text && !visual) Object.assign(data, { start: null, last: null, oldLast: null, advtDate: null });
+      if (data.verdict !== "skip" && !data.cancelled) {   // the safety net (see exclusiveSignal)
+        const sign = exclusiveSignal(item.title, text);
+        if (sign && ruleNames(this.rules).includes(sign)) { data.verdict = "skip"; data.rule = sign; this.log(src, item, "exclusive-signal", "the text says so: " + sign); }
+      }   // no document text: any date would be a guess
       if (visual) scanned = !data.last;   // read visually: only "scanned — dates not found" when it really found no last date
       const entry = { v: CACHE_VERSION, data, scanned, noText, ...(visual ? { visual: true } : {}) };
       this.cache[item.link] = entry;

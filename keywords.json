@@ -20,7 +20,8 @@
         "\\bex[- ]?servicem[ae]n\\b.{0,40}\\b(only|on\\s+contract|contractual|contract\\s+basis)\\b",
         "\\b(recruitment|engagement|hiring|appointment|selection|vacanc\\w*|posts?)\\s+(of|for|from|among)\\s+(the\\s+)?(retired\\s+)?ex[- ]?servicem[ae]n\\b",
         "\\bfor\\s+ex[- ]?servicem[ae]n\\s+only\\b",
-        "\\bESM\\s+only\\b"
+        "\\bESM\\s+only\\b",
+        "\\(ESM\\)"
       ],
       "unless": ["reserv", "quota", "relaxation", "preference", "concession", "percent", "%", "\\bagainst\\s+(the\\s+)?ex", "\\balso\\b"]
     },

@@ -7,7 +7,7 @@ import fs from "node:fs";
 import { PDFDocument } from "pdf-lib";
 import { buildSnippet, countRealWords, dateStatus, detailLines, firstPagesBase64, isVacancyUpdateTitle, looksImageLike, parseReply, ruleNames, todayIST } from "../src/extract.mjs";
 import { categorize } from "../src/categorize.mjs";
-import { Classifier, isFormTitle, isWordExcelLink, loadConfig, noFileDecision, preFilter, titleSkipRule } from "../src/classify.mjs";
+import { Classifier, exclusiveSignal, isFormTitle, isWordExcelLink, loadConfig, noFileDecision, preFilter, titleSkipRule } from "../src/classify.mjs";
 import { formatItem } from "../src/telegram.mjs";
 import { parseAlert } from "../src/inbox.mjs";
 
@@ -278,8 +278,8 @@ const addPdf = (link, o) => { pdfs[link] = o; bySample.push(o); return link; };
 // ===== What gets alerted: silent rule skips, title pre-check, forms and Word/Excel files =====
 { // 1) "Ex-servicemen only" / "Retired personnel only": ONLY when exclusively for them. A public recruitment with an ESM quota is still alerted.
   const rules = fs.readFileSync(new URL("../editorial-rules.md", import.meta.url), "utf8");
-  check("editorial-rules.md says 'only' means EXCLUSIVELY, and quota/reservation recruitments must be posted", /Ex-servicemen only: .*EXCLUSIVELY/.test(rules) && /merely reserves seats/.test(rules) && /Retired personnel only: .*EXCLUSIVELY/.test(rules));
-  check("the AI prompt says so too", prompts.some(p => p.includes("ONLY when the post can be filled EXCLUSIVELY") && p.includes("merely RESERVES seats")));
+  check("editorial-rules.md: the exclusive tests (100% / (ESM), military rank or service, retired scientists / superannuation certificate) and 'a quota is not a skip'", /Ex-servicemen only: .*100% for ex-servicemen.*\(ESM\).*military rank.*Armed Forces/.test(rules) && /Retired personnel only: .*retired Scientist-G.*superannuation/.test(rules) && /NOT this rule: a quota inside a normal public recruitment/.test(rules));
+  check("the AI prompt says so too", prompts.some(p => p.includes("ANY of these holds") && p.includes("100% for ex-servicemen") && p.includes("(ESM)") && p.includes("military rank") && p.includes("retired Scientist-G") && p.includes("superannuation / relieving") && p.includes("a QUOTA inside a normal public recruitment") && p.includes("is NOT a skip")));
   // exclusive: skipped, silently
   const exclusive = addPdf("https://x.gov.in/esm-only.pdf", { title: "Recruitment of Security Guards 2026 (Advt 04/2026)", pages: ["Applications are invited for Security Guards. Open only to ex-servicemen (ESM). Last date 20.10.2026."],
     reply: R({ post: "Security Guard", last: "2026-10-20", eligibility: "Open only to ex-servicemen", verdict: "skip", rule: "Ex-servicemen only" }) });
@@ -387,6 +387,44 @@ const addPdf = (link, o) => { pdfs[link] = o; bySample.push(o); return link; };
   const startDoc = addPdf("https://x.gov.in/startdate.pdf", { title: "Recruitment of Stenographer 2026 (Advt 11/2026)", pages: [filler, "The online registration starts on\n25.09.2026 and closes on 19.10.2026."], reply: R({ post: "Stenographer", start: "2026-09-25", last: "2026-10-19" }) });
   const ds = await ask(mk(), "Recruitment of Stenographer 2026 (Advt 11/2026)", startDoc);
   check("start date from the notice text reaches the alert: 🟢 Start date: 25 Sep, 🔴 Last date: 19 Oct", prompts.at(-1).includes("The online registration starts on\n25.09.2026") && ds.extra.body.includes("🟢 Start date: 25 Sep") && ds.extra.body.includes("🔴 Last date: 19 Oct") && ds.extra.body.at(-1) === "✅ Open · 20 days left", ds.extra.body.join(" | ")); }
+
+// ===== The two BEL notices that were alerted but are exclusive (exact texts from the PDFs), and the advertisement-date fallback =====
+{ const esmText = ["BEL has a requirement of Executives in E-I GRADE (ESM) forits NCS &RADAR", "Should be in the rank of JR. WARRANT OFFICER (JWO) or abovewith 15 years of service in the Indian Air Force with desired qualification as mentioned in", "The candidates should possess the qualification and the experience as specified above & the reservation is 100% for Ex-servicemen.\nDischarge book / certificate issued by the Indian Air Force clearly indicating the medical category.\nLast date to apply: 16.10.2026. Advt dated 25.09.2026."];
+  const advText = ["Interested and eligible retired Scientist-G / Scientist-F/ Outstanding Scientist / Director /", "Associate Director or above from DRDO / other National R&D Labs may apply for the post of Advisor for PDIC.", "Superannuation/Relieving Certificate from the employer.\nLast date: 19.10.2026."];
+  check("exclusiveSignal: '(ESM)' in the post name, and '100% for Ex-servicemen'", exclusiveSignal("x", esmText.join("\n")) === "Ex-servicemen only" && exclusiveSignal("Executives in E-I GRADE (ESM)", "") === "Ex-servicemen only" && exclusiveSignal("x", "the reservation is 100% for Ex-servicemen.") === "Ex-servicemen only");
+  check("exclusiveSignal: 'eligible retired Scientist-G ...'", exclusiveSignal("Advisor", advText.join("\n")) === "Retired personnel only");
+  check("exclusiveSignal: a quota / relaxation / preference is NOT a signal", [ "10% of the vacancies are reserved for ex-servicemen.", "Age relaxation for ex-servicemen as per Government rules. Retired employees may also apply.", "5 years relaxation for Ex-servicemen; 100% online application", "Preference will be given to ex-servicemen" ].every(t => exclusiveSignal("SSC Constable 2026", t) === null));
+  const esm = addPdf("https://x.gov.in/bel-sae.pdf", { title: "RECRUITMENT FOR THE POST OF SR.ASST ENGR FOR GHAZIABAD UNIT", pages: esmText, reply: R({ post: "Sr. Asst. Engineer", start: null, last: "2026-10-16", advt_date: "2026-09-25", verdict: "post", rule: null }) });
+  const adv = addPdf("https://x.gov.in/bel-adv.pdf", { title: "Recruitment of Advisor for PDIC, Bengaluru", pages: advText, reply: R({ post: "Advisor for PDIC", last: "2026-10-19", verdict: "post", rule: null }) });
+  const dEsm = await ask(mk(), "RECRUITMENT FOR THE POST OF SR.ASST ENGR FOR GHAZIABAD UNIT", esm);
+  const dAdv = await ask(mk(), "Recruitment of Advisor for PDIC, Bengaluru", adv);
+  check("BEL Sr. Asst. Engineer (100% Ex-servicemen, (ESM), JWO rank): skipped as 'Ex-servicemen only' even if the AI said post", dEsm.send === false && dEsm.skipped?.rule === "Ex-servicemen only", JSON.stringify(dEsm.skipped));
+  check("BEL Advisor for PDIC (only retired Scientist-G/F ..., relieving certificate): skipped as 'Retired personnel only' even if the AI said post", dAdv.send === false && dAdv.skipped?.rule === "Retired personnel only", JSON.stringify(dAdv.skipped));
+  const esm2 = addPdf("https://x.gov.in/bel-sae2.pdf", { title: "RECRUITMENT FOR THE POST OF SR.ASST ENGR FOR GHAZIABAD UNIT (2)", pages: esmText, reply: R({ post: "Sr. Asst. Engineer", last: "2026-10-16", verdict: "skip", rule: "Ex-servicemen only", eligibility: "the reservation is 100% for Ex-servicemen" }) });
+  const dEsm2 = await ask(mk(), "RECRUITMENT FOR THE POST OF SR.ASST ENGR FOR GHAZIABAD UNIT (2)", esm2);
+  check("...and when the AI itself answers skip with the exact name, the same result", dEsm2.send === false && dEsm2.skipped?.rule === "Ex-servicemen only");
+  const bel = mk(); await ask(bel, "RECRUITMENT FOR THE POST OF SR.ASST ENGR FOR GHAZIABAD UNIT", esm);
+  check("the safety net is logged", bel.logRows.some(r => r.decision === "exclusive-signal"));
+  check("BEL Sr. DGM title (Absorption / re-employment of Defence Forces officers (serving / retired)) is skipped from the title alone", titleSkipRule("Absorption/ re-employment of Defence Forces officers (serving/ retired) for the post of Sr. Deputy General Manager on Permanent Basis") === "Retired personnel only");
+  check("'(ESM)' in a title is skipped from the title; a title with a quota is not", titleSkipRule("Executives in E-I GRADE (ESM) for NCS & RADAR") === "Ex-servicemen only" && titleSkipRule("SSC GD 2026 (10% reserved for ESM)") === null);
+  // a quota inside a normal public recruitment is still alerted, also through the safety net
+  const quota = addPdf("https://x.gov.in/quota2.pdf", { title: "Recruitment of Junior Assistant 2026 (Advt 12/2026)", pages: ["Open to all graduates. 10% of the vacancies are reserved for ex-servicemen. Age relaxation for ex-servicemen. Retired employees may also apply. Last date 25.10.2026."], reply: R({ post: "Junior Assistant", last: "2026-10-25", verdict: "post" }) });
+  const dQuota = await ask(mk(), "Recruitment of Junior Assistant 2026 (Advt 12/2026)", quota);
+  check("a quota / relaxation inside a normal recruitment: still alerted", dQuota.send === true && !dQuota.skipped, JSON.stringify(dQuota.skipped)); }
+
+{ // start date fallback: the advertisement date, labelled; "?" only if neither exists
+  const L = (d, o) => detailLines({ type: "fresh", ...d }, TODAY, o);
+  check("no start date but an advertisement date: 🟢 Start date: 25 Sep (advt date)", L({ last: "2026-10-19", advtDate: "2026-09-25" }).join(" | ") === "🟢 Start date: 25 Sep (advt date) | 🔴 Last date: 19 Oct | ✅ Open · 20 days left", L({ last: "2026-10-19", advtDate: "2026-09-25" }).join(" | "));
+  check("neither: 🟢 Start date: ?", L({ last: "2026-10-19" })[0] === "🟢 Start date: ?");
+  check("a real start date wins over the advertisement date, unlabelled", L({ start: "2026-09-20", last: "2026-10-19", advtDate: "2026-09-25" })[0] === "🟢 Start date: 20 Sep");
+  check("the site list's start date wins over the advertisement date", L({ last: "2026-10-19", advtDate: "2026-09-25" }, { listStart: "2026-09-23" })[0] === "🟢 Start date: 23 Sep (site list)");
+  check("no dates at all but an advertisement date: still 'Dates not found' (the advt date alone is not a date to act on)", L({ advtDate: "2026-09-25" }).join(" | ") === "⚠️ Dates not found — check PDF");
+  check("advt date in the future is a start in the future: 🕒 Starts", L({ last: "2026-10-30", advtDate: "2026-10-05" }).join(" | ") === "🟢 Start date: 5 Oct (advt date) | 🔴 Last date: 30 Oct | 🕒 Starts 5 Oct");
+  check("parseReply reads advt_date (and drops an impossible one)", parseReply(R({ advt_date: "2026-09-25" }), TODAY).advtDate === "2026-09-25" && parseReply(R({ advt_date: "2031-01-01" }), TODAY).advtDate === null && parseReply(R({}), TODAY).advtDate === null);
+  check("the prompt asks for the advertisement / notice date", prompts.some(p => p.includes('"advt_date"') && p.includes("date of the advertisement / notice itself")));
+  const dl = addPdf("https://x.gov.in/offline.pdf", { title: "Recruitment of Clerk by post (Advt 13/2026)", pages: ["Advt dated 25.09.2026. Applications by post only. Last date: 19.10.2026."], reply: R({ post: "Clerk", last: "2026-10-19", advt_date: "2026-09-25" }) });
+  const dOff = await ask(mk(), "Recruitment of Clerk by post (Advt 13/2026)", dl);
+  check("offline notice through the classifier: start date = advt date, labelled", dOff.extra.body.includes("🟢 Start date: 25 Sep (advt date)") && dOff.extra.body.includes("🔴 Last date: 19 Oct"), dOff.extra.body.join(" | ")); }
 
 // a "noFileDownload" source (NALCO): the PDF is never opened, no AI call, alert says so instead of the date lines
 { let opened = 0; const ai4 = mk({ readPdf: async () => { opened++; return { text: "x", scanned: false }; } });
