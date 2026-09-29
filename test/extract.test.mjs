@@ -27,27 +27,27 @@ const SAMPLES = {
   fresh: {
     title: "Recruitment of Junior Engineer 2026 (Advt No. 05/2026)", pages: ["Advertisement for 120 posts of Junior Engineer.\nOnline application opens on 20/09/2026.", filler, "Last date for submission of online application: 15 October 2026."],
     reply: R({ post: "Junior Engineer", start: "2026-09-20", last: "2026-10-15" }),
-    expect: ["🧾 Post: Junior Engineer", "📅 Start: 20 Sep · Last date: 15 Oct", "✅ Open till 15 Oct"],
+    expect: ["🧾 Post: Junior Engineer", "🟢 Start date: 20 Sep", "🔴 Last date: 15 Oct", "✅ Open · 16 days left"],
   },
   extendsPassed: {
     title: "Corrigendum: extension of last date for Advt 03/2026", pages: ["Corrigendum. The last date to apply, earlier 12.09.2026, is extended up to 30.10.2026."],
     reply: R({ category: "Correction", type: "extension", old_last: "2026-09-12", last: "2026-10-30" }),
-    expect: ["🔁 Last date extended: 12 Sep → 30 Oct ✅ Open again"],
+    expect: ["🟢 Start date: ?", "🔴 Last date: 30 Oct", "🔁 Extended: 12 Sep → 30 Oct", "✅ Open · 31 days left"],
   },
   newDatePassedToo: {
     title: "Corrigendum for Advt 07/2026 (revised last date)", pages: ["Revised last date of application is 20.09.2026 (earlier 05.09.2026)."],
     reply: R({ category: "Correction", type: "corrigendum", old_last: "2026-09-05", last: "2026-09-20" }),
-    expect: ["🔁 Last date extended: 5 Sep → 20 Sep ⛔ Last date passed"],
+    expect: ["🔁 Extended: 5 Sep → 20 Sep", "⛔ Closed on 20 Sep"],
   },
   hindi: {
     title: "Recruitment of Constable 2026 (Hindi notice)", pages: ["भर्ती विज्ञापन\nऑनलाइन आवेदन की अंतिम तिथि १५ अक्टूबर २०२६ है।"],
     reply: R({ post: "Constable", last: "2026-10-15" }),
-    expect: ["📅 Last date: 15 Oct", "✅ Open till 15 Oct"],
+    expect: ["🟢 Start date: ?", "🔴 Last date: 15 Oct", "✅ Open · 16 days left"],
   },
   dotted: {
     title: "Recruitment of Clerk 2026", pages: ["Vacancy notice. Total vacancies: 1,250\nLast date: 15.10.2026 (till 11:59 PM)"],
     reply: R({ post: "Clerk", vacancies: 1250, vacancies_quote: "Total vacancies: 1,250", last: "2026-10-15" }),   // (an AI that still answers "vacancies": it is ignored)
-    expect: ["🧾 Post: Clerk", "✅ Open till 15 Oct"],
+    expect: ["🧾 Post: Clerk", "🔴 Last date: 15 Oct", "✅ Open · 16 days left"],
   },
   noDates: {
     title: "Recruitment of Assistant 2026", pages: ["Applications are invited for the post of Assistant. Details will be available on the website."],
@@ -55,9 +55,9 @@ const SAMPLES = {
     expect: ["🧾 Post: Assistant", "⚠️ Dates not found — check PDF"],
   },
   closesToday: { title: "Recruitment of Driver 2026 A", pages: ["Last date 29.09.2026"], reply: R({ last: "2026-09-29" }), expect: ["⏳ Closes today"] },
-  closesSoon: { title: "Recruitment of Driver 2026 B", pages: ["Last date 01.10.2026"], reply: R({ last: "2026-10-01" }), expect: ["⚠️ Closes in 2 days (1 Oct)"] },
-  passed: { title: "Recruitment of Driver 2026 C", pages: ["Last date 12.09.2026"], reply: R({ last: "2026-09-12" }), expect: ["⛔ Last date passed (12 Sep)"] },
-  notOpenYet: { title: "Recruitment of Driver 2026 D", pages: ["Apply from 05.10.2026 to 25.10.2026"], reply: R({ start: "2026-10-05", last: "2026-10-25" }), expect: ["🕒 Not open yet — starts 5 Oct (till 25 Oct)"] },
+  closesSoon: { title: "Recruitment of Driver 2026 B", pages: ["Last date 01.10.2026"], reply: R({ last: "2026-10-01" }), expect: ["⚠️ Closing · 2 days left"] },
+  passed: { title: "Recruitment of Driver 2026 C", pages: ["Last date 12.09.2026"], reply: R({ last: "2026-09-12" }), expect: ["⛔ Closed on 12 Sep"] },
+  notOpenYet: { title: "Recruitment of Driver 2026 D", pages: ["Apply from 05.10.2026 to 25.10.2026"], reply: R({ start: "2026-10-05", last: "2026-10-25" }), expect: ["🟢 Start date: 5 Oct", "🔴 Last date: 25 Oct", "🕒 Starts 5 Oct"] },
   skipRule: { title: "Recruitment of Consultant 2026", pages: ["Consultant on contract, 2 posts. Last date 10.10.2026"], reply: R({ post: "Consultant", last: "2026-10-10", verdict: "skip", rule: "consultant under 5 posts" }), expect: [] },   // (rule written in lower case: the code puts back the exact name)
   brokenJson: { title: "Recruitment of Peon 2026", pages: ["Some text about a peon post."], reply: "Sorry, here is what I found: post = peon" },
   guessedDate: { title: "Recruitment of Guard 2026", pages: ["Some text."], reply: R({ last: "2031-01-01", start: "2026-02-30" }), expect: ["⚠️ Dates not found — check PDF"] },
@@ -73,7 +73,7 @@ check("snippet catches a Hindi date line far from the start", buildSnippet([fill
 check("snippet catches a long one-paragraph PDF", buildSnippet(["blah ".repeat(1500) + " last date is 15.10.2026 " + "blah ".repeat(200)]).includes("15.10.2026"));
 check("status: passed / today / soon / open",
   [dateStatus("2026-09-28", TODAY).kind, dateStatus("2026-09-29", TODAY).kind, dateStatus("2026-10-02", TODAY).kind, dateStatus("2026-10-03", TODAY).kind].join() === "passed,today,soon,open");
-check("a date in another year shows the year", detailLines({ last: "2027-01-05", type: "fresh" }, TODAY).includes("✅ Open till 5 Jan 2027"));
+check("a date in another year shows the year", detailLines({ last: "2027-01-05", type: "fresh" }, TODAY).includes("🔴 Last date: 5 Jan 2027"));
 let threw = 0; for (const bad of ["", "no json", '{"category": "Banana"}', "{broken"]) try { parseReply(bad, TODAY); } catch { threw++; }
 check("unusable AI answers are rejected", threw === 4);
 check("a nonsense date becomes 'not found'", parseReply(SAMPLES.guessedDate.reply, TODAY).last === null && parseReply(SAMPLES.guessedDate.reply, TODAY).start === null);
@@ -169,13 +169,13 @@ check("daily counter starts again the next day", (await decide(ai5, SAMPLES.clos
 // the site's own end date (DRDO): used only when the PDF names no last date
 const drdoAi = mk();
 const listOnly = await drdoAi.decide(src, { title: "PXE, Balasore invites eligible candidates for the engagement of Apprentices", link: "https://drdo.gov.in/drdo/en/offerings/vacancies/pxe", endDate: "2026-10-12" });
-check("web-page notice with a list end date: verdict from the list, no AI call", drdoAi.calls === 0 && listOnly.extra.body.join("|") === "📅 Last date: 12 Oct (site list)|✅ Open till 12 Oct", listOnly.extra.body.join(" / "));
+check("web-page notice with a list end date: verdict from the list, no AI call", drdoAi.calls === 0 && listOnly.extra.body.join("|") === "🟢 Start date: ?|🔴 Last date: 12 Oct (site list)|✅ Open · 13 days left", listOnly.extra.body.join(" / "));
 const listPassed = await drdoAi.decide(src, { title: "DIPR invites applications for the engagement of Apprentices", link: "https://drdo.gov.in/drdo/en/offerings/vacancies/dipr", endDate: "2026-09-20" });
-check("list end date already passed -> ⛔", listPassed.extra.body.includes("⛔ Last date passed (20 Sep)"), listPassed.extra.body.join(" / "));
+check("list end date already passed -> ⛔", listPassed.extra.body.includes("⛔ Closed on 20 Sep"), listPassed.extra.body.join(" / "));
 const pdfWins = await mk().decide(src, { title: SAMPLES.dotted.title, link: urlOf(SAMPLES.dotted), endDate: "2026-11-30" });
-check("a last date found in the PDF wins over the list date", pdfWins.extra.body.includes("✅ Open till 15 Oct") && !pdfWins.extra.body.join().includes("site list"));
+check("a last date found in the PDF wins over the list date", pdfWins.extra.body.includes("🔴 Last date: 15 Oct") && pdfWins.extra.body.includes("✅ Open · 16 days left") && !pdfWins.extra.body.join().includes("site list"));
 const pdfNone = await mk().decide(src, { title: SAMPLES.noDates.title, link: urlOf(SAMPLES.noDates), endDate: "2026-10-20" });
-check("PDF with no date: the list date is used and labelled", pdfNone.extra.body.includes("📅 Last date: 20 Oct (site list)") && pdfNone.extra.body.includes("✅ Open till 20 Oct"), pdfNone.extra.body.join(" / "));
+check("PDF with no date: the list date is used and labelled", pdfNone.extra.body.includes("🔴 Last date: 20 Oct (site list)") && pdfNone.extra.body.includes("✅ Open · 21 days left"), pdfNone.extra.body.join(" / "));
 
 // alert layout + listener parser
 const full = formatItem("Test site", "Job", SAMPLES.fresh.title, "https://x.gov.in/0.pdf", null, "central", (await decide(ai, SAMPLES.fresh)).extra);
@@ -237,7 +237,7 @@ const addPdf = (link, o) => { pdfs[link] = o; bySample.push(o); return link; };
   const link = addPdf("https://x.gov.in/bel.pdf", { title: "Detailed Advertisement for Sr. DGM 2026", pages: [filler, belPage7], reply: R({ post: "Sr. DGM", last: "2026-10-06" }) });
   const d = await ask(mk(), "Detailed Advertisement for Sr. DGM 2026", link);
   const sent = prompts.at(-1);
-  check("BEL through the classifier: the text sent to the AI holds the whole sentence, and the last date 6 Oct comes back", sent.includes("online application is 06-10-2026.") && d.extra.body.includes("📅 Last date: 6 Oct"), d.extra?.body?.join(" / ")); }
+  check("BEL through the classifier: the text sent to the AI holds the whole sentence, and the last date 6 Oct comes back", sent.includes("online application is 06-10-2026.") && d.extra.body.includes("🔴 Last date: 6 Oct"), d.extra?.body?.join(" / ")); }
 
 // 6) PDFs with no real text layer: detect, send the PDF itself (first 6 pages), fall back, log, count
 { const hpclText = ["", "", "•\n•\n•\n•\n•\n•\n•\nperformancemanagement@hpcl.in\n•\n•\n•\n•\n•", "•"];
@@ -258,7 +258,7 @@ const addPdf = (link, o) => { pdfs[link] = o; bySample.push(o); return link; };
   const d = await ask(visualAi, "Advertisement for Engagement of TA Consultant 2026", link);
   check("image-like PDF: the PDF itself is sent to the AI as a document (base64 PDF)", docCalls.length === before.docs + 1 && docCalls.at(-1).mediaType === "application/pdf" && docCalls.at(-1).data === "QUJDRA==" && docCalls.at(-1).types.join() === "document,text");
   check("image-like PDF: the prompt says to read it visually", prompts.at(-1).includes("read it visually"));
-  check("HPCL: last date 12 Sep, ⛔ Last date passed, skip rule 'Retired personnel only'", d.extra.body.includes("📅 Last date: 12 Sep") && d.extra.body.includes("⛔ Last date passed (12 Sep)") && d.extra.skip === "Retired personnel only", d.extra.body.join(" / ") + " | " + d.extra.skip);
+  check("HPCL: last date 12 Sep, ⛔ Last date passed, skip rule 'Retired personnel only'", d.extra.body.includes("🔴 Last date: 12 Sep") && d.extra.body.includes("⛔ Closed on 12 Sep") && d.extra.skip === "Retired personnel only", d.extra.body.join(" / ") + " | " + d.extra.skip);
   check("visual reading is logged with its token cost", visualAi.logRows.some(r => r.decision === "visual-read" && /tokens in 1500, out 90/.test(r.reason)), visualAi.logRows.map(r => r.reason).join(" | "));
   check("visual reading counts in the daily AI limit and is reported", visualAi.usage.calls === before.calls + 1 && visualAi.visualReads === 1 && visualAi.summary().includes("visual PDF reads: 1"));
   check("visual answers show how they were read", d.how === "AI (read visually)");
@@ -289,7 +289,7 @@ const addPdf = (link, o) => { pdfs[link] = o; bySample.push(o); return link; };
   const quota = addPdf("https://x.gov.in/ssc-quota.pdf", { title: "SSC Constable (GD) 2026 Recruitment (Advt 05/2026)", pages: ["Open to all graduates. 10% of vacancies are reserved for ex-servicemen. Last date 25.10.2026."],
     reply: R({ post: "Constable (GD)", last: "2026-10-25", eligibility: "Any graduate; 10% reserved for ex-servicemen", verdict: "post", rule: null }) });
   const dQ = await ask(mk(), "SSC Constable (GD) 2026 Recruitment (Advt 05/2026)", quota);
-  check("public recruitment with an ex-servicemen quota: still alerted", dQ.send === true && !dQ.skipped && dQ.extra.body.includes("✅ Open till 25 Oct"), JSON.stringify(dQ.extra));
+  check("public recruitment with an ex-servicemen quota: still alerted", dQ.send === true && !dQ.skipped && dQ.extra.body.includes("🔴 Last date: 25 Oct") && dQ.extra.body.includes("✅ Open · 26 days left"), JSON.stringify(dQ.extra));
   // a wrong 'skip' with a rule that is not exclusive-looking still needs an exact rule name; an invented one is a post
   const inv = addPdf("https://x.gov.in/inv.pdf", { title: "Recruitment of Junior Clerk 2026 (Advt 06/2026)", pages: ["Junior Clerk. Last date 25.10.2026. 10% reserved for ex-servicemen."], reply: R({ post: "Junior Clerk", last: "2026-10-25", verdict: "skip", rule: "Has ex-servicemen quota" }) });
   const dInv = await ask(mk(), "Recruitment of Junior Clerk 2026 (Advt 06/2026)", inv);
@@ -341,6 +341,53 @@ const addPdf = (link, o) => { pdfs[link] = o; bySample.push(o); return link; };
   check("a web page still says the link is a web page", dWeb.extra.body[0].startsWith("⚠️ Dates not checked — the link is a web page"), JSON.stringify(dWeb.extra));
   check("detailLines: Word/Excel line", detailLines(null, TODAY, { wordExcel: true }).join() === "📄 Word/Excel file — not read"); }
 
+// ===== Date lines: 🟢 Start date / 🔴 Last date / status line =====
+{ const L = (d, o) => detailLines({ type: "fresh", ...d }, TODAY, o);   // TODAY = 29 Sep 2026
+  check("both dates: two separate lines, then the status", L({ start: "2026-09-25", last: "2026-10-19" }).join(" | ") === "🟢 Start date: 25 Sep | 🔴 Last date: 19 Oct | ✅ Open · 20 days left", L({ start: "2026-09-25", last: "2026-10-19" }).join(" | "));
+  check("a missing start date shows ?", L({ last: "2026-10-19" }).slice(0, 2).join(" | ") === "🟢 Start date: ? | 🔴 Last date: 19 Oct");
+  check("a missing last date shows ? (start known and already passed: check the PDF)", L({ start: "2026-09-20" }).join(" | ") === "🟢 Start date: 20 Sep | 🔴 Last date: ? | ⚠️ Last date not found — check PDF");
+  check("start date in the future and no last date: 🕒 Starts", L({ start: "2026-10-05" }).join(" | ") === "🟢 Start date: 5 Oct | 🔴 Last date: ? | 🕒 Starts 5 Oct");
+  check("both dates missing: ⚠️ Dates not found — check PDF (kept), no ? lines", L({}).join(" | ") === "⚠️ Dates not found — check PDF" && L({ post: "Clerk" }).join(" | ") === "🧾 Post: Clerk | ⚠️ Dates not found — check PDF");
+  check("status: ✅ Open · N days left (4 or more days)", L({ last: "2026-10-03" }).at(-1) === "✅ Open · 4 days left" && L({ last: "2026-12-01" }).at(-1) === "✅ Open · 63 days left");
+  check("status: ⚠️ Closing · N days left (3 days or fewer, 1 day is singular)", L({ last: "2026-10-02" }).at(-1) === "⚠️ Closing · 3 days left" && L({ last: "2026-10-01" }).at(-1) === "⚠️ Closing · 2 days left" && L({ last: "2026-09-30" }).at(-1) === "⚠️ Closing · 1 day left");
+  check("status: ⏳ Closes today", L({ last: "2026-09-29" }).at(-1) === "⏳ Closes today");
+  check("status: ⛔ Closed on 12 Sep (with the year when it is another year)", L({ last: "2026-09-12" }).at(-1) === "⛔ Closed on 12 Sep" && L({ last: "2026-09-12", start: "2026-09-01" }).at(-1) === "⛔ Closed on 12 Sep");
+  check("status: 🕒 Starts 5 Oct when the start date is still ahead", L({ start: "2026-10-05", last: "2026-10-25" }).at(-1) === "🕒 Starts 5 Oct");
+  check("closed wins over 'starts' (the last date has passed)", L({ start: "2026-10-05", last: "2026-09-12" }).at(-1) === "⛔ Closed on 12 Sep");
+  check("a date in another year shows the year", L({ start: "2026-12-20", last: "2027-01-05" }).slice(0, 2).join(" | ") === "🟢 Start date: 20 Dec | 🔴 Last date: 5 Jan 2027");
+  // corrigendum / extension: the 🔁 line sits above the status line
+  const ext = L({ type: "extension", oldLast: "2026-09-12", last: "2026-10-30", start: "2026-09-01" });
+  check("extension: 🔁 Extended: 12 Sep → 30 Oct, directly above the status line", ext.join(" | ") === "🟢 Start date: 1 Sep | 🔴 Last date: 30 Oct | 🔁 Extended: 12 Sep → 30 Oct | ✅ Open · 31 days left", ext.join(" | "));
+  check("corrigendum without an old date: 🔁 New last date", L({ type: "corrigendum", last: "2026-10-30" }).join(" | ").includes("🔁 New last date: 30 Oct | ✅ Open"));
+  check("a fresh notice never has the 🔁 line", !L({ oldLast: "2026-09-12", last: "2026-10-30" }).some(l => l.startsWith("🔁")));
+  // the other lines stay as they were
+  check("scanned / web page / Word-Excel lines are unchanged", L({}, { scanned: true }).join() === "📷 scanned — dates not found" && L({}, { notPdf: true }).join().startsWith("⚠️ Dates not checked — the link is a web page") && L({}, { wordExcel: true }).join() === "📄 Word/Excel file — not read");
+  check("cancelled: unchanged", L({ cancelled: true, post: "Clerk" }).join(" | ") === "🧾 Post: Clerk | ❌ Advertisement cancelled");
+  // the site list (DRDO): its start date feeds the start date like its end date feeds the last date
+  check("list start + list end date, none in the PDF: both labelled (site list)", L({}, { listStart: "2026-09-23", listDate: "2026-10-12" }).join(" | ") === "🟢 Start date: 23 Sep (site list) | 🔴 Last date: 12 Oct (site list) | ✅ Open · 13 days left");
+  check("the PDF's own dates win over the list's", L({ start: "2026-09-25", last: "2026-10-19" }, { listStart: "2026-09-23", listDate: "2026-10-12" }).slice(0, 2).join(" | ") === "🟢 Start date: 25 Sep | 🔴 Last date: 19 Oct");
+  check("only a list start date on a web page: the start line shows it, the last date is ?", L({}, { notPdf: true, listStart: "2026-09-23" }).slice(0, 2).join(" | ") === "🟢 Start date: 23 Sep (site list) | 🔴 Last date: ?"); }
+{ const drdo = mk();
+  const both = await drdo.decide(src, { title: "PXE, Balasore invites eligible candidates for the engagement of Apprentices (2026)", link: "https://drdo.gov.in/drdo/en/offerings/vacancies/pxe2", startDate: "2026-09-23", endDate: "2026-10-12" });
+  check("DRDO item with start and end date: no AI call, both lines from the list", drdo.calls === 0 && both.extra.body.join(" | ") === "🟢 Start date: 23 Sep (site list) | 🔴 Last date: 12 Oct (site list) | ✅ Open · 13 days left", both.extra.body.join(" | "));
+  const pdfStart = await mk().decide(src, { title: SAMPLES.fresh.title, link: urlOf(SAMPLES.fresh), startDate: "2026-09-01", endDate: "2026-11-30" });
+  check("a PDF that names both dates beats the list start and end", pdfStart.extra.body.includes("🟢 Start date: 20 Sep") && pdfStart.extra.body.includes("🔴 Last date: 15 Oct") && !pdfStart.extra.body.join().includes("site list"));
+  const noStart = await mk().decide(src, { title: SAMPLES.dotted.title, link: urlOf(SAMPLES.dotted), startDate: "2026-09-10" });
+  check("a PDF with a last date but no start date takes the start date from the list", noStart.extra.body.join(" | ").includes("🟢 Start date: 10 Sep (site list) | 🔴 Last date: 15 Oct"), noStart.extra.body.join(" | ")); }
+
+// Haiku must return the START date: the prompt asks for it, and the start-date keywords bring their (wrapped) lines along
+{ const p = prompts.find(x => x.includes("Title: " + SAMPLES.fresh.title));
+  check("the prompt asks for the application start date (start, opening, registration starts, commencement, 'from X to Y')", /"start": the date online applications \/ registration OPEN/.test(p) && p.includes("registration starts") && p.includes("commencement") && p.includes('"from X to Y"') && p.includes("start is X"));
+  const wrapStart = (kw) => buildSnippet([filler, `Intro.\n${kw}\n25.09.2026 (10:00 AM).\nMore text after.\nAnd more.\nFar away line.`]);
+  for (const kw of ["The online registration starts on", "Start date of online application:", "The opening date for applications is", "Commencement of online application", "Apply online from", "Registration begins on", "Applications open from"]) {
+    const sn = wrapStart(kw);
+    check(`start keyword "${kw}": the wrapped date line (25.09.2026) is sent with it`, sn.includes(kw) && sn.includes("25.09.2026 (10:00 AM)"), sn.slice(sn.indexOf("--- Lines")));
+  }
+  check("'from 25.09.2026 to 19.10.2026' in the middle of a long text is found", buildSnippet([filler, "Applications will be accepted from 25.09.2026 to 19.10.2026 through the portal."]).includes("from 25.09.2026 to 19.10.2026"));
+  const startDoc = addPdf("https://x.gov.in/startdate.pdf", { title: "Recruitment of Stenographer 2026 (Advt 11/2026)", pages: [filler, "The online registration starts on\n25.09.2026 and closes on 19.10.2026."], reply: R({ post: "Stenographer", start: "2026-09-25", last: "2026-10-19" }) });
+  const ds = await ask(mk(), "Recruitment of Stenographer 2026 (Advt 11/2026)", startDoc);
+  check("start date from the notice text reaches the alert: 🟢 Start date: 25 Sep, 🔴 Last date: 19 Oct", prompts.at(-1).includes("The online registration starts on\n25.09.2026") && ds.extra.body.includes("🟢 Start date: 25 Sep") && ds.extra.body.includes("🔴 Last date: 19 Oct") && ds.extra.body.at(-1) === "✅ Open · 20 days left", ds.extra.body.join(" | ")); }
+
 // a "noFileDownload" source (NALCO): the PDF is never opened, no AI call, alert says so instead of the date lines
 { let opened = 0; const ai4 = mk({ readPdf: async () => { opened++; return { text: "x", scanned: false }; } });
   const nsrc = { name: "NALCO Recruitment Portal", noFileDownload: true };
@@ -352,7 +399,7 @@ const addPdf = (link, o) => { pdfs[link] = o; bySample.push(o); return link; };
   const dn2 = await ai4.decide(nsrc, { title: "Tender for supply of stationery", link: "https://mudira.nalcoindia.co.in/iorms/Uploaded_Data/Notices/b.pdf" });
   check("noFileDownload: works without any AI (what the monitor calls)", noFileDecision({ title: "Recruitment of X", link: "https://a/b.pdf" }).extra.body[0].startsWith("📄 PDF not read"));
   check("noFileDownload: clearly irrelevant titles are still skipped", dn2.send === false); }
-check("listener also reads the details lines", parsed.details.includes("✅ Open till 15 Oct"));
+check("listener also reads the details lines", parsed.details.includes("✅ Open · 16 days left") && parsed.details.includes("🟢 Start date: 20 Sep"));
 const skipParsed = parseAlert(skipAlert.replace(/<\/?b>/g, ""));
 check("listener reads the skip mark", skipParsed?.skip === "Consultant under 5 posts" && skipParsed.title === SAMPLES.skipRule.title);
 check("listener reads the limit flag", parseAlert(formatItem("T", "Job", "Some title here", "https://x.gov.in/a.pdf", "limit"))?.flag === "limit");

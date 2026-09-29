@@ -131,7 +131,9 @@ function fromHtml(src, text, finalUrl) {
       if (exclude && exclude.test(hay)) return;
       // "rowEndDate": selector of the row's own "end date" (e.g. 15/10/2026); used later if the PDF names no last date
       const endDate = src.rowEndDate ? isoDate($row.find(src.rowEndDate).first().text()) : null;
-      items.push(endDate ? { title, link, endDate } : { title, link });
+      // "rowStartDate": the same for the row's own "start date"
+      const startDate = src.rowStartDate ? isoDate($row.find(src.rowStartDate).first().text()) : null;
+      items.push({ title, link, ...(endDate ? { endDate } : {}), ...(startDate ? { startDate } : {}) });
     });
     return items;
   }

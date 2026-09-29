@@ -70,6 +70,9 @@ check("isoDate reads three formats and rejects impossible dates", isoDate("15/10
 items = await fetchItems({ type: "html", url: B + "/end", rowSelector: "li.b", rowTitle: ".t", rowLink: "a", rowEndDate: ".e", minTitle: 10 });
 check("rowEndDate is read from each entry (bad date -> none)", items[0].endDate === "2026-10-15" && items[1].endDate === undefined, JSON.stringify(items.map(i => i.endDate)));
 
+// the site's own start date per list entry, next to the end date (DRDO)
+items = await fetchItems({ type: "html", url: B + "/end", rowSelector: "li.b", rowTitle: ".t", rowLink: "a", rowStartDate: ".d", rowEndDate: ".e", minTitle: 10 });
+check("rowStartDate is read from each entry too ('Start 01/09/2026' has no clean date: none; the end date still works)", items[0].endDate === "2026-10-15" && items[0].startDate === "2026-09-01" && items[1].startDate === undefined, JSON.stringify(items.map(i => [i.startDate, i.endDate])));
 // a page whose list only exists after JavaScript ran and a button was clicked (FCI), read with the pinned Chromium (falling back to Chrome, then Edge)
 try {
   items = await fetchItems({ type: "html", url: B + "/js", render: true, clickText: "English", waitFor: ".box", rowSelector: ".box", rowTitle: "h2", rowLink: "a", minTitle: 10 });

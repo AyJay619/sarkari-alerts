@@ -12,7 +12,7 @@ export const todayIST = (now = Date.now()) => new Date(now + 5.5 * 3600 * 1000).
 const DATE_WORDS = new RegExp([
   "last\\s*date", "closing\\s*date", "end\\s*date", "start\\s*date", "opening\\s*date", "due\\s*date", "commencement",
   "extended", "extension", "revised", "re-?opened", "corrigendum", "addendum", "on\\s+or\\s+before", "not\\s+later\\s+than",
-  "apply\\s+online\\s+(from|between)", "online\\s+application[^.]{0,40}(from|till|upto|up\\s*to)",
+  "apply\\s+online\\s+(from|between)", "registration\\s+(start|begin|open|commenc)\\w*", "(application|applications)\\s+(start|begin|open|commenc)\\w*", "\\b(starts?|opens?|begins?|commences?)\\s+(on|from)\\b", "date\\s+of\\s+(start|opening|commencement)", "online\\s+registration", "\\bfrom\\s+\\d", "online\\s+application[^.]{0,40}(from|till|upto|up\\s*to)",
   "अंतिम\\s*(तिथि|दिनांक|तारीख)", "आवेदन[^।.]{0,30}(प्रारंभ|शुरू|आरंभ)", "प्रारंभ\\s*(तिथि|दिनांक)", "आरंभ\\s*(तिथि|दिनांक)",
   "बढ़ा", "विस्तार", "संशोधित", "शुद्धिपत्र", "तक\\s*आवेदन",
 ].join("|"), "i");
@@ -138,7 +138,7 @@ Reply with ONLY one JSON object, no other text:
 {"category": one of "Job", "Admit Card", "Result", "Answer Key", "Correction", "Not Relevant",
  "post": name of the post(s) as a short string, or null,
  "eligibility": the exact words of the notice about WHO may apply (eligibility, e.g. "Retired employees of ...", "Any graduate"), max 150 characters, or null. Find this BEFORE you decide the verdict, and compare it with every SKIP rule,
- "start": date online applications open, "YYYY-MM-DD" or null,
+ "start": the date online applications / registration OPEN (start date, opening date, "registration starts", "commencement of online application", "apply online from ..."), "YYYY-MM-DD" or null. If the notice says applications are accepted "from X to Y" or "between X and Y", start is X. Always look for it,
  "last": last date to apply, "YYYY-MM-DD" or null,
  "old_last": for a corrigendum/extension only: the previous last date if the notice states it, else null,
  "type": one of "fresh" (a new advertisement), "corrigendum" (changes to an earlier notice), "extension" (only extends a date), "other",
@@ -204,31 +204,42 @@ export function dateStatus(last, today) {
   return { left, kind: left < 0 ? "passed" : left === 0 ? "today" : left <= 3 ? "soon" : "open" };
 }
 
-// data: parseReply() result; opts: { scanned, notPdf, listDate }. Returns the lines shown under the alert title.
-// listDate: the "end date" the site itself shows next to the notice; used only when the PDF names no last date.
-export function detailLines(data, today, { scanned = false, notPdf = false, wordExcel = false, listDate = null } = {}) {
+// data: parseReply() result; opts: { scanned, notPdf, wordExcel, listDate, listStart }. Returns the lines shown under the alert title:
+//   🟢 Start date: 25 Sep
+//   🔴 Last date: 19 Oct
+//   [🔁 Extended: 12 Sep → 30 Oct]      (corrigendum / extension only)
+//   ✅ Open · 19 days left    (or ⚠️ Closing · N days left / ⏳ Closes today / ⛔ Closed on 12 Sep / 🕒 Starts 5 Oct)
+// A date that was not found shows "?". Both missing: "⚠️ Dates not found — check PDF" (or the scanned / web page / Word-Excel line).
+// listDate / listStart: the "end date" / "start date" the site itself shows next to the notice; used only when the PDF names none.
+export function detailLines(data, today, { scanned = false, notPdf = false, wordExcel = false, listDate = null, listStart = null } = {}) {
   data = data ?? { type: "fresh" };
   if (data.cancelled) return [...(data.post ? [`🧾 Post: ${data.post}`] : []), "❌ Advertisement cancelled"];
-  let fromList = false;
-  if (!data.last && listDate) { data = { ...data, last: listDate }; fromList = true; }
+  let lastFromList = false, startFromList = false;
+  if (!data.last && listDate) { data = { ...data, last: listDate }; lastFromList = true; }
+  if (!data.start && listStart) { data = { ...data, start: listStart }; startFromList = true; }
   const lines = [];
-  if (!data.last && wordExcel) return ["📄 Word/Excel file — not read"];
-  if (!data.last && notPdf) return ["⚠️ Dates not checked — the link is a web page, not a PDF"];
-  if (!data.last && scanned) return ["📷 scanned — dates not found"];
+  if (!data.last && !data.start && wordExcel) return ["📄 Word/Excel file — not read"];
+  if (!data.last && !data.start && notPdf) return ["⚠️ Dates not checked — the link is a web page, not a PDF"];
+  if (!data.last && !data.start && scanned) return ["📷 scanned — dates not found"];
   if (data.post) lines.push(`🧾 Post: ${data.post}`);
-  const dates = [data.start && `Start: ${fmtDate(data.start, today)}`, data.last && `Last date: ${fmtDate(data.last, today)}${fromList ? " (site list)" : ""}`].filter(Boolean);
-  if (dates.length) lines.push("📅 " + dates.join(" · "));
+  if (!data.last && !data.start) { lines.push("⚠️ Dates not found — check PDF"); return lines; }
 
-  if (!data.last) { lines.push("⚠️ Dates not found — check PDF"); return lines; }
+  const shown = (d, fromList) => (d ? fmtDate(d, today) + (fromList ? " (site list)" : "") : "?");
+  lines.push(`🟢 Start date: ${shown(data.start, startFromList)}`);
+  lines.push(`🔴 Last date: ${shown(data.last, lastFromList)}`);
+
+  const changed = data.type === "corrigendum" || data.type === "extension";
+  if (changed && data.last) lines.push(data.oldLast && data.oldLast !== data.last ? `🔁 Extended: ${fmtDate(data.oldLast, today)} → ${fmtDate(data.last, today)}` : `🔁 New last date: ${fmtDate(data.last, today)}`);
+
+  if (!data.last) {   // only a start date is known
+    lines.push(data.start && day(data.start) > day(today) ? `🕒 Starts ${fmtDate(data.start, today)}` : "⚠️ Last date not found — check PDF");
+    return lines;
+  }
   const { left, kind } = dateStatus(data.last, today);
-  const last = fmtDate(data.last, today);
-  if (data.type === "corrigendum" || data.type === "extension") {
-    const change = data.oldLast && data.oldLast !== data.last ? `Last date extended: ${fmtDate(data.oldLast, today)} → ${last}` : `New last date: ${last}`;
-    lines.push(`🔁 ${change} ` + (kind === "passed" ? "⛔ Last date passed" : kind === "today" ? "⏳ Closes today" : "✅ Open again"));
-  } else if (kind === "passed") lines.push(`⛔ Last date passed (${last})`);
+  if (kind === "passed") lines.push(`⛔ Closed on ${fmtDate(data.last, today)}`);
   else if (kind === "today") lines.push("⏳ Closes today");
-  else if (data.start && day(data.start) > day(today)) lines.push(`🕒 Not open yet — starts ${fmtDate(data.start, today)} (till ${last})`);
-  else if (kind === "soon") lines.push(`⚠️ Closes in ${left} day${left === 1 ? "" : "s"} (${last})`);
-  else lines.push(`✅ Open till ${last}`);
+  else if (data.start && day(data.start) > day(today)) lines.push(`🕒 Starts ${fmtDate(data.start, today)}`);
+  else if (kind === "soon") lines.push(`⚠️ Closing · ${left} day${left === 1 ? "" : "s"} left`);
+  else lines.push(`✅ Open · ${left} days left`);
   return lines;
 }

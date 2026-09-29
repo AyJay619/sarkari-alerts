@@ -1037,6 +1037,7 @@
     "rowTitle": ".vacanciess-title",
     "rowLink": ".vacanciess-view-node a",
     "rowEndDate": ".vacanciess-due-date-content",
+    "rowStartDate": ".vacanciess-start-date-content",
     "minTitle": 15,
     "limit": 30
   },

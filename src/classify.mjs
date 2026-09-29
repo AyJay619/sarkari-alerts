@@ -114,7 +114,7 @@ export class Classifier {
     if (forceCorrection) category = "Correction";
     const wantsDates = NEEDS_DATES.has(category);
     const skipRule = data.cancelled ? null : data.verdict === "skip" ? (data.rule ?? "no rule named") : null;
-    const extra = { body: wantsDates ? detailLines(data, today, { scanned, listDate: item.endDate }) : [], skip: skipRule };
+    const extra = { body: wantsDates ? detailLines(data, today, { scanned, listDate: item.endDate, listStart: item.startDate }) : [], skip: skipRule };
     if (skipRule) {   // skipped by an editorial rule: no alert. Logged here, and recorded for the daily digest by the caller.
       // (extra is kept so the test command can still show what the alert would have looked like)
       this.log(src, item, "ai-skip", "skipped by rule: " + skipRule);
@@ -149,7 +149,7 @@ export class Classifier {
     }
 
     // A web page (not a PDF) cannot be read for dates. Titles the keywords already trust are not sent to the AI for that alone.
-    if (!isPdf && verdict === "relevant") return { send: true, category: null, flag: null, extra: { body: detailLines(null, today, { notPdf: true, wordExcel: isWordExcelLink(item.link), listDate: item.endDate }), skip: null }, how: "keywords" };
+    if (!isPdf && verdict === "relevant") return { send: true, category: null, flag: null, extra: { body: detailLines(null, today, { notPdf: true, wordExcel: isWordExcelLink(item.link), listDate: item.endDate, listStart: item.startDate }), skip: null }, how: "keywords" };
 
     if (this.broken) return { send: true, category: null, flag: "unchecked", how: "AI stopped" };
     if (this.calls >= this.cfg.maxAiCallsPerRun || this.usage.calls >= this.cfg.maxAiCallsPerDay)
@@ -185,7 +185,7 @@ export class Classifier {
       const entry = { v: CACHE_VERSION, data, scanned, noText, ...(visual ? { visual: true } : {}) };
       this.cache[item.link] = entry;
       const d = this.fromEntry(src, item, entry, verdict);
-      if (d.extra?.body.length && noText && !isPdf) d.extra.body = detailLines(data, today, { notPdf: true, wordExcel: isWordExcelLink(item.link), listDate: item.endDate });
+      if (d.extra?.body.length && noText && !isPdf) d.extra.body = detailLines(data, today, { notPdf: true, wordExcel: isWordExcelLink(item.link), listDate: item.endDate, listStart: item.startDate });
       return d;
     } catch (e) {
       console.error(`  AI problem: ${e.message}`);
