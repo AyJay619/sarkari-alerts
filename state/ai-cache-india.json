@@ -38,8 +38,8 @@
  "https://www.upsc.gov.in/whats-new/09%20posts%20of%20Scientist-B%20(Instrumentation)%20in%20Ministry%20of%20Earth%20Sciences/Rectt.%20Test": "Job",
  "https://barc.gov.in/careers/result23.pdf": "Not Relevant",
  "__usage": {
-  "date": "2026-09-29",
-  "calls": 13
+  "date": "2026-09-30",
+  "calls": 3
  },
  "https://www.ibps.in/index.php/management-trainees-xvi/": {
   "data": {
@@ -235,5 +235,56 @@
   },
   "scanned": false,
   "noText": true
+ },
+ "https://hal-india.co.in/career#1010": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": "Design Trainees / Management Trainees",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://recruitment.ssb.gov.in/notificationUrl": {
+  "v": 4,
+  "data": {
+   "category": "Admit Card",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://nationalinsurance.nic.co.in/sites/default/files/2026-09/Addendum%20Advertisement%20dated%2030-09-2026%20%28CISO%29_1.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "corrigendum",
+   "post": "Chief Information & Security Officer (CISO)",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-10-06",
+   "oldLast": null,
+   "advtDate": "2026-09-30",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
  }
 }
