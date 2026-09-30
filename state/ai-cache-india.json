@@ -39,8 +39,8 @@
  "https://barc.gov.in/careers/result23.pdf": "Not Relevant",
  "__usage": {
   "date": "2026-09-30",
-  "calls": 7,
-  "visual": 1
+  "calls": 14,
+  "visual": 3
  },
  "https://www.ibps.in/index.php/management-trainees-xvi/": {
   "data": {
@@ -356,5 +356,126 @@
   },
   "scanned": false,
   "noText": true
+ },
+ "https://esic.gov.in/attachments/recruitmentfile/Department_wise_Interview_Schedule_amp_Vacancy_Chart_1790758629.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": "Specialist, Senior Resident, AYUSH posts across multiple departments",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": "2026-09-29",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
+ },
+ "https://esic.gov.in/attachments/recruitmentfile/Walk_in_Interview_for_recruitment_of_the_post_of_full_time_part_time_Specialists_and_Senior_Residents_on_contract_basis_for_ESIC_Hospital_Sarojini_Nagar_Lucknow_1790758629.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Full Time/Part Time Specialists, Senior Residents, Ayurveda and Homeopathy Physicians (contract basis)",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": "2026-09-30",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://www.upsc.gov.in/whats-new/08%20Posts%20of%20Administrative%20Officer%20Grade%20-%20I,%20Ministry%20of%20Defence/Notice": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Administrative Officer Grade - I",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://www.upsc.gov.in/whats-new/19%20Posts%20of%20Manager%20Grade%20-%20I%20-%20Section%20Officer,%20Ministry%20of%20Defence/Notice": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Manager Grade - I - Section Officer",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://www.upsc.gov.in/whats-new/32%20Posts%20of%20Accounts%20Officer,%20Administration%20of%20Union%20Territory%20of%20Ladakh/Notice": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Accounts Officer",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://www.csir.res.in/sites/default/files/2026-09/advert_director_csir-ncl_eng.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Director, CSIR-National Chemical Laboratory (CSIR-NCL), Pune",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-11-30",
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://ncert.nic.in/pdf/announcement/vacancies/nonacademicvacancy/Objection_Window_Notice-R-II-30-09.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": "Production Officer, Assistant Production Officer, Business Manager, Film Joiner, Painter, Set Designer, Toucher Grade-II",
+   "cancelled": false,
+   "start": "2026-09-30",
+   "last": "2026-10-03",
+   "oldLast": null,
+   "advtDate": "2026-09-30",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false,
+  "visual": true
  }
 }
