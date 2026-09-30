@@ -9,7 +9,15 @@ on:
   #   12:55 UTC = 6:25 pm IST (aim: 6:30 pm)     15:55 UTC = 9:25 pm IST (aim: 9:30 pm, the last run of the day)
   schedule:
     - cron: "55 3,6,9,12,15 * * *"
-  workflow_dispatch:          # the manual "Run workflow" button
+  # The PC starts the same workflow through the GitHub API at 9:30, 12:30, 3:30, 6:30 and 9:30 pm IST (Windows Task Scheduler, see
+  # trigger/ and the README), because GitHub's timer is sometimes late or skipped. It sends slot_guard = true.
+  # The manual "Run workflow" button leaves it "false" and always runs.
+  workflow_dispatch:
+    inputs:
+      slot_guard:
+        description: "Skip if this time slot (9:30 / 12:30 / 3:30 / 6:30 / 9:30 pm IST) was already scanned (the PC trigger sets this)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write             # needed to save state files back to the repo
@@ -31,7 +39,11 @@ jobs:
       group: notice-monitor-india
       cancel-in-progress: false
     steps:
+      # ref: main = the newest state when THIS job starts (a run that waited in line must not read the memory file as it was when it was queued;
+      # that is also what the time-slot guard relies on).
       - uses: actions/checkout@v5
+        with:
+          ref: main
 
       # Uses the Node already installed on the PC (no setup-node download).
       - run: npm ci
@@ -41,6 +53,8 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}   # only used if aiEnabled is true in config.json
+          # timer and PC-trigger runs skip a slot that was already scanned; the manual button never does
+          SLOT_GUARD: ${{ github.event_name == 'schedule' || github.event.inputs.slot_guard == 'true' }}
         run: node src/monitor.mjs --runner india
 
       - name: Save the list of already-seen notices

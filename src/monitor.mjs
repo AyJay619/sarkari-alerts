@@ -9,6 +9,7 @@ import { buildPlan, levelOf } from "./order.mjs";
 import { Classifier, keywordVerdict, loadConfig, noFileDecision, preFilter } from "./classify.mjs";
 import { digestHtml, digestsDue, markDigestSent, recordSkips } from "./skipped.mjs";
 import { missedRunNote } from "./schedule.mjs";
+import { slotOf, slotAlreadyDone } from "./slot.mjs";
 
 const args = process.argv.slice(2);
 const flag = n => args.includes(n);
@@ -30,6 +31,14 @@ const sources = JSON.parse(fs.readFileSync(SOURCES_FILE, "utf8")).filter(s => !s
 let state = { sources: {} };
 if (fs.existsSync(STATE_FILE)) state = JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
 state.sources ??= {};
+
+// Time-slot guard (see slot.mjs): a timer / PC-trigger run whose slot was already scanned stops here, before anything is fetched or sent.
+const RUN_START_MS = process.env.TEST_NOW_ISO ? Date.parse(process.env.TEST_NOW_ISO) : Date.now();
+const RUN_SLOT = slotOf(RUN_START_MS);   // (fixed at the START of the run: a long run does not move into the next slot)
+if (!ONLY && !CHECK && slotAlreadyDone(state, RUN_START_MS, process.env.SLOT_GUARD === "true")) {
+  console.log(`SKIPPED: the ${RUN_SLOT} (India) scan was already done by an earlier run. Nothing was checked or changed.`);
+  process.exit(0);
+}
 
 // One-time move of the old GitHub-cloud job's memory into the PC's: sites that used to run on "cloud" carry over what they had
 // already seen, so moving them to the PC neither re-baselines them nor floods you with old notices. Only sites the PC state
@@ -293,7 +302,7 @@ if (!ONLY && !networkDown) {
   }
 }
 
-if (!ONLY && !networkDown) state.lastRunAt = new Date(clockMs()).toISOString();   // for the missed-run warning
+if (!ONLY && !networkDown) { state.lastRunAt = new Date(clockMs()).toISOString(); state.lastSlot = RUN_SLOT; }   // for the missed-run warning and the time-slot guard
 if (ai) { console.log(ai.summary()); if (SAVES_STATE) ai.save(); }
 if (SAVES_STATE) {
   fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });

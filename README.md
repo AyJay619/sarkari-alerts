@@ -49,9 +49,50 @@ and runs when the PC is back; a run that waits more than 24 hours is cancelled b
 
 **Safety:** the workflow only starts on the timer or the manual button — never on pull requests. Keep it that way, because the india job runs on your own PC.
 
+## Reliable start from your PC (Windows Task Scheduler)
+
+GitHub's own timer is sometimes late or skipped. So your PC also starts the workflow itself at **9:30 am, 12:30 pm, 3:30 pm, 6:30 pm and 9:30 pm** (its clock must be on India time). GitHub's timer (9:25, 12:25 ...) stays as a backup.
+**The same time slot is never scanned twice:** every run belongs to one of the five slots (a run counts for the slot that is at most 15 minutes ahead of it, so 9:25 and 9:30 are both the "9:30" slot; a late run still belongs to the slot it was meant for). The monitor writes the slot it scanned into `state/seen-india.json` (`lastSlot`). A run from the timer or from the PC trigger whose slot is already done stops at once ("SKIPPED", still a green tick, nothing checked or sent). The manual **Run workflow** button is never blocked: it always scans.
+The workflow now checks out `main` at the moment the job starts (`ref: main`), so a run that waited in line reads the newest memory file.
+
+**How it works:** Task Scheduler runs `trigger\start-hidden.vbs` (no window) which runs `trigger\trigger-run.mjs`. That sends one request to GitHub ("start `monitor.yml` on `main`, `slot_guard` = true") with a **fine-grained token**. The token lives in a file **outside the project** (`C:\Users\<you>\.sarkari-alerts\github-token.txt`), readable only by your Windows account. It is never in the repo, never in `.env`, never printed or logged. It can only start and read workflows of this one repository. The task also wakes the PC from sleep, and if the PC was off at a time it runs as soon as possible afterwards (the guard then decides whether that slot still needs a scan). If GitHub cannot be reached it retries for about 4 minutes; on a final failure you get a Telegram message "⚠️ PC trigger: ..." (using the Telegram values in `.env`).
+
+### One-time setup (about 10 minutes)
+
+1. **Put the new files on GitHub first.** Open GitHub Desktop, tick **all** the changed files (the `trigger` folder, `src`, `test`, `README.md` and `.github/workflows/monitor.yml`), commit, and press **Push origin**. (Never commit `.env`.) The trigger needs the new `slot_guard` setting to exist on GitHub.
+2. **Make the token** (on github.com, signed in as AyJay619):
+   1. Click your **round profile picture** (top right) → **Settings**.
+   2. Scroll the left menu to the very bottom → **Developer settings**.
+   3. **Personal access tokens** → **Fine-grained tokens** → green **Generate new token**.
+   4. **Token name:** `sarkari-pc-trigger`. **Expiration:** pick **1 year** (or the longest offered), and write the date in your calendar.
+   5. **Resource owner:** AyJay619. **Repository access:** choose **Only select repositories** → click the box → pick **sarkari-alerts**.
+   6. Click **Add permissions** (or open **Repository permissions**) → find **Actions** → set **Access: Read and write**. (Metadata: Read-only appears by itself. Give it nothing else.)
+   7. Click **Generate token** → click the **copy** icon next to the token (it starts with `github_pat_`). GitHub shows it only once: do not close the page until step 3 is done.
+3. **Save the token on your PC:** in the project folder open the `trigger` folder and **double-click `setup-token.cmd`**. A black window and **Notepad** open. In Notepad delete the words `PASTE-YOUR-TOKEN-HERE`, **paste** (Ctrl+V) the token, press **Ctrl+S**, close Notepad. Then close the black window (press any key).
+4. **Test the token:** double-click **`test-token.cmd`**. You want to see `Token OK: it can see the workflow (nothing was started).` If it says 401 / 404 / 403 the token is wrong, expired or missing the Actions permission: repeat step 2 and 3. Nothing is started by this test.
+5. **Install the schedule:** double-click **`install-trigger.cmd`**. You want to see `Installed: "SarkariAlertsTrigger" will start the workflow at 09:30, 12:30, 15:30, 18:30, 21:30 every day.` (If it says the time zone is not India: Windows **Settings → Time & language → Date & time → Time zone → (UTC+05:30) Chennai, Kolkata, Mumbai, New Delhi**, then again.)
+6. **Try it once for real:** double-click **`run-now.cmd`**. On GitHub open your repository → **Actions** tab → **Check for new notices**: a new run appears within a minute with the label "workflow_dispatch". If that time slot was already scanned, its log says `SKIPPED: the ... scan was already done`; that is correct.
+7. **Let the PC wake up for it** (once): press the **Windows key**, type **Edit power plan**, press Enter → **Change advanced power settings** → open **Sleep** → **Allow wake timers** → set to **Enable** (both "On battery" and "Plugged in") → **OK**. If you would rather the PC never sleeps, set **Put the computer to sleep** to **Never** on the same first page.
+
+### Check that it works
+
+- Double-click **`check-trigger.cmd`**: it shows the task's *Next Run Time*, *Last Run Time*, *Last Result* (`0` = fine) and the last lines of the trigger log (`C:\Users\<you>\.sarkari-alerts\trigger.log`, each run adds "Started the workflow").
+- In the **Actions** tab each slot now shows up to two runs: one from the PC trigger (event `workflow_dispatch`) and one from GitHub's timer (event `schedule`). One of them scans; the other says `SKIPPED` in its log. Either order is fine.
+- If the PC was off, nothing is lost: the next trigger scans for everything posted meanwhile.
+
+### When the token expires (or after you regenerate it)
+
+You get a Telegram message "⚠️ PC trigger: GitHub answered 401 ... the token is wrong or has expired". Make a new token (steps 2.1-2.7 above), double-click **`setup-token.cmd`** (it opens the same file), replace the old token, Ctrl+S, and run **`test-token.cmd`**. Nothing else changes. GitHub's own timer keeps working as the backup meanwhile.
+
+### Remove it
+
+Double-click **`uninstall-trigger.cmd`**. GitHub's timer carries on. To also forget the token: delete `C:\Users\<you>\.sarkari-alerts\github-token.txt` and delete the token on GitHub (Settings → Developer settings → Fine-grained tokens → Delete).
+
+Tests: `node test/slot.test.mjs` (the slot guard, including the real monitor) and `node test/trigger.test.mjs` (the trigger against a fake GitHub).
+
 ## Run it manually
 
-Repo → **Actions** tab → **Check for new notices** → **Run workflow** (green button).
+Repo → **Actions** tab → **Check for new notices** → **Run workflow** (green button). Leave **slot_guard** unticked so it always scans.
 
 ## Everything runs on your PC
 
