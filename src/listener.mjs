@@ -3,10 +3,13 @@
 // project uses getUpdates or a webhook, so there is no conflict. Start it with:  node --env-file=.env src/listener.mjs
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { apiBase, DONE_BUTTON } from "./telegram.mjs";
 import { getBuffer } from "./fetchers.mjs";
 import { allowedHosts, baseName, hostAllowed, Inbox, noAutoDownload, parseAlert, sourceForHost } from "./inbox.mjs";
 
+// Load .env from the repo root ourselves, so it works from any folder and without --env-file.
+try { process.loadEnvFile(fileURLToPath(new URL("../.env", import.meta.url))); } catch { /* no .env: the check below says so */ }
 const token = process.env.TELEGRAM_BOT_TOKEN, chatId = process.env.TELEGRAM_CHAT_ID;
 if (!token || !chatId) { console.error("TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be in the .env file."); process.exit(1); }
 
@@ -42,7 +45,12 @@ function log(msg) {
 if (fs.existsSync(PIDFILE)) {
   const other = Number(fs.readFileSync(PIDFILE, "utf8"));
   let alive = false;
-  try { process.kill(other, 0); alive = other !== process.pid; } catch { /* not running */ }
+  // A leftover pid file can point at an unrelated process (Windows reuses pids), so also require a fresh heartbeat from that pid.
+  try {
+    process.kill(other, 0);
+    const hb = JSON.parse(fs.readFileSync(HEARTBEAT, "utf8"));
+    alive = other !== process.pid && hb.pid === other && Date.now() - new Date(hb.time) < 120_000;
+  } catch { /* not running */ }
   if (alive) { console.log(`Listener already running (pid ${other}).`); process.exit(3); }
 }
 fs.writeFileSync(PIDFILE, String(process.pid));
