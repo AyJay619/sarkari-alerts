@@ -21,6 +21,7 @@ const server = http.createServer((req, res) => {
     if (req.url === "/empty") return send("text/html", `<ul><li>nothing posted</li></ul>`);
     if (req.url === "/pageA") return send("text/html", `<ul><li><a href="/a1.pdf">Notice from page A about engagement</a></li></ul>`);
     if (req.url === "/pageB") return send("text/html", `<ul><li><a href="/b1.pdf">Notice from page B about engagement</a></li></ul>`);
+    if (req.url === "/ajax") { lastPost = { method: req.method, body }; return send("application/json", JSON.stringify({ data: { posts: [{ fields: { d: "2026-09-29", no: "(Advt. No. 15/2026)", subj: "School Teacher &amp; TRE", files: '<div><a href="https://x.test/a.pdf">A</a><a href="https://x.test/b.pdf">B</a></div>' } }, { fields: { d: "2026-09-28", no: "", subj: "Nothing to download", files: "" } }] } })); }
     res.statusCode = 404; res.end("no");
   });
 }).listen(8814);
@@ -36,6 +37,12 @@ try { await fetchItems({ type: "json", url: B + "/var", jsonInPage: "nope", titl
 items = await fetchItems({ type: "json", url: B + "/rsc", method: "POST", headers: { "Next-Action": "abc123" }, body: '["page=1"]', rscLine: "1", itemsPath: "data.data", titleField: "value", fallbackLink: B + "/notice" });
 check("server-action reply is read", items.map(i => i.title).join() === "Notice one,Notice two" && items[0].link === B + "/notice");
 check("the raw body and header were sent", lastPost.method === "POST" && lastPost.action === "abc123" && lastPost.body === '["page=1"]');
+
+// a form POST whose reply is JSON: title from several fields, link taken from a piece of HTML (BPSC)
+items = await fetchItems({ type: "json", url: B + "/ajax", method: "POST", form: { action: "x" }, itemsPath: "data.posts", titleFormat: "{fields.d} {fields.no} {fields.subj}", linkHtmlField: "fields.files", fallbackLink: B + "/page" });
+check("titleFormat joins fields and turns HTML into text", items[0].title === "2026-09-29 (Advt. No. 15/2026) School Teacher & TRE", items[0]?.title);
+check("linkHtmlField takes the first link in the HTML, else the fallback", items[0].link === "https://x.test/a.pdf" && items[1].link === B + "/page", JSON.stringify(items.map(i => i.link)));
+check("the form was sent as a POST", lastPost.method === "POST" && lastPost.body === "action=x", JSON.stringify(lastPost));
 
 // titles
 items = await fetchItems({ type: "html", url: B + "/rows", rowSelector: "tr", rowTitle: "td:nth-child(2)", titleReplace: ["\\s*Publish Date\\s*-?:?\\s*(\\d{1,2}-\\w{3}-\\d{4}).*$", " (published $1)"], pageLink: true, minTitle: 10 });

@@ -204,9 +204,12 @@ function fromJson(src, text) {
   const include = src.include ? new RegExp(src.include, "i") : null, exclude = src.exclude ? new RegExp(src.exclude, "i") : null;
   const list = src.itemsPath ? pick(data, src.itemsPath) : data;
   if (!Array.isArray(list)) throw new Error("JSON: items list not found at '" + src.itemsPath + "'");
+  // "titleFormat" (optional): builds the title from several fields, e.g. "{fields.date} {fields.no} {fields.subject}" (HTML in them is turned into plain text).
+  // "linkHtmlField" (optional): the link is the first web address inside a field that holds a piece of HTML (BPSC).
+  const plain = s => cheerio.load("<p>" + String(s ?? "") + "</p>")("p").text();
   return list.map(row => {
-    const title = clean(pick(row, src.titleField));
-    let link = src.linkField ? pick(row, src.linkField) : "";
+    const title = src.titleFormat ? clean(src.titleFormat.replace(/\{([\w.]+)\}/g, (_, k) => plain(pick(row, k)))) : clean(pick(row, src.titleField));
+    let link = src.linkHtmlField ? cheerio.load(String(pick(row, src.linkHtmlField) ?? ""))("a[href]").first().attr("href") ?? "" : src.linkField ? pick(row, src.linkField) : "";
     link = link ? (src.linkPrefix || "") + String(link).replaceAll("\\", "/") : src.fallbackLink || src.url;
     return { title, link };
   }).filter(i => i.title && (!include || include.test(i.title)) && !(exclude && exclude.test(i.title)));   // include / exclude work on the title, as for html sources

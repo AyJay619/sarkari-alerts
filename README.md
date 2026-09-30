@@ -107,6 +107,7 @@ Open `sources.json` and copy one of the blocks. The simple kind (a page with a l
 - `jsonInPage` — *(optional, with `"type": "json"`)* the list is a JavaScript variable inside the page, e.g. `"glblMasterCareerDetails"` (Bank of Baroda). `include`/`exclude` also work on JSON titles.
 - `body` and `rscLine` — *(optional)* a raw request body for `POST`, and, for sites whose answer is a Next.js "server action" (`1:{...}` lines), which line holds the JSON (AIIMS). Such sites break if the site is rebuilt (the `Next-Action` id changes): you would then get the usual "failed 3 runs" warning.
 - `titleReplace` — *(optional)* `["regex", "replacement"]` to tidy long row titles (PNB).
+- `titleFormat` / `linkHtmlField` — *(optional, with `"type": "json"`)* `titleFormat` builds the title from several fields, e.g. `"{fields.date} {fields.no} {fields.subject}"`; `linkHtmlField` takes the link from the first web address inside a field that holds a piece of HTML. Both are for a JSON reply like the one behind BPSC's notice table (no longer used there: BPSC is read with `render` because its certificate chain is incomplete on the runner service, but the options are tested and kept).
 - `noFileDownload` — *(optional)* `true` for a site whose robots.txt forbids fetching its notice files (NALCO): the page listing is read, but the monitor never opens the PDF (no date/post lines, no AI read) and **📥 Send to agents** refuses and tells you to download it yourself. The alert shows the title, the link and "📄 PDF not read (site doesn't allow automated downloads)".
 - `titleFromHref` — *(optional)* `true` for a page where every link just says "Detailed Advertisement" or "Click Here": the title is made from the file name in the link instead (IDBI, RCF, BSNL).
 - `contextPrev` — *(optional)* a heading tag such as `"h4"`: for pages laid out as a heading followed by a list of links, the nearest heading above the link is put in front of the link text (Bank of Maharashtra).
@@ -183,6 +184,7 @@ These are not read by the monitor. Look at them yourself now and then:
 | DVC (`dvc.gov.in/cms-web/recruitment-notices`) | Its robots.txt allows only Google and Bing and says `User-agent: * Disallow: /`. Respected. |
 | NFL (`nationalfertilizers.com`) | Its robots.txt says `User-agent: * Disallow: /`. Respected. |
 | EIL recruitment portal (`recruitment.eil.co.in`) | Its robots.txt says `User-agent: * Disallow: /`. Respected. |
+| MPPSC (`mppsc.mp.gov.in`) | Its robots.txt says `User-agent: * Disallow: /` (everything). Respected: not read at all. Check `mppsc.mp.gov.in/Advertisement` by eye. |
 | NLC India (`nlcindia.in/website/en/careers/jobs/currentopenings.html`) | Opens in Chrome, but the normal reader and `classicTls` get the page frame with no list, and the pinned Chromium gets a firewall page ("Web Page Blocked!", HTTP 500). Not bypassed. |
 
 ## Sites not added yet (retry later)
@@ -198,6 +200,9 @@ Each was tested from this PC. "Retry" means: look again in a few weeks, or when 
 | ASRB (`asrb.gov.in/vacancy`; old `asrb.org.in` times out) | `asrb.gov.in/vacancy` gave HTTP 500 (Internal Server Error) on 29 Sep 2026 with the normal reader, `classicTls` and Chromium alike: a server-side error. Retry later. |
 | MTNL (`mtnl.in`) | No recruitment page: only a fake-advert warning. Retry. |
 | `www.indianoil.in`, `rrcecr.gov.in` (old RRC ECR address), `jointerritorialarmy.gov.in` | Did not answer from this PC (timeouts), even with `classicTls`. |
+
+**State sources (Batch 2, all `"level": "state"`):** UPPSC (advertisements + notices), UPSSSC, UPPRPB, BPSC, BSSC (Bihar), CSBC (Bihar Police), RPSC (notices + advertisements), RSSB (notices, advertisements, results, admit cards), MPESB, HPSC (notices + advertisements), HSSC (advertisements, public notices, results), PPSC, PSSSB.
+Notes: **HPSC** files live under `/Portals/`, which its robots.txt disallows, so it uses `noFileDownload` (title and link only). **RSSB**'s robots.txt disallows `/Documents/` and `/uploads/`, but its notices are under `/storage/`, which is allowed. UPSSSC, RSSB and PSSSB (an old TLS handshake Node refuses), and BPSC, BSSC, MPESB and PPSC (incomplete certificate chain) are read with `render` (Chromium). UPPSC and PPSC notice links belong to a browser session on their site: the alert link may need a fresh visit to the site to open. The UPSSSC list also carries links to Google Drive files that the commission itself posts.
 
 Added on a "may break" basis: **AIIMS** (its internal request id changes if the site is rebuilt), **Air Force**, **AFCAT** and **RRC SCR** (the last one lives at an IP address, `203.153.33.92`, which is the address the official SCR site links to).
 
