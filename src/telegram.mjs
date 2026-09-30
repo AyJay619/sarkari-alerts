@@ -14,8 +14,10 @@ const ICONS = { "Job": "💼", "Admit Card": "🎫", "Result": "📊", "Answer K
 // so a Job/Correction has no dates) | "scanned" (PDF is a scan, judged by title only)
 const FLAGS = { unchecked: "❓ unchecked", capped: "🤖 AI skipped: cap reached", limit: "🤖 dates not checked (limit)", scanned: "📷 scanned" };
 // extra (optional): { body: [lines under the title: post, vacancies, dates, verdict], skip: editorial rule name | null }
-const flagLine = (flag, extra) => (FLAGS[flag] ? "\n" + FLAGS[flag] : "") + (extra?.skip ? "\n🙈 AI says skip: " + esc(extra.skip) : "");
-const bodyBlock = extra => (extra?.body?.length ? "\n\n" + extra.body.map(esc).join("\n") : "");
+const flagLine = (flag, extra) => (FLAGS[flag] ? "\n" + FLAGS[flag] : "") + (extra?.skip ? "\n🙈 AI says skip: " + esc(cap(String(extra.skip), 200)) : "");
+// (a notice is always ONE message: its title and body lines are capped, so it stays far below Telegram's 4096 limit)
+const cap = (t, n) => (t.length > n ? t.slice(0, n - 1) + "…" : t);
+const bodyBlock = extra => (extra?.body?.length ? "\n\n" + extra.body.slice(0, 8).map(l => esc(cap(String(l), 250))).join("\n") : "");
 
 // First-line tag: "🏛️ Central · " or "🗺️ State · " (parseAlert in inbox.mjs skips it)
 const tag = level => (level === "state" ? "🗺️ State · " : "🏛️ Central · ");
@@ -37,7 +39,7 @@ export function formatGroup(groupName, category, groupTitle, regions, totalRegio
   const first = regions.length > 1 ? ` (${regions[0]} copy)` : "";
   return `${tag(level)}${ICONS[category] || "📌"} <b>${esc(category)}</b> · ${esc(groupName)}${flagLine(flag, extra)}
 
-${esc(groupTitle)} — ${esc(where)}${bodyBlock(extra)}
+${esc(cap(groupTitle, 400))} — ${esc(cap(where, 400))}${bodyBlock(extra)}
 
 🔗 ${esc(link)}${esc(first)}`;
 }
@@ -74,9 +76,16 @@ export function splitMessage(html, limit = TELEGRAM_SAFE_LIMIT) {
   return parts.filter(p => p.trim());
 }
 
+const stripTags = h => h.replace(/<[^>]*>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+
 export function makeSender({ token, chatId, dryRun }) {
   // withButton: true for alerts (notices); false for summaries and warnings.
+  // send() never throws: any unexpected problem is logged and reported as "not delivered" (false), so state is still saved.
   return async function send(html, withButton = false) {
+    try { return await sendParts(html, withButton); }
+    catch (e) { console.error("Telegram send error: " + String(e?.message ?? e).replace(token ?? "", "***")); return false; }
+  };
+  async function sendParts(html, withButton) {
     const parts = splitMessage(html);
     if (parts.length > 1) {   // several messages; the button (if any) goes under the last one; ok only if every part was delivered
       let all = true;
@@ -84,15 +93,15 @@ export function makeSender({ token, chatId, dryRun }) {
       return all;
     }
     return sendOne(html, withButton);
-  };
-  async function sendOne(html, withButton) {
+  }
+  async function sendOne(html, withButton, plain = false) {
     if (dryRun) { console.log("\n┌── Telegram message (dry run) ──\n" + html.replace(/<\/?b>/g, "*").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").split("\n").map(l => "│ " + l).join("\n") + "\n└──"); return true; }
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         const res = await fetch(`${apiBase()}/bot${token}/sendMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: chatId, text: html, parse_mode: "HTML", disable_web_page_preview: true, ...(withButton ? { reply_markup: SEND_BUTTON } : {}) }),
+          body: JSON.stringify({ chat_id: chatId, text: plain ? stripTags(html) : html, ...(plain ? {} : { parse_mode: "HTML" }), disable_web_page_preview: true, ...(withButton ? { reply_markup: SEND_BUTTON } : {}) }),
           signal: AbortSignal.timeout(20000),
         });
         const body = await res.json().catch(() => ({}));
@@ -100,6 +109,8 @@ export function makeSender({ token, chatId, dryRun }) {
         if (res.status === 429) { await new Promise(r => setTimeout(r, (body.parameters?.retry_after ?? 5) * 1000 + 500)); continue; }
         // Never print the token: only Telegram's own description
         console.error(`Telegram error ${res.status}: ${body.description ?? "unknown"}`);
+        // A message Telegram cannot parse as HTML would otherwise fail on every run: send it once more as plain text.
+        if (res.status === 400 && !plain && /parse entities|unsupported start tag/i.test(body.description ?? "")) return sendOne(html, withButton, true);
         return false;
       } catch (e) {
         console.error(`Telegram request failed (attempt ${attempt}): ${e.message.replace(token, "***")}`);
