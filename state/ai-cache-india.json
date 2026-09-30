@@ -39,7 +39,8 @@
  "https://barc.gov.in/careers/result23.pdf": "Not Relevant",
  "__usage": {
   "date": "2026-09-30",
-  "calls": 3
+  "calls": 7,
+  "visual": 1
  },
  "https://www.ibps.in/index.php/management-trainees-xvi/": {
   "data": {
@@ -286,5 +287,74 @@
   },
   "scanned": false,
   "noText": false
+ },
+ "https://aima-web-images.s3.ap-south-1.amazonaws.com/sailcareers.com/Downloads/BHILAI_News%20&%20Jobs_30092026_120848.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Trade Apprentices, Technician (Diploma) Apprentices, Graduate Apprentices",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-10-20",
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://esic.gov.in/attachments/recruitmentfile/Regarding_interview_Of_Contractual_Part_Time_Specialist_1790745863.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Contractual Part Time Specialist - Super Specialist Gastroenterologist",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": "2026-09-23",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
+ },
+ "https://bdl-india.in/sites/default/files/Advertisement-for-the-Post-of-Director%28Technical%29.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Director (Technical)",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-10-21",
+   "oldLast": null,
+   "advtDate": "2026-09-29",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://pgimer.edu.in/PGIMER_PORTAL/PGIMERPORTAL/Vacancies/JSP/ViewAll.jsp?record=15757": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Project Technical Support-I",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
  }
 }
