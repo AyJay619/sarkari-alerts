@@ -39,8 +39,8 @@
  "https://barc.gov.in/careers/result23.pdf": "Not Relevant",
  "__usage": {
   "date": "2026-09-30",
-  "calls": 14,
-  "visual": 3
+  "calls": 36,
+  "visual": 4
  },
  "https://www.ibps.in/index.php/management-trainees-xvi/": {
   "data": {
@@ -477,5 +477,380 @@
   "scanned": false,
   "noText": false,
   "visual": true
+ },
+ "https://www.ibps.in/index.php/rural-bank-xiv/": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://dsssb.delhi.gov.in/sites/default/files/DSSSB/circulars-orders/final_adv.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Senior Personal Assistant, Personal Assistant, Junior Judicial Assistant, Process Server, Peon/Orderly/Dak Peon",
+   "cancelled": false,
+   "start": "2026-10-06",
+   "last": "2026-11-04",
+   "oldLast": null,
+   "advtDate": "2026-09-30",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://dsssb.delhi.gov.in/sites/default/files/DSSSB/universal-tab/docs_0003.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "Court Attendant, Court Attendant (S), Court Attendant (L), Room Attendant (H), Security Attendant",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://cdnbbsr.s3waas.gov.in/s3ec0490f1f4972d133619a60c30f3559e/uploads/2026/09/2026093036.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Junior Court Assistant (Group-B Non-Gazetted)",
+   "cancelled": false,
+   "start": "2026-10-07",
+   "last": "2026-10-28",
+   "oldLast": null,
+   "advtDate": "2026-09-30",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false,
+  "visual": true
+ },
+ "https://pgimer.edu.in/PGIMER_PORTAL/PGIMERPORTAL/Vacancies/JSP/ViewAll.jsp?record=15759": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Project Research Scientist I",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://pgimer.edu.in/PGIMER_PORTAL/PGIMERPORTAL/Vacancies/JSP/ViewAll.jsp?record=15761": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Senior Resident",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://pgimer.edu.in/PGIMER_PORTAL/PGIMERPORTAL/Vacancies/JSP/ViewAll.jsp?record=15765": {
+  "v": 4,
+  "data": {
+   "category": "Admit Card",
+   "type": "other",
+   "post": "Project Research Scientist-III, Project Technical Support-III",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://upsssc.gov.in/ViewPdf.aspx?XL+bHOJ82XyR8ahAzDDWFVjXaMxuRqJJ+1VhDUiqgTk=": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://upsssc.gov.in/ViewPdf.aspx?XL+bHOJ82XwLfOa7YOEUlihXGrq/B4KFRGLvS/cm8o8=": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://upsssc.gov.in/ViewPdf.aspx?XL+bHOJ82XyMT9p3ogmQq1FjsVTOSBAuqNUWWQLUceo=": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://upsssc.gov.in/ViewPdf.aspx?ZAav3PHO8SZAd8dfxVU/hC/GnNBQsKRX3B45+A8f/Ms=": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://upsssc.gov.in/ViewPdf.aspx?ZAav3PHO8SYUg0v8p0pdhBn/q+BVIEaSNfWhqhR1MZ0=": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Havildar Trainer",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://upsssc.gov.in/ViewPdf.aspx?ZAav3PHO8SbXz1lscJB7EDPU5b9okTh6fPFWXxkqerQ=": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://upsssc.gov.in/ViewPdf.aspx?ZAav3PHO8SadE1elv4czrrIC+FQDR9n9BYbJOCnh3Rs=": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://upsssc.gov.in/ViewPdf.aspx?ZAav3PHO8Sa4CfLaY/nwL3e1pIEpzRiGN0vy0yPjdRU=": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://examqp.com/upssscForestWGv02A26/": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "Forest Guard and Wildlife Guard",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://examqp.com/upssscForensicV26N/": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://upsssc.gov.in/ResultsDire.aspx": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "group:rrb:RRB CEN 02/2025: Medical Examination": {
+  "v": 4,
+  "data": {
+   "category": "Admit Card",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "group:rrc:Notice regarding publication of Answer Keys for TBT Exam held on 24.09.2026.": {
+  "v": 4,
+  "data": {
+   "category": "Answer Key",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "group:rrc:CEN: 08/2024 SER - LIST OF PET QUALIFIED CANDIDATES. DATE OF PET : 30/09/2026": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "group:rrc:LIST OF NOT QUALIFIED CANDIDATES FOR PET HELD ON 30/09/2026. CEN : 08/2024": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
  }
 }
