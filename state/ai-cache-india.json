@@ -39,8 +39,8 @@
  "https://barc.gov.in/careers/result23.pdf": "Not Relevant",
  "__usage": {
   "date": "2026-10-01",
-  "calls": 56,
-  "visual": 15
+  "calls": 72,
+  "visual": 17
  },
  "https://www.ibps.in/index.php/management-trainees-xvi/": {
   "data": {
@@ -1816,6 +1816,280 @@
    "advtDate": null,
    "verdict": "post",
    "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://ssc.gov.in/api/attachment/uploads/masterData/NoticeBoards/Notice_01102026.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": "2026-10-01",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
+ },
+ "https://aima-web-images.s3.ap-south-1.amazonaws.com/sailcareers.com/Downloads/RSP_News%20&%20Jobs_01102026_172734.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Civil Engineer (YP-3), Surveyor (YP-2), IT Engineer (YP-1), Electronics Engineer (YP-1)",
+   "cancelled": false,
+   "start": "2026-10-01",
+   "last": "2026-10-22",
+   "oldLast": null,
+   "advtDate": "2026-10-01",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://esic.gov.in/attachments/recruitmentfile/Recruitment_notification_October_2026_for_allopathy_doctors_scheduled_on_09_10_2026_1790850387.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Full Time Specialist, Part Time Specialist, Senior Resident – 1 Year (Allopathy)",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": "2026-10-01",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://sjvn.nic.in/index.php/en/apprenticeship-training-sjvn-fy-2026-27-state-himachal-pradesh-view-fourth-list-candidates-called": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://sjvn.nic.in/index.php/en/apprenticeship-scheme-stpl-state-bihar-0": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://sjvn.nic.in/index.php/en/apprenticeship-scheme-stpl-state-bihar-check-list-selected-candidates-click-view-job-details-tab": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://pgimer.edu.in/PGIMER_PORTAL/PGIMERPORTAL/Vacancies/JSP/ViewAll.jsp?record=15773": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Project Research Scientist-I",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://jipmer.edu.in/announcement/results-selection-process-held-28092026-post-project-nurse-ii-1-no-under-changing-trial": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "Project Nurse-II",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://jipmer.edu.in/announcement/dr-s-sree-devi-junior-resident-department-transfusion-medicine-jipmer-has-secured-third": {
+  "v": 4,
+  "data": {
+   "category": "Not Relevant",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "skip",
+   "rule": "Tender"
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://jipmer.edu.in/announcement/final-results-%E2%80%93-selection-post-project-technical-support-i-non-medical-department-ent-%E2%80%93": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "Project Technical Support-I (Non-Medical), Department of ENT – Extramural Project",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://konkanrailway.com/sites/default/files/2026-10/19c.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Junior Technical Assistant in Mechanical department",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://uppbpb.gov.in/FilesUploaded/Notice/IMG_000230026fef-8a62-4883-93b2-a06f847d065c.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": "Constable (Civil Police) and equivalent posts, Uttar Pradesh Police",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-10-08",
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://uppbpb.gov.in/FilesUploaded/Notice/IMG_0001%20(2)9fee29e8-3f95-4e0f-b3d9-361939b7f366.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": "Constable (Nagarik Police and equivalent posts), Uttar Pradesh Police",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-10-08",
+   "oldLast": null,
+   "advtDate": "2026-09-27",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://rpsc.rajasthan.gov.in/Static/Result/456273F952864615AAE8931EED3D98DF.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "Assistant Prosecution Officer",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": "2026-10-01",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
+ },
+ "group:rrb:RRB CEN 02/2025: Indicative Notice": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "group:rrc:शारीरिक दक्षता परीक्षा (पीईटी) के संबंध में महत्वपूर्ण सूचना संख्या - 07.": {
+  "v": 4,
+  "data": {
+   "category": "Not Relevant",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "skip",
+   "rule": "Tender"
   },
   "scanned": false,
   "noText": true
