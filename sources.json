@@ -2597,6 +2597,7 @@
     "render": true,
     "waitFor": "ul.listing li a",
     "url": "https://sssb.punjab.gov.in/",
+    "legacyTls": true,
     "selector": "ul.listing li a",
     "include": "wp-content/uploads",
     "minTitle": 15,

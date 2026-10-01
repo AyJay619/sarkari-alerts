@@ -60,9 +60,9 @@ if (RUNNER === "india" && fs.existsSync(LEGACY_STATE)) {
 // stored, unless sources.json carries "rebaseline": true for them.
 const hashOf = rest => crypto.createHash("sha1").update(JSON.stringify(rest)).digest("hex").slice(0, 12);
 // (extraCerts is left out too: HOW to connect does not change WHICH notices are found)
-const fingerprint = src => { const { name, runner, timeoutMs, level, extraCerts, ...rest } = src; return hashOf(rest); };
+const fingerprint = src => { const { name, runner, timeoutMs, level, extraCerts, legacyTls, ...rest } = src; return hashOf(rest); };
 // Fingerprints saved before extraCerts was left out still count as "unchanged" (no needless silent re-baseline).
-const legacyFingerprint = src => { const { name, runner, timeoutMs, level, ...rest } = src; return hashOf(rest); };
+const legacyFingerprint = src => { const { name, runner, timeoutMs, level, legacyTls, ...rest } = src; return hashOf(rest); };
 
 const keyOf = i => (i.title.toLowerCase().replace(/\s+/g, " ") + "|" + i.link).slice(0, 600);
 

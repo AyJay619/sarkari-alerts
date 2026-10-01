@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import tls from "node:tls";
+import { constants as cryptoConstants } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import * as cheerio from "cheerio";
@@ -17,13 +18,16 @@ const HEADERS = {
 const agents = new Map();
 // "classicTls": true for sites whose (old) firewall drops Node's modern TLS hello (it offers a post-quantum key that some servers
 // cannot read, so the connection just hangs until it times out, while a normal browser or curl connects at once).
-function agentFor(extraCerts = [], timeoutMs, classicTls = false) {
-  const key = extraCerts.join("|") + "@" + (timeoutMs ?? "") + (classicTls ? "@classic" : "");
+// "legacyTls": true for sites whose server still uses the old TLS "legacy renegotiation" (PSSSB). Node refuses those by default; this
+// allows it for that source ONLY. The site's certificate is still fully checked, so no security checking is switched off.
+function agentFor(extraCerts = [], timeoutMs, classicTls = false, legacyTls = false) {
+  const key = extraCerts.join("|") + "@" + (timeoutMs ?? "") + (classicTls ? "@classic" : "") + (legacyTls ? "@legacy" : "");
   if (!agents.has(key)) {
     const connect = {};
     if (extraCerts.length) connect.ca = [...tls.rootCertificates, ...extraCerts.map(f => fs.readFileSync(new URL("../" + f, import.meta.url), "utf8"))];
     if (timeoutMs) connect.timeout = timeoutMs;
     if (classicTls) connect.ecdhCurve = "X25519:prime256v1:secp384r1";
+    if (legacyTls) connect.secureOptions = cryptoConstants.SSL_OP_LEGACY_SERVER_CONNECT;
     const opts = { connect };
     if (timeoutMs) Object.assign(opts, { headersTimeout: timeoutMs, bodyTimeout: timeoutMs });
     agents.set(key, new Agent(opts));
@@ -34,14 +38,35 @@ function agentFor(extraCerts = [], timeoutMs, classicTls = false) {
 // One HTTP request, honouring the source's extraCerts / timeoutMs.
 // Optional per source: "method": "POST" + "form": {...} for the few sites whose list comes from a POST request (e.g. HAL),
 // and "headers": {...} to change a header for that site only (HAL refuses the normal Accept header on POST).
-function request(url, { extraCerts, timeoutMs, classicTls, method, form, body, headers } = {}, redirect = "follow") {
+function request(url, { extraCerts, timeoutMs, classicTls, legacyTls, method, form, body, headers } = {}, redirect = "follow") {
   const opts = { headers: { ...HEADERS, ...headers }, signal: AbortSignal.timeout(timeoutMs ?? 30000), redirect };
   if (method === "POST") Object.assign(opts, { method, body: body ?? new URLSearchParams(form ?? {}) });   // "body": a raw text body instead of "form" (AIIMS)
-  return extraCerts?.length || timeoutMs || classicTls ? undiciFetch(url, { ...opts, dispatcher: agentFor(extraCerts, timeoutMs, classicTls) }) : fetch(url, opts);
+  return extraCerts?.length || timeoutMs || classicTls || legacyTls ? undiciFetch(url, { ...opts, dispatcher: agentFor(extraCerts, timeoutMs, classicTls, legacyTls) }) : fetch(url, opts);
+}
+// The real reason a download failed, in plain words (the technical code is kept in brackets).
+export function plainCause(e) {
+  const code = [e.cause?.code, e.code].find(c => typeof c === "string") ?? "";
+  const text = `${e.name ?? ""} ${e.message ?? ""} ${e.cause?.message ?? ""}`;
+  const http = text.match(/HTTP (\d{3})/)?.[1];
+  const tag = code ? ` (${code})` : "";
+  if (http === "403" || http === "401") return `the site refused us: HTTP ${http} (it may block automated downloads or non-Indian visitors)`;
+  if (http === "404") return "the file was not found: HTTP 404 (the link may be dead or moved)";
+  if (http === "429") return "the site says too many requests: HTTP 429 (try again later)";
+  if (http && Number(http) >= 500) return `the site itself is having a problem: HTTP ${http}`;
+  if (http) return `the site answered HTTP ${http}`;
+  if (/LEGACY_RENEGOTIATION/.test(code + text)) return `the site uses an old security handshake that this program blocks by default${tag}`;
+  if (/CERT|SELF_SIGNED|UNABLE_TO_VERIFY|UNABLE_TO_GET_ISSUER|HOSTNAME_MISMATCH/i.test(code + text)) return `the site's security certificate could not be verified${tag}`;
+  if (/TimeoutError|ABORT_ERR|CONNECT_TIMEOUT|HEADERS_TIMEOUT|BODY_TIMEOUT|ETIMEDOUT|timed out|due to timeout/i.test(code + text)) return `timed out: the site did not answer in time${tag}`;
+  if (/ENOTFOUND|EAI_AGAIN/.test(code)) return `the site's address could not be found (DNS)${tag}`;
+  if (/ECONNREFUSED/.test(code)) return `the site refused the connection${tag}`;
+  if (/ECONNRESET|UND_ERR_SOCKET|EPIPE|socket hang up/i.test(code + text)) return `the connection was cut off by the site${tag}`;
+  if (/too large/.test(text)) return "the file is too large";
+  if (/too many redirects/.test(text)) return "the link keeps redirecting (too many redirects)";
+  return `${e.message}${e.cause ? " (" + [e.cause.code, e.cause.message].filter(Boolean).join(" ") + ")" : ""}`;
 }
 const explain = (e, started, url) => {
   const cause = e.cause ? ` | cause: ${[e.cause.code, e.cause.message].filter(Boolean).join(" ")}` : "";
-  return new Error(`${e.name}: ${e.message}${cause} | after ${((Date.now() - started) / 1000).toFixed(1)}s | url: ${url}`);
+  return Object.assign(new Error(`${e.name}: ${e.message}${cause} | after ${((Date.now() - started) / 1000).toFixed(1)}s | url: ${url}`), { reason: plainCause(e) });
 };
 
 // One attempt, with a detailed error message so the GitHub log shows exactly what went wrong.
@@ -56,9 +81,42 @@ export async function getText(url, srcOpts = {}) {
   }
 }
 
-// Downloads a file (used by the listener). Redirects are followed by hand so that EVERY hop can be checked:
+// ScrapFly fallback (https://scrapfly.io): used only when the direct download fails AND SCRAPFLY_KEY is set in .env.
+// ScrapFly fetches the file from its own servers (Indian residential proxy) and hands the bytes back; nothing else changes.
+async function scrapflyBuffer(url, maxBytes) {
+  const key = process.env.SCRAPFLY_KEY;
+  if (!key) throw new Error("ScrapFly is not set up (no SCRAPFLY_KEY in .env)");
+  const api = new URL("https://api.scrapfly.io/scrape");
+  api.search = new URLSearchParams({ key, url, country: "in", asp: "true", proxy_pool: "public_residential_pool", format: "raw", retry: "false", timeout: "120000" }).toString();
+  const res = await fetch(api, { signal: AbortSignal.timeout(150000) });
+  if (!res.ok) {
+    const info = await res.json().catch(() => null);   // ScrapFly describes its own errors in a small JSON body
+    throw new Error(`ScrapFly HTTP ${res.status}${info?.message ? ": " + info.message : info?.result?.error?.message ? ": " + info.result.error.message : ""}`);
+  }
+  const buf = Buffer.from(await res.arrayBuffer());
+  if (buf.length > maxBytes) throw new Error("file is too large");
+  if (!buf.length) throw new Error("ScrapFly returned an empty file");
+  return { buf, finalUrl: url, contentType: res.headers.get("content-type") ?? "" };
+}
+
+// Downloads a file (used by the listener and the PDF reader). A direct download first; if that fails and SCRAPFLY_KEY is set, ScrapFly is tried.
+// If both fail, the error's "reason" says what went wrong with each. (The site-allowed check still runs on the first address.)
+export async function getBuffer(url, opts = {}) {
+  try {
+    return await getBufferDirect(url, opts);
+  } catch (direct) {
+    if (direct.refused || !process.env.SCRAPFLY_KEY || opts.scrapfly === false) throw direct;
+    try {
+      return { ...(await scrapflyBuffer(url, opts.maxBytes ?? 30 * 1024 * 1024)), viaScrapfly: true };
+    } catch (fallback) {
+      throw Object.assign(direct, { reason: `${direct.reason}; ScrapFly fallback also failed: ${plainCause(fallback)}` });
+    }
+  }
+}
+
+// One direct download. Redirects are followed by hand so that EVERY hop can be checked:
 // allow(url) must throw to refuse a URL. optsFor(url) gives that host's extraCerts / timeoutMs.
-export async function getBuffer(url, { allow = () => {}, optsFor = () => ({}), maxBytes = 30 * 1024 * 1024 } = {}) {
+async function getBufferDirect(url, { allow = () => {}, optsFor = () => ({}), maxBytes = 30 * 1024 * 1024 } = {}) {
   const started = Date.now();
   let current = url;
   try {

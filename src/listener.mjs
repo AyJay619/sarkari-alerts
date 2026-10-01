@@ -105,11 +105,11 @@ async function handleTap(cb) {
     const known = inbox.findExisting(alert.link);
     if (known) { log(`Already in inbox: ${known}`); await reply(msg, `ℹ️ Already in inbox: ${known}`); await markDone(msg); return; }
 
-    const { buf, finalUrl, contentType } = await getBuffer(alert.link, {
+    const { buf, finalUrl, contentType, viaScrapfly } = await getBuffer(alert.link, {
       allow: refuse,
       optsFor: url => {
         const s = sourceForHost(new URL(url).hostname, sources);
-        return { extraCerts: s?.extraCerts, timeoutMs: s?.timeoutMs, classicTls: s?.classicTls };
+        return { extraCerts: s?.extraCerts, timeoutMs: s?.timeoutMs, classicTls: s?.classicTls, legacyTls: s?.legacyTls };
       },
     });
     const isPdf = buf.subarray(0, 1024).includes("%PDF");
@@ -122,7 +122,7 @@ async function handleTap(cb) {
       alertDate: when.toISOString(), flag: alert.flag, ...(alert.skip ? { aiSkip: alert.skip } : {}), ...(alert.details ? { details: alert.details } : {}), ...(alert.test ? { test: true } : {}),
       ...(finalUrl !== alert.link ? { finalUrl } : {}), contentType,
     });
-    log(`Saved: ${name}${isPdf ? "" : " (link only)"}`);
+    log(`Saved: ${name}${isPdf ? "" : " (link only)"}${viaScrapfly ? " (downloaded through ScrapFly)" : ""}`);
     await reply(msg, isPdf ? `✅ Saved to inbox: ${name}` : `✅ Saved to inbox: ${name}\n(link only — no PDF)`);
     await markDone(msg);
   } catch (e) {
@@ -131,7 +131,7 @@ async function handleTap(cb) {
       await reply(msg, `🚫 Refused: ${e.message}. Nothing was downloaded.`);
     } else {
       log(`Download failed: ${e.message}`);
-      await reply(msg, `❌ Download failed: ${e.message.split(" | ")[0].replace(/^\w*Error: /, "")}\nThe button is still there, so you can tap again to retry.`);
+      await reply(msg, `❌ Download failed: ${e.reason ?? e.message.split(" | ")[0].replace(/^\w*Error: /, "")}\nThe button is still there, so you can tap again to retry.`);
     }
   }
 }

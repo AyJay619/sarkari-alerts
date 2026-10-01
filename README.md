@@ -301,6 +301,7 @@ Every alert has a **📥 Send to agents** button. Tapping it saves that notice i
    ```
    TELEGRAM_BOT_TOKEN=...
    TELEGRAM_CHAT_ID=...
+   SCRAPFLY_KEY=...        (optional: if a direct download fails, ScrapFly is tried as a backup)
    ```
 2. Double-click **`listener\install-listener.cmd`**. It makes the listener start hidden every time you log in to Windows, restarts it if it crashes, and starts it right now. (If Windows says access is denied, right-click it → *Run as administrator*.) It uses no PowerShell scripts, so your execution policy is untouched.
 3. Try it: run `npm run send-test-alerts` — three 🧪 TEST alerts arrive: a real SSC PDF, one from a website that is not allowed (should be refused), and an RRB link (link only). Tap each button.
