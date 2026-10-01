@@ -6027,7 +6027,8 @@
     "bokaro steel plant: result of the 'walk-in-interview' held for the post of audiologist against advertisement no. bsl/r-c/2026-08|https://aima-web-images.s3.ap-south-1.amazonaws.com/sailcareers.com/Downloads/BSP_News%20&%20Jobs_29092026_110701.pdf": "2026-09-29T08:37:08.686Z",
     "proficiency training of dresser cum compounder in m&hs, cfp|https://aima-web-images.s3.ap-south-1.amazonaws.com/sailcareers.com/Downloads/SAIL-CFP_News%20&%20Jobs_29092026_155450.pdf": "2026-09-29T15:28:11.072Z",
     "advertisement for engagement of trade apprentices (ta) at bhilai steel plant for fy 2026–27|https://aima-web-images.s3.ap-south-1.amazonaws.com/sailcareers.com/Downloads/BHILAI_News%20&%20Jobs_30092026_120848.pdf": "2026-09-30T07:00:34.410Z",
-    "apply online for engagement of young professionals at cmo and emd|https://sailcareers.com/SAIL2026YPCMO/": "2026-09-30T07:00:34.410Z"
+    "apply online for engagement of young professionals at cmo and emd|https://sailcareers.com/SAIL2026YPCMO/": "2026-09-30T07:00:34.410Z",
+    "result of personal interview — engagement of young professionals advt. no. isp/yp/2026/01 dated 22.05.2026|https://aima-web-images.s3.ap-south-1.amazonaws.com/sailcareers.com/Downloads/IISCO_News%20&%20Jobs_01102026_091532.pdf": "2026-10-01T04:00:31.292Z"
    },
    "fails": 0,
    "warned": false,
@@ -7161,8 +7162,8 @@
     "selection of design trainees/ management trainees 2026 - declaration of final results - list of provsionally selected candidates|https://hal-india.co.in/career#1009": "2026-09-27T16:34:46.174Z",
     "selection of design trainees/ management trainees 2026 -link for downloading provisional offer of appointment by candidates provisionally selected as dt/mt|https://hal-india.co.in/career#1010": "2026-09-30T05:09:23.454Z"
    },
-   "fails": 2,
-   "warned": false,
+   "fails": 3,
+   "warned": true,
    "fp": "fe116c3e007c"
   },
   "army": {
@@ -13703,9 +13704,12 @@
     "public notice regarding correction portal for advertisement 03 of 2026 for the posts of craft instructor|https://sssb.punjab.gov.in/wp-content/uploads/2026/09/Public-Notice-regarding-Correction-Portal-1.pdf": "2026-09-30T05:18:15.807Z",
     "final answer key of written examination set d held on 02.08.2026 for the post of assistant district attorney (advt. no. 09 of 2026)|https://sssb.punjab.gov.in/wp-content/uploads/2026/08/Final-Answer-Key-SET-D-2.pdf": "2026-09-30T05:18:15.807Z",
     "final answer key of written examination set c held on 02.08.2026 for the post of assistant district attorney (advt. no. 09 of 2026)|https://sssb.punjab.gov.in/wp-content/uploads/2026/08/Final-Answer-Key-SET-C-2.pdf": "2026-09-30T05:18:15.807Z",
-    "final answer key of written examination set b held on 02.08.2026 for the post of assistant district attorney (advt. no. 09 of 2026)|https://sssb.punjab.gov.in/wp-content/uploads/2026/08/Final-Answer-Key-SET-B-2.pdf": "2026-09-30T05:18:15.807Z"
+    "final answer key of written examination set b held on 02.08.2026 for the post of assistant district attorney (advt. no. 09 of 2026)|https://sssb.punjab.gov.in/wp-content/uploads/2026/08/Final-Answer-Key-SET-B-2.pdf": "2026-09-30T05:18:15.807Z",
+    "scribe notice for the post of junior engineer (civil/mechanical/electrical) in advertisement no 07 of 2026|https://sssb.punjab.gov.in/wp-content/uploads/2026/09/Scribe-Notice-Advt-No-7-of-2026.pdf": "2026-10-01T04:06:37.314Z",
+    "result of written test dated 26.07.2026 for the post of warder and matron under advt. no. 08 of 2026|https://sssb.punjab.gov.in/wp-content/uploads/2026/09/Roll-Number-Wise-Result-Advt-No.-08-of-2026.pdf": "2026-10-01T04:06:37.314Z",
+    "supplementary result for the post of junior engineer (civil) advertisement no 16 of 2025|https://sssb.punjab.gov.in/wp-content/uploads/2026/09/Supplementary-Result-JE-Civil-Advt-No-16-of-2025.pdf": "2026-10-01T04:06:37.314Z"
    },
-   "fails": 1,
+   "fails": 0,
    "warned": false,
    "fp": "0c4ec461d6e4"
   }
@@ -13732,8 +13736,8 @@
    }
   }
  },
- "morning": "2026-09-30",
+ "morning": "2026-10-01",
  "skippedDays": [],
- "lastRunAt": "2026-09-30T16:09:29.004Z",
- "lastSlot": "2026-09-30 21:30"
+ "lastRunAt": "2026-10-01T04:07:00.040Z",
+ "lastSlot": "2026-10-01 09:30"
 }

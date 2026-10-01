@@ -38,9 +38,8 @@
  "https://www.upsc.gov.in/whats-new/09%20posts%20of%20Scientist-B%20(Instrumentation)%20in%20Ministry%20of%20Earth%20Sciences/Rectt.%20Test": "Job",
  "https://barc.gov.in/careers/result23.pdf": "Not Relevant",
  "__usage": {
-  "date": "2026-09-30",
-  "calls": 36,
-  "visual": 4
+  "date": "2026-10-01",
+  "calls": 1
  },
  "https://www.ibps.in/index.php/management-trainees-xvi/": {
   "data": {
@@ -842,6 +841,23 @@
    "category": "Result",
    "type": "other",
    "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://sssb.punjab.gov.in/wp-content/uploads/2026/09/Scribe-Notice-Advt-No-7-of-2026.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": "Junior Engineer (Civil/Mechanical/Electrical)",
    "cancelled": false,
    "start": null,
    "last": null,
