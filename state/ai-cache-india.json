@@ -39,7 +39,8 @@
  "https://barc.gov.in/careers/result23.pdf": "Not Relevant",
  "__usage": {
   "date": "2026-10-01",
-  "calls": 1
+  "calls": 35,
+  "visual": 7
  },
  "https://www.ibps.in/index.php/management-trainees-xvi/": {
   "data": {
@@ -858,6 +859,591 @@
    "category": "Correction",
    "type": "other",
    "post": "Junior Engineer (Civil/Mechanical/Electrical)",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://esic.gov.in/attachments/recruitmentfile/WALK_IN_INTERVIEW_FOR_POST_OF_SPECIALIST_PGMO_amp_SENIOR_RESIDENT_on_contractual_Basis_1790828886.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Specialist (General Surgeon, Pathologist, Resident Radiologist, Gynaecologist, Ophthalmology), PGMO, Senior Resident",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": "2026-10-01",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
+ },
+ "https://esic.gov.in/attachments/recruitmentfile/Advertisement_for_Recruitment_Senior_Resident_1790837474.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Senior Resident (18 posts across multiple specialties)",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": "2026-09-10",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://esic.gov.in/attachments/recruitmentfile/Full_time_Specialist_Part_time_Specialist_1790837474.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Full Time Specialists (FTS) / Part Time Specialists (PTS) on Contract basis",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": "2026-09-10",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://recruitment.itbpolice.nic.in/noticeboards/downloadpdf/361.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Constable (General Duty) under Sports Quota",
+   "cancelled": false,
+   "start": "2026-10-03",
+   "last": "2026-11-01",
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://www.cisf.gov.in/assets/pdfs/2026/09/updation_seniority_list_upto_adg_med.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://pgimer.edu.in/PGIMER_PORTAL/PGIMERPORTAL/Vacancies/JSP/ViewAll.jsp?record=15769": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Project Research Scientist-III (Medical and Non-medical)",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://munitionsindia.in/wp-content/uploads/3.OFI-CPW-170723-Prescribed-Format-of-OBC-Caste-Certificate.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Not Relevant",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "skip",
+   "rule": "Tender"
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://munitionsindia.in/wp-content/uploads/2.OFI-CPW-170723-Prescribed-format-of-Character-Certificate.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Not Relevant",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "skip",
+   "rule": "Tender"
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
+ },
+ "https://munitionsindia.in/wp-content/uploads/1.OFI-CPW-170723-General-Notice.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Tenure Based CPW (Contractual Personnel)",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "skip",
+   "rule": "Deputation only"
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
+ },
+ "https://munitionsindia.in/wp-content/uploads/10.OFI-AmendmentOFI-1.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "corrigendum",
+   "post": "Tenure Based CPW",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
+ },
+ "https://munitionsindia.in/wp-content/uploads/9-OFI-ofi-amnd-190623-1.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "corrigendum",
+   "post": "Tenure Based CPW (Skilled)",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
+ },
+ "https://munitionsindia.in/wp-content/uploads/8.OFI-CPW-TENURE-BASE-TEST.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": "CPW (Tenure Based)",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://munitionsindia.in/wp-content/uploads/7.OFKFull-Advertisement-OFK.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Tenure Based DBW (Danger Building Worker) Personnel on Contract Basis",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "skip",
+   "rule": "Ex-servicemen only"
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://munitionsindia.in/wp-content/uploads/6.OFCHFullAdvertisementDBW-1.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Tenure Based DBW (Danger Building Worker) - Skilled",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
+ },
+ "https://munitionsindia.in/wp-content/uploads/5.OFIT-Amendment-CPW.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "extension",
+   "post": "Tenure Based CPW",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
+ },
+ "https://munitionsindia.in/wp-content/uploads/4.HEF-Advt-for-Apprentice.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Apprentice (Engineering Graduates, Technician, General Stream)",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://munitionsindia.in/wp-content/uploads/3.OFI_Advt_13-4-2023.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Tenure Based CPW (Chemical Process Worker)",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "skip",
+   "rule": "Retired personnel only"
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://munitionsindia.in/wp-content/uploads/2.OFN-AOCP-ATP-2023.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "DBW/CPW (Danger Building Worker, Chemical Process Worker)",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "skip",
+   "rule": "Retired personnel only"
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://munitionsindia.in/wp-content/uploads/Detailed_Advt_HR_Consultant_MIL_Dec_2022.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "HR Consultant",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://rssb.rajasthan.gov.in/storage/result_item/1790685551.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "Stenographer",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://rssb.rajasthan.gov.in/storage/result_item/1790685600.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "Stenographer 2024",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://rssb.rajasthan.gov.in/storage/result_item/1790705292.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "Jr. Tech. Assistant & Contract Accounts Assistant",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://rssb.rajasthan.gov.in/storage/result_item/1790682622.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://rssb.rajasthan.gov.in/storage/result_item/1790705065.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "Aayush Officer (Contractual) (Aayurved/Homeo/Unani)",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://rssb.rajasthan.gov.in/storage/result_item/1790705013.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": "Aayush Officer (Contractual) (Aayurved/Homeo/Unani)",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://rssb.rajasthan.gov.in/storage/result_item/1790705775.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": "Community Health Officer (Contract)",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://rssb.rajasthan.gov.in/storage/result_item/1790706131.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://rssb.rajasthan.gov.in/storage/result_item/1790685503.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "Stenographer",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://rssb.rajasthan.gov.in/storage/result_item/1790706219.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "ANM (Contractual)",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://rssb.rajasthan.gov.in/storage/result_item/1790682568.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://rssb.rajasthan.gov.in/storage/result_item/1790705406.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://rssb.rajasthan.gov.in/storage/result_item/1790833841.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "Librarian Grade III",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://rssb.rajasthan.gov.in/storage/result_item/1790834360.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "Live Stock Assistant",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://rssb.rajasthan.gov.in/storage/result_item/1790832024.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "Physical Training Instructor (PTI) Grade III",
    "cancelled": false,
    "start": null,
    "last": null,
