@@ -39,8 +39,8 @@
  "https://barc.gov.in/careers/result23.pdf": "Not Relevant",
  "__usage": {
   "date": "2026-10-01",
-  "calls": 35,
-  "visual": 7
+  "calls": 56,
+  "visual": 15
  },
  "https://www.ibps.in/index.php/management-trainees-xvi/": {
   "data": {
@@ -1444,6 +1444,371 @@
    "category": "Result",
    "type": "other",
    "post": "Physical Training Instructor (PTI) Grade III",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://ssc.gov.in/api/attachment/uploads/masterData/NoticeBoards/Notice_KK11426_01102026.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "corrigendum",
+   "post": "Agriculture Assistant",
+   "cancelled": true,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": "2026-09-30",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
+ },
+ "https://ssc.gov.in/api/attachment/uploads/masterData/NoticeBoards/Notice_KK13526_01102026.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "corrigendum",
+   "post": "Junior Technical Officer",
+   "cancelled": true,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": "2026-09-30",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
+ },
+ "https://esic.gov.in/attachments/recruitmentfile/alk_in_Interview_on_09_102026_for_Recruitment_of_Senior_Resident_Broad_Speciality_Departments_on_eon_tract_basis_at_ESIC_Medical_College_amp_Faridabad_NIT_mdash_3_1790838128.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Senior Resident (ICU, NICU, PICU)",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-10-09",
+   "oldLast": null,
+   "advtDate": "2026-10-01",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false,
+  "visual": true
+ },
+ "https://esic.gov.in/attachments/recruitmentfile/Circular_Regarding_Recruitment_Adv_No_01_amp_02_of_2026_1790846465.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "corrigendum",
+   "post": "Senior Resident (Pathology), Associate Professor, Assistant Professor, Professor",
+   "cancelled": true,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": "2026-08-24",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://cdnbbsr.s3waas.gov.in/s32d2ca7eedf739ef4c3800713ec482e1a/uploads/2026/10/2026100138.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Deputy Commissioner",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-11-02",
+   "oldLast": null,
+   "advtDate": "2026-10-01",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false,
+  "visual": true
+ },
+ "https://dsssb.delhi.gov.in/sites/default/files/DSSSB/universal-tab/notice_no_1070.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "TGT (Sanskrit) Female",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-07-31",
+   "oldLast": null,
+   "advtDate": "2026-10-01",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://dsssb.delhi.gov.in/sites/default/files/DSSSB/universal-tab/notice_no_1071.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "TGT (Social Science) Male",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-07-24",
+   "oldLast": null,
+   "advtDate": "2026-10-01",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://pgimer.edu.in/PGIMER_PORTAL/PGIMERPORTAL/Vacancies/JSP/ViewAll.jsp?record=15771": {
+  "v": 4,
+  "data": {
+   "category": "Admit Card",
+   "type": "other",
+   "post": "Project Research Scientist-III, Project Technical Support-III",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://munitionsindia.in/wp-content/uploads/2022/11/building-img.jpg": {
+  "v": 4,
+  "data": {
+   "category": "Not Relevant",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "skip",
+   "rule": "Tender"
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://munitionsindia.in/wp-content/uploads/2022/11/lagacy-img-1.jpg": {
+  "v": 4,
+  "data": {
+   "category": "Not Relevant",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "skip",
+   "rule": "Tender"
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://www.cris.org.in/PDF/Project_Officers/VC%2054%20of%202026.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Project Officer, EPS Group",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-10-31",
+   "oldLast": null,
+   "advtDate": "2026-09-30",
+   "verdict": "skip",
+   "rule": "Retired personnel only"
+  },
+  "scanned": false,
+  "noText": false,
+  "visual": true
+ },
+ "https://www.cris.org.in/PDF/Project_Assistants/VC%2055%20of%202026.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Project Assistant",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-10-30",
+   "oldLast": null,
+   "advtDate": "2026-09-30",
+   "verdict": "skip",
+   "rule": "Retired personnel only"
+  },
+  "scanned": false,
+  "noText": false,
+  "visual": true
+ },
+ "https://aweil.in/download/recruitment/Nov-2025/Executive-Finance-Result-20-11-2025.pdf?v=1.4.94": {
+  "v": 4,
+  "data": {
+   "category": "Result",
+   "type": "other",
+   "post": "Executive Finance",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": "2025-11-20",
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
+ },
+ "https://aweil.in/download/notices/cancellation/Consultant-Accounts-Cancelletion-of-Advertisement.pdf?v=1.4.94": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "corrigendum",
+   "post": "Consultant (Accounts)",
+   "cancelled": true,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
+ },
+ "https://aweil.in/download/notices/ADVERTISEMENT-PRO.pdf?v=1.4.94": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Executive (Corporate Communication)",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-01-15",
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://aweil.in/download/recruitment/Draft-Advt-Skilled-3rd.pdf?v=1.4.94": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Skilled (Experienced) Tradesmen: Machinist (CNC Operator), Fitter (G), Fitter (Electronic), Millwright, TIG/MIG Welder, ",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://aweil.in/download/recruitment/2026/Filling-of-Technical-Posts-on-Contractual-Basis-for-production-at-GSF-en-hi.pdf?v=1.4.94": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Electrical Fitter, Mechanical Fitter, Machinist, Turner, Electroplater, Heat Treatment Operator (40 posts)",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-10-31",
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://aweil.in/download/recruitment/2026/GCF-Detailed-Advt-Design-Engineer-Online-Application-Sept-2026.pdf?v=1.4.94": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Design Engineer (Mechanical) – 4 posts, Design Engineer (Electrical/Electronics) – 1 post",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-10-15",
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://aweil.in/download/recruitment/2026/GCF-Detailed-Advt-Skilled-Tradesman-Online-Application-Sept-2026.pdf?v=1.4.94": {
+  "v": 4,
+  "data": {
+   "category": "Job",
+   "type": "fresh",
+   "post": "Skilled (Experienced) Tradesman (Fitter - Electrical/Electronics)",
+   "cancelled": false,
+   "start": null,
+   "last": "2026-10-11",
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": false
+ },
+ "https://rssb.rajasthan.gov.in/storage/news_item/1790833749.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": "Librarian Grade III",
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": null,
+   "verdict": "post",
+   "rule": null
+  },
+  "scanned": false,
+  "noText": true
+ },
+ "https://rssb.rajasthan.gov.in/storage/news_item/1790834288.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Correction",
+   "type": "other",
+   "post": "Live Stock Assistant",
    "cancelled": false,
    "start": null,
    "last": null,
