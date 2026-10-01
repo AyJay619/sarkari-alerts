@@ -39,8 +39,8 @@
  "https://barc.gov.in/careers/result23.pdf": "Not Relevant",
  "__usage": {
   "date": "2026-10-01",
-  "calls": 72,
-  "visual": 17
+  "calls": 73,
+  "visual": 18
  },
  "https://www.ibps.in/index.php/management-trainees-xvi/": {
   "data": {
@@ -2093,5 +2093,23 @@
   },
   "scanned": false,
   "noText": true
+ },
+ "https://cdnbbsr.s3waas.gov.in/s3ec0490f1f4972d133619a60c30f3559e/uploads/2026/10/2026100117.pdf": {
+  "v": 4,
+  "data": {
+   "category": "Not Relevant",
+   "type": "other",
+   "post": null,
+   "cancelled": false,
+   "start": null,
+   "last": null,
+   "oldLast": null,
+   "advtDate": "2026-10-01",
+   "verdict": "skip",
+   "rule": "Tender"
+  },
+  "scanned": true,
+  "noText": false,
+  "visual": true
  }
 }
