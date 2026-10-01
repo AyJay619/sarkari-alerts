@@ -7,8 +7,9 @@ on:
   # Times are UTC (cron always is); India is UTC+5:30, so 03:55 UTC = 9:25 am IST, and so on:
   #   03:55 UTC = 9:25 am IST (aim: 9:30 am)     06:55 UTC = 12:25 pm IST (aim: 12:30 pm)   09:55 UTC = 3:25 pm IST (aim: 3:30 pm)
   #   12:55 UTC = 6:25 pm IST (aim: 6:30 pm)     15:55 UTC = 9:25 pm IST (aim: 9:30 pm, the last run of the day)
-  schedule:
-    - cron: "55 3,6,9,12,15 * * *"
+  # PAUSED (2026-10-02): re-enable by uncommenting these two lines
+  # schedule:
+  #   - cron: "55 3,6,9,12,15 * * *"
   # The PC starts the same workflow through the GitHub API at 9:30, 12:30, 3:30, 6:30 and 9:30 pm IST (Windows Task Scheduler, see
   # trigger/ and the README), because GitHub's timer is sometimes late or skipped. It sends slot_guard = true.
   # The manual "Run workflow" button leaves it "false" and always runs.
