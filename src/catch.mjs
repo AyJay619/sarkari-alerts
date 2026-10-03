@@ -7,7 +7,7 @@
 // Windows environment variable SCRAPFLY_KEY is set, and their credits are counted per site, per scan and per month (state.scrapfly).
 import fs from "node:fs";
 import path from "node:path";
-import { fetchItemsWithRetry } from "./fetchers.mjs";
+import { fetchItems } from "./fetchers.mjs";
 
 const two = n => String(n).padStart(2, "0");
 const localDate = d => `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`;
@@ -74,7 +74,7 @@ export function scanMessage({ newLinks, sitesWithNew, failed, floods = [], netwo
   return lines.join("\n");
 }
 
-// ctx: { sources, state, send, dry, onlyTest, now (Date), catchDir, runSlot, fingerprint, legacyFingerprint, keyOf, prune, scrapflyKey }
+// ctx: { sources, state, send, dry, onlyTest, now (Date), catchDir, runSlot, fingerprint, legacyFingerprint, keyOf, prune, scrapflyKey, floodLimit, scrapflyCreditLimit, scrapflyRetryMinLeft }
 // Returns { file, exitCode, message }. The seen-links record (ctx.state) is changed in memory only; the caller saves it AFTER this returns,
 // i.e. only once the catch file really exists, so a link is never marked "seen" without having been written down.
 export async function runCatchScan(ctx) {
@@ -85,24 +85,30 @@ export async function runCatchScan(ctx) {
   const results = [];     // one per site
   const items = [];       // the new links
   const groupHits = {};   // group -> [{ src, fresh, st }]
-  const failedNow = [];   // { src, st }
+  const resOf = new Map();   // site id -> its result row (a retry updates the same row)
+  const metaOf = new Map();  // SCRAPFLY site id -> { credits } (counts BOTH tries)
 
-  async function scanSite(src, meta) {
+  // One try at one site. Returns null when it worked, or { src, st, res } when it failed (the caller may retry it once, at the end of its group).
+  // A site is only really FAILED when its retry fails too: the first failure is kept in "first_try_reason".
+  async function scanSite(src, meta, isRetry = false) {
     const st = (state.sources[src.id] ??= { initialized: false, seen: {}, fails: 0, warned: false });
-    const res = { site: src.name, id: src.id, tier: tierOf(src) };
-    results.push(res);
+    let res = resOf.get(src.id);
+    if (!res) { res = { site: src.name, id: src.id, tier: tierOf(src) }; resOf.set(src.id, res); results.push(res); }
     let found;
     try {
-      found = await (tierOf(src) === "SCRAPFLY" ? fetchItemsWithRetry(src, 0, meta) : fetchItemsWithRetry(src));
+      found = await fetchItems(src, meta);   // (one try only: failures are retried at the end of the group, see below)
     } catch (e) {
-      Object.assign(res, { status: "FAILED", reason: String(e.reason ?? e.message).slice(0, 300) });
+      const reason = String(e.reason ?? e.message).slice(0, 300);
+      if (isRetry) res.first_try_reason = res.reason;
+      Object.assign(res, { status: "FAILED", reason });
+      if (isRetry) res.retried = true;
       if (meta) res.credits = meta.credits ?? 0;
-      failedNow.push({ src, st, res });
-      console.log(`FAILED ${src.name}: ${e.message}`);
-      return;
+      console.log(`FAILED ${src.name}${isRetry ? " (after retry)" : ""}: ${e.message}`);
+      return { src, st, res, e };
     }
     st.fails = 0;
     st.warned = false;
+    if (isRetry) { res.first_try_reason = res.reason; res.retried = true; res.note = "OK on the retry at the end of the scan"; delete res.reason; }
     Object.assign(res, { status: "OK", links: found.length });
     if (meta) res.credits = meta.credits ?? 0;
     const fp = ctx.fingerprint(src);
@@ -112,10 +118,10 @@ export async function runCatchScan(ctx) {
       found.forEach(i => (st.seen[keyOf(i)] = stamp));
       st.initialized = true;
       st.fp = fp;
-      Object.assign(res, { new_links: 0, note: changed ? "settings changed: page recorded as already seen, nothing caught" : "first scan of this site: page recorded as already seen, nothing caught" });
+      Object.assign(res, { new_links: 0, note: [res.note, changed ? "settings changed: page recorded as already seen, nothing caught" : "first scan of this site: page recorded as already seen, nothing caught"].filter(Boolean).join("; ") });
       console.log(`${changed ? "RE-BASELINE" : "FIRST RUN"} ${src.name}: recorded ${found.length}`);
       prune(st);
-      return;
+      return null;
     }
     st.fp = fp;
     const seenNow = seenSetOf(st);
@@ -129,18 +135,32 @@ export async function runCatchScan(ctx) {
     const flood = fresh.length > floodLimit;
     if (flood) { res.possible_flood = true; console.log(`POSSIBLE FLOOD ${src.name}: ${fresh.length} new links at once`); }
     console.log(`OK ${src.name}: ${found.length} on page, ${fresh.length} new`);
-    if (src.group) { (groupHits[src.group] ??= []).push({ src, fresh, st, flood }); return; }
+    if (src.group) { (groupHits[src.group] ??= []).push({ src, fresh, st, flood }); return null; }
     for (const i of fresh) {
       st.seen[keyOf(i)] = stamp;
       items.push({ site: src.name, group: null, page_url: src.url, title: i.title, link: i.link, first_seen: stamp, ...(flood ? { possible_flood: true } : {}) });
     }
     prune(st);
+    return null;
   }
+
+  // Every site that failed gets ONE more try after all the other sites of its group (a timeout or a dropped connection is
+  // often over a few minutes later). Not when almost everything failed (the internet is down: the whole scan would only take twice as long).
+  // note: the note field of a retried-OK site says so; a still-failing site keeps retried: true and both reasons.
+  const looksOffline = (failed, total) => total >= 5 && failed.length >= total * 0.9;
 
   // ---- 1. FREE group ----
   const free = sources.filter(s => tierOf(s) === "FREE");
   const paid = sources.filter(s => tierOf(s) === "SCRAPFLY");
-  for (const src of free) await scanSite(src);
+  let stillFailed = [];   // sites whose last try failed
+  const firstFree = [];
+  for (const src of free) { const f = await scanSite(src); if (f) firstFree.push(f); }
+  if (looksOffline(firstFree, free.length)) { console.log(`Almost every FREE site failed (${firstFree.length}/${free.length}): no retries, the internet is probably down.`); stillFailed.push(...firstFree); }
+  else for (const f of firstFree) {
+    console.log(`RETRY ${f.src.name} (second and last try)`);
+    const again = await scanSite(f.src, undefined, true);
+    if (again) stillFailed.push(again);
+  }
 
   // ---- 2. SCRAPFLY group: only after FREE has finished, and only with a key ----
   const month = localDate(startedAt).slice(0, 7);
@@ -151,11 +171,32 @@ export async function runCatchScan(ctx) {
     for (const src of paid) results.push({ site: src.name, id: src.id, tier: "SCRAPFLY", status: "SKIPPED", reason: "SCRAPFLY_KEY is not set in the Windows environment variables" });
   } else if (paid.length) {
     scrapfly.ran = true;
-    for (const src of paid) {
-      const meta = { credits: 0 };
-      await scanSite(src, meta);
-      scrapfly.credits += meta.credits;
-      state.scrapfly.credits += meta.credits;
+    // credits are counted after EVERY try, so the retry guard below always sees the real month total
+    const charged = async (src, isRetry) => {
+      const meta = metaOf.get(src.id) ?? (metaOf.set(src.id, { credits: 0 }), metaOf.get(src.id));
+      const before = meta.credits;
+      const f = await scanSite(src, meta, isRetry);
+      scrapfly.credits += meta.credits - before;
+      state.scrapfly.credits += meta.credits - before;
+      return f;
+    };
+    const firstPaid = [];
+    for (const src of paid) { const f = await charged(src, false); if (f) firstPaid.push(f); }
+    // The retry costs credits again, so it only runs while enough credits are left this month:
+    // config.json "scrapflyCreditLimit" (credits the plan gives per month) minus the month total so far must be at least "scrapflyRetryMinLeft".
+    // No limit configured = no retries (the safe way round).
+    const limit = ctx.scrapflyCreditLimit, minLeft = ctx.scrapflyRetryMinLeft ?? 100;
+    for (const f of firstPaid) {
+      const left = typeof limit === "number" ? limit - state.scrapfly.credits : null;
+      if (left === null || left < minLeft) {
+        f.res.retry_skipped = left === null ? "no retry: scrapflyCreditLimit is not set in config.json" : `no retry: only ${left} ScrapFly credits left this month (safe limit is ${minLeft})`;
+        console.log(`RETRY SKIPPED ${f.src.name}: ${f.res.retry_skipped}`);
+        stillFailed.push(f);
+        continue;
+      }
+      console.log(`RETRY ${f.src.name} (second and last try)`);
+      const again = await charged(f.src, true);
+      if (again) stillFailed.push(again);
     }
     scrapfly.monthTotal = state.scrapfly.credits;
   }
@@ -181,6 +222,7 @@ export async function runCatchScan(ctx) {
     if (gk.length > 2000) gk.slice(0, gk.length - 2000).forEach(k => delete gs.seen[k]);
   }
   scrapfly.newLinks = items.filter(i => paid.some(p => p.name === i.site)).length;
+  const failedNow = stillFailed;   // { src, st, res, e }: the sites that are FAILED in the end
   scrapfly.failed = failedNow.filter(f => tierOf(f.src) === "SCRAPFLY").map(f => f.src.name);
 
   // ---- failures: if (nearly) EVERY site failed, the internet dropped: nobody's "in a row" counter goes up ----
@@ -200,6 +242,8 @@ export async function runCatchScan(ctx) {
       sites_scanned: attempted,
       sites_ok: results.filter(r => r.status === "OK").length,
       sites_failed: failedNow.length,
+      sites_retried: results.filter(r => r.retried).length,
+      sites_ok_on_retry: results.filter(r => r.retried && r.status === "OK").length,
       sites_skipped: results.filter(r => r.status === "SKIPPED").length,
       new_links: items.length,
       sites_with_new_links: sitesWithNew,

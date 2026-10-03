@@ -325,6 +325,8 @@ if (CATCH_ONLY) {
   const result = await runCatchScan({
     sources, state, send, now: new Date(clockMs()), onlyTest: !!ONLY, runSlot: RUN_SLOT,
     catchDir: catchDirOf(cfg, opt("--catch-dir", null)),
+    scrapflyCreditLimit: opt("--scrapfly-credit-limit", null) !== null ? Number(opt("--scrapfly-credit-limit")) : cfg.scrapflyCreditLimit,   // (the two --scrapfly-... flags are for tests)
+    scrapflyRetryMinLeft: opt("--scrapfly-retry-min-left", null) !== null ? Number(opt("--scrapfly-retry-min-left")) : cfg.scrapflyRetryMinLeft,   // the ScrapFly retry only runs while enough credits are left this month
     floodLimit: cfg.floodLimit,   // more new links than this from one site = "possible flood"
     scrapflyKey: process.env.SCRAPFLY_KEY,   // read ONLY from the Windows environment variable; never from a file
     fingerprint, legacyFingerprint, keyOf, prune,

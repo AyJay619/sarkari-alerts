@@ -86,7 +86,7 @@ export async function getText(url, srcOpts = {}) {
 async function scrapflyBuffer(url, maxBytes) {
   const key = process.env.SCRAPFLY_KEY;
   if (!key) throw new Error("ScrapFly is not set up (no SCRAPFLY_KEY environment variable)");
-  const api = new URL("https://api.scrapfly.io/scrape");
+  const api = new URL((process.env.SCRAPFLY_API_BASE || "https://api.scrapfly.io") + "/scrape");   // (SCRAPFLY_API_BASE: only the tests set it)
   api.search = new URLSearchParams({ key, url, country: "in", asp: "true", proxy_pool: "public_residential_pool", format: "raw", retry: "false", timeout: "120000" }).toString();
   const res = await fetch(api, { signal: AbortSignal.timeout(150000) });
   if (!res.ok) {
@@ -107,7 +107,7 @@ async function scrapflyText(src, meta) {
   if (src.method === "POST") throw new Error("the SCRAPFLY group does not support POST sources yet");
   const params = { key, url: src.url, country: "in", asp: "true", proxy_pool: "public_residential_pool", format: "raw", retry: "false", timeout: "120000" };
   if (src.render) Object.assign(params, { render_js: "true", rendering_wait: "3000" });
-  const api = new URL("https://api.scrapfly.io/scrape");
+  const api = new URL((process.env.SCRAPFLY_API_BASE || "https://api.scrapfly.io") + "/scrape");   // (SCRAPFLY_API_BASE: only the tests set it)
   api.search = new URLSearchParams(params).toString();
   const res = await fetch(api, { signal: AbortSignal.timeout(150000) });
   const cost = Number(res.headers.get("x-scrapfly-api-cost"));
