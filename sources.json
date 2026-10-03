@@ -847,13 +847,13 @@
     "tier": "FREE",
     "level": "central",
     "type": "html",
-    "url": "https://kvsangathan.nic.in/en/interview-notice/",
+    "url": "http://kvsangathan.nic.in/en/interview-notice/",
     "rowSelector": "table tr",
     "rowTitle": "td:nth-child(1)",
     "rowLink": "a[href]",
     "minTitle": 10,
     "limit": 40,
-    "timeoutMs": 45000
+    "timeoutMs": 15000
   },
   {
     "id": "kvs-results",
@@ -862,13 +862,13 @@
     "tier": "FREE",
     "level": "central",
     "type": "html",
-    "url": "https://kvsangathan.nic.in/en/results-misc-answer-keys/",
+    "url": "http://kvsangathan.nic.in/en/results-misc-answer-keys/",
     "rowSelector": "table tr",
     "rowTitle": "td:nth-child(1)",
     "rowLink": "a[href]",
     "minTitle": 10,
     "limit": 40,
-    "timeoutMs": 45000
+    "timeoutMs": 15000
   },
   {
     "id": "nvs",
