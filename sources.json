@@ -164,10 +164,80 @@
     "tier": "FREE",
     "level": "central",
     "type": "html",
-    "url": "https://www.upsc.gov.in/",
+    "url": "https://www.upsc.gov.in/whats-new",
     "include": "whats-new/|[.]pdf",
-    "limit": 60,
+    "limit": 100,
     "rebaseline": true
+  },
+  {
+    "id": "upsc-final-result",
+    "name": "UPSC Final Results",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://www.upsc.gov.in/recruitment/status-recruitment-cases-advertisementwise/results/final-result",
+    "rowSelector": "tbody tr",
+    "rowTitle": "self",
+    "titleReplace": [
+      "^([0-9]+ - [0-9]{4}(?: [(]Special[)])?) [0-9]+ (.*)$",
+      "Final Result: $2 (Advt $1)"
+    ],
+    "minTitle": 10,
+    "limit": 60
+  },
+  {
+    "id": "upsc-rt-answer-keys",
+    "name": "UPSC Recruitment Answer Keys",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://www.upsc.gov.in/recruitment/recruitment-test/answer-keys",
+    "rowSelector": "tbody tr",
+    "rowTitle": "self",
+    "titleReplace": [
+      "^([0-9]+ - [0-9]{4}(?: [(]Special[)])?) [0-9]+ (.*)$",
+      "Answer Key: $2 (Advt $1)"
+    ],
+    "minTitle": 10,
+    "limit": 60,
+    "allowEmpty": true
+  },
+  {
+    "id": "upsc-rt-result-details",
+    "name": "UPSC Recruitment Result Details",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://www.upsc.gov.in/recruitment/recruitment-test/result-details",
+    "rowSelector": "tbody tr",
+    "rowTitle": "self",
+    "titleReplace": [
+      "^([0-9]+ - [0-9]{4}(?: [(]Special[)])?) [0-9]+ (.*)$",
+      "Result Details: $2 (Advt $1)"
+    ],
+    "minTitle": 10,
+    "limit": 60,
+    "allowEmpty": true
+  },
+  {
+    "id": "upsc-rt-notices",
+    "name": "UPSC Recruitment Test Notices",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://www.upsc.gov.in/recruitment/recruitment-test/notices",
+    "rowSelector": "tbody tr",
+    "rowTitle": "self",
+    "titleReplace": [
+      "^([0-9]+ - [0-9]{4}(?: [(]Special[)])?) [0-9]+ (.*)$",
+      "Notice: $2 (Advt $1)"
+    ],
+    "minTitle": 10,
+    "limit": 60
   },
   {
     "id": "ibps",
