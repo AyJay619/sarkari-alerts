@@ -12,7 +12,35 @@ import { fetchItemsWithRetry } from "./fetchers.mjs";
 const two = n => String(n).padStart(2, "0");
 const localDate = d => `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`;
 export const catchFileBase = d => `${localDate(d)}_${two(d.getHours())}${two(d.getMinutes())}`;   // 2026-10-03_0930
+export const FLOOD_LIMIT = 15;   // more new links than this from ONE site in ONE scan = "possible flood" (kept, but flagged for the sorter)
 export const tierOf = src => (src.tier === "SCRAPFLY" ? "SCRAPFLY" : "FREE");
+
+// Link normalising for the "already seen" check, for ALL sites: the same file written a little differently is the same link.
+// Ignored: http vs https, www vs no www, double slashes in the path, a #fragment, and encoded vs raw characters (%28 = "(").
+// Only the COMPARISON uses this; the link that is saved in the catch file stays exactly as the site gives it.
+export function normalizeLink(link) {
+  const dec = t => { try { return decodeURIComponent(t); } catch { return t; } };
+  const raw = String(link ?? "").trim();
+  try {
+    const u = new URL(raw);
+    const pathname = dec(u.pathname).replace(/\/{2,}/g, "/");
+    return u.hostname.toLowerCase().replace(/^www\./, "") + (u.port ? ":" + u.port : "") + pathname + dec(u.search);
+  } catch {
+    return dec(raw).replace(/^https?:\/\/(www\.)?/i, "").replace(/([^:])\/{2,}/g, "$1/");
+  }
+}
+// "title|link" (the seen record's key form, see keyOf in monitor.mjs) -> "title|normalised link"
+const normKeyOf = (title, link) => (String(title).toLowerCase().replace(/\s+/g, " ") + "|" + normalizeLink(link)).slice(0, 600);
+// Everything a site has already seen, in normalised form. The stored keys keep their old spelling, so nothing already seen looks new
+// after this change (no mass re-catch): each stored key is normalised here when the scan starts.
+function seenSetOf(st) {
+  const set = new Set();
+  for (const k of Object.keys(st.seen)) {
+    const cut = k.lastIndexOf("|");
+    set.add(cut < 0 ? k : normKeyOf(k.slice(0, cut), k.slice(cut + 1)));
+  }
+  return set;
+}
 
 // Where the catch files go: --catch-dir, else <inboxDir>\catch (config.json "inboxDir")
 export const catchDirOf = (cfg, override) => path.resolve(override || path.join(cfg.inboxDir || "C:\\Dev\\sarkari-inbox", "catch"));
@@ -31,11 +59,12 @@ export function writeCatchFile(dir, when, data) {
 // The ONE Telegram message of a scan, e.g.
 //   Scan done: 41 new links from 30 sites. Failed: IOCL, HAL.
 //   ScrapFly: 6 links, 48 credits (month: 1,920).
-export function scanMessage({ newLinks, sitesWithNew, failed, networkDown, scrapfly }) {
+export function scanMessage({ newLinks, sitesWithNew, failed, floods = [], networkDown, scrapfly }) {
   const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
   const names = failed.length > 12 ? failed.slice(0, 12).join(", ") + ` and ${failed.length - 12} more` : failed.join(", ");
   const head = `Scan done: ${plural(newLinks, "new link")} from ${plural(sitesWithNew, "site")}. Failed: ${failed.length ? names : "none"}.`;
   const lines = [networkDown ? "⚠️ Almost every site failed, so the internet probably dropped.\n" + head : head];
+  if (floods.length) lines.push(`⚠️ Possible flood (marked in the catch file, sorter please check): ${floods.slice(0, 10).join(", ")}${floods.length > 10 ? ` and ${floods.length - 10} more` : ""}.`);
   if (scrapfly.configured) {
     lines.push(scrapfly.ran
       ? `ScrapFly: ${plural(scrapfly.newLinks, "link")}, ${scrapfly.credits.toLocaleString("en-US")} credits (month: ${scrapfly.monthTotal.toLocaleString("en-US")}).` +
@@ -50,6 +79,7 @@ export function scanMessage({ newLinks, sitesWithNew, failed, networkDown, scrap
 // i.e. only once the catch file really exists, so a link is never marked "seen" without having been written down.
 export async function runCatchScan(ctx) {
   const { sources, state, send, now, keyOf, prune } = ctx;
+  const floodLimit = ctx.floodLimit ?? FLOOD_LIMIT;
   const startedAt = new Date();
   const stamp = now.toISOString();
   const results = [];     // one per site
@@ -88,13 +118,21 @@ export async function runCatchScan(ctx) {
       return;
     }
     st.fp = fp;
-    const fresh = found.filter(i => !(keyOf(i) in st.seen));
+    const seenNow = seenSetOf(st);
+    const fresh = found.filter(i => {
+      const nk = normKeyOf(i.title, i.link);
+      if (keyOf(i) in st.seen || seenNow.has(nk)) return false;
+      seenNow.add(nk);   // (the same link twice on one page is caught once)
+      return true;
+    });
     res.new_links = fresh.length;
+    const flood = fresh.length > floodLimit;
+    if (flood) { res.possible_flood = true; console.log(`POSSIBLE FLOOD ${src.name}: ${fresh.length} new links at once`); }
     console.log(`OK ${src.name}: ${found.length} on page, ${fresh.length} new`);
-    if (src.group) { (groupHits[src.group] ??= []).push({ src, fresh, st }); return; }
+    if (src.group) { (groupHits[src.group] ??= []).push({ src, fresh, st, flood }); return; }
     for (const i of fresh) {
       st.seen[keyOf(i)] = stamp;
-      items.push({ site: src.name, group: null, page_url: src.url, title: i.title, link: i.link, first_seen: stamp });
+      items.push({ site: src.name, group: null, page_url: src.url, title: i.title, link: i.link, first_seen: stamp, ...(flood ? { possible_flood: true } : {}) });
     }
     prune(st);
   }
@@ -136,7 +174,7 @@ export async function runCatchScan(ctx) {
       if (k in gs.seen) continue;
       gs.seen[k] = stamp;
       const first = hits[0], others = [...new Set(hits.slice(1).map(h => h.mem.src.name))];
-      items.push({ site: first.mem.src.name, group: first.mem.src.groupName ?? group, page_url: first.mem.src.url, title: first.i.title, link: first.i.link, first_seen: stamp, ...(others.length ? { also_on: others } : {}) });
+      items.push({ site: first.mem.src.name, group: first.mem.src.groupName ?? group, page_url: first.mem.src.url, title: first.i.title, link: first.i.link, first_seen: stamp, ...(others.length ? { also_on: others } : {}), ...(first.mem.flood ? { possible_flood: true } : {}) });
     }
     members.forEach(m => prune(m.st));
     const gk = Object.keys(gs.seen);
@@ -154,6 +192,7 @@ export async function runCatchScan(ctx) {
   // ---- the catch file ----
   const sitesWithNew = new Set(items.map(i => i.site)).size;
   const failedNames = failedNow.map(f => f.src.name);
+  const floods = results.filter(r => r.possible_flood).map(r => `${r.site} (${r.new_links})`);
   const data = {
     scan_started: startedAt.toISOString(),
     scan_finished: new Date().toISOString(),
@@ -164,6 +203,7 @@ export async function runCatchScan(ctx) {
       sites_skipped: results.filter(r => r.status === "SKIPPED").length,
       new_links: items.length,
       sites_with_new_links: sitesWithNew,
+      possible_flood_sites: floods.length,
       ...(networkDown ? { warning: "almost every site failed: the internet probably dropped during this scan" } : {}),
     },
     scrapfly: paid.length
@@ -178,7 +218,7 @@ export async function runCatchScan(ctx) {
   console.log(`CATCH FILE: ${file} (${items.length} new links, ${failedNow.length} failed sites)`);
 
   // ---- the one Telegram message ----
-  const message = scanMessage({ newLinks: items.length, sitesWithNew, failed: failedNames, networkDown, scrapfly });
+  const message = scanMessage({ newLinks: items.length, sitesWithNew, failed: failedNames, floods, networkDown, scrapfly });
   const delivered = await send(message);
   if (!delivered) console.error("Could not deliver the scan message to Telegram.");
 

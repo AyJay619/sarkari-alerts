@@ -325,6 +325,7 @@ if (CATCH_ONLY) {
   const result = await runCatchScan({
     sources, state, send, now: new Date(clockMs()), onlyTest: !!ONLY, runSlot: RUN_SLOT,
     catchDir: catchDirOf(cfg, opt("--catch-dir", null)),
+    floodLimit: cfg.floodLimit,   // more new links than this from one site = "possible flood"
     scrapflyKey: process.env.SCRAPFLY_KEY,   // read ONLY from the Windows environment variable; never from a file
     fingerprint, legacyFingerprint, keyOf, prune,
   });

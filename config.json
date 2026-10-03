@@ -1,6 +1,7 @@
 {
   "inboxDir": "C:\\Dev\\sarkari-inbox",
   "catchOnly": true,
+  "floodLimit": 15,
   "sendToAgentsButton": false,
   "aiEnabled": false,
   "maxAiCallsPerRun": 60,

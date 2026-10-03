@@ -2032,18 +2032,20 @@
   },
   {
     "id": "beml",
-    "name": "BEML Recruitments (in progress)",
+    "name": "BEML Recruitments",
     "runner": "india",
     "tier": "FREE",
     "level": "central",
     "type": "html",
-    "url": "https://www.bemlindia.in/careers/in-progress-recruitments/",
-    "rowSelector": "div.pdf_urls_add_carrears",
-    "rowTitle": "h2",
-    "rowLink": "a[href*='.pdf']",
+    "url": "https://www.bemlindia.in/careers/",
+    "selector": "#v-pills-Recruitments a[href], #v-pills-In-Progress a[href]",
+    "include": "[.]pdf|admit card|hall.?ticket",
+    "contextClosest": "div.pdf_urls_add_carrears",
+    "contextFind": "h2",
     "exclude": "compassionate|qualified|roll no|unique id",
-    "minTitle": 10,
-    "limit": 120
+    "minTitle": 8,
+    "limit": 400,
+    "rebaseline": true
   },
   {
     "id": "goa-shipyard",
