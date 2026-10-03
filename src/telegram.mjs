@@ -78,10 +78,12 @@ export function splitMessage(html, limit = TELEGRAM_SAFE_LIMIT) {
 
 const stripTags = h => h.replace(/<[^>]*>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 
-export function makeSender({ token, chatId, dryRun }) {
+// button: false = no "Send to agents" button under alerts (config.json "sendToAgentsButton")
+export function makeSender({ token, chatId, dryRun, button = true }) {
   // withButton: true for alerts (notices); false for summaries and warnings.
   // send() never throws: any unexpected problem is logged and reported as "not delivered" (false), so state is still saved.
   return async function send(html, withButton = false) {
+    withButton = withButton && button;
     try { return await sendParts(html, withButton); }
     catch (e) { console.error("Telegram send error: " + String(e?.message ?? e).replace(token ?? "", "***")); return false; }
   };

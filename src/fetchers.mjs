@@ -85,7 +85,7 @@ export async function getText(url, srcOpts = {}) {
 // ScrapFly fetches the file from its own servers (Indian residential proxy) and hands the bytes back; nothing else changes.
 async function scrapflyBuffer(url, maxBytes) {
   const key = process.env.SCRAPFLY_KEY;
-  if (!key) throw new Error("ScrapFly is not set up (no SCRAPFLY_KEY in .env)");
+  if (!key) throw new Error("ScrapFly is not set up (no SCRAPFLY_KEY environment variable)");
   const api = new URL("https://api.scrapfly.io/scrape");
   api.search = new URLSearchParams({ key, url, country: "in", asp: "true", proxy_pool: "public_residential_pool", format: "raw", retry: "false", timeout: "120000" }).toString();
   const res = await fetch(api, { signal: AbortSignal.timeout(150000) });
@@ -97,6 +97,26 @@ async function scrapflyBuffer(url, maxBytes) {
   if (buf.length > maxBytes) throw new Error("file is too large");
   if (!buf.length) throw new Error("ScrapFly returned an empty file");
   return { buf, finalUrl: url, contentType: res.headers.get("content-type") ?? "" };
+}
+
+// ScrapFly for a WHOLE PAGE (the SCRAPFLY group in sources.json). The key comes ONLY from the Windows environment variable SCRAPFLY_KEY.
+// meta.credits (optional) is increased by what ScrapFly charged for the request (its X-Scrapfly-Api-Cost header).
+async function scrapflyText(src, meta) {
+  const key = process.env.SCRAPFLY_KEY;
+  if (!key) throw new Error("ScrapFly is not set up (no SCRAPFLY_KEY environment variable)");
+  if (src.method === "POST") throw new Error("the SCRAPFLY group does not support POST sources yet");
+  const params = { key, url: src.url, country: "in", asp: "true", proxy_pool: "public_residential_pool", format: "raw", retry: "false", timeout: "120000" };
+  if (src.render) Object.assign(params, { render_js: "true", rendering_wait: "3000" });
+  const api = new URL("https://api.scrapfly.io/scrape");
+  api.search = new URLSearchParams(params).toString();
+  const res = await fetch(api, { signal: AbortSignal.timeout(150000) });
+  const cost = Number(res.headers.get("x-scrapfly-api-cost"));
+  if (meta && Number.isFinite(cost)) meta.credits = (meta.credits ?? 0) + cost;   // (charged even when the target site answered with an error)
+  if (!res.ok) {
+    const info = await res.json().catch(() => null);
+    throw Object.assign(new Error(`ScrapFly HTTP ${res.status}${info?.message ? ": " + info.message : info?.result?.error?.message ? ": " + info.result.error.message : ""}`), { reason: `ScrapFly answered HTTP ${res.status}` });
+  }
+  return { text: await res.text(), finalUrl: src.url };
 }
 
 // Downloads a file (used by the listener and the PDF reader). A direct download first; if that fails and SCRAPFLY_KEY is set, ScrapFly is tried.
@@ -310,12 +330,14 @@ async function getRendered(src) {
   } finally { await browser.close(); }
 }
 
-export async function fetchItems(src) {
-  const { text, finalUrl } = src.render ? await getRendered(src) : await getText(src.url, src);
+// meta (optional): { credits } is filled with the ScrapFly credits this call used. A source with "tier": "SCRAPFLY" is fetched through ScrapFly.
+export async function fetchItems(src, meta) {
+  const viaScrapfly = src.tier === "SCRAPFLY";
+  const { text, finalUrl } = viaScrapfly ? await scrapflyText(src, meta) : src.render ? await getRendered(src) : await getText(src.url, src);
   const items = src.type === "json" ? fromJson(src, text) : fromHtml(src, text, finalUrl);
   // "extraUrls" (optional): more pages read the same way, for sites that split their notices over several pages (the railway zones).
   // Any page failing fails the whole source, so a quietly missing page cannot hide new notices.
-  for (const u of src.extraUrls ?? []) { const more = await getText(u, src); items.push(...fromHtml(src, more.text, more.finalUrl)); }
+  for (const u of src.extraUrls ?? []) { const more = viaScrapfly ? await scrapflyText({ ...src, url: u }, meta) : await getText(u, src); items.push(...fromHtml(src, more.text, more.finalUrl)); }
   // de-duplicate identical title+link within one page
   const seen = new Set();
   const unique = items.filter(i => { const k = i.title + "|" + i.link; if (seen.has(k)) return false; seen.add(k); return true; });
@@ -326,13 +348,15 @@ export async function fetchItems(src) {
 }
 
 // Tries once, and if that fails waits a short while and tries one more time.
-export async function fetchItemsWithRetry(src, pauseMs = 20000) {
+// (a SCRAPFLY source is never retried: every try costs credits)
+export async function fetchItemsWithRetry(src, pauseMs = 20000, meta) {
   try {
-    return await fetchItems(src);
+    return await fetchItems(src, meta);
   } catch (e) {
+    if (src.tier === "SCRAPFLY") throw e;
     console.log(`  ${src.name}: first attempt failed -> ${e.message}
   ${src.name}: retrying in ${pauseMs / 1000}s ...`);
     await new Promise(r => setTimeout(r, pauseMs));
-    return await fetchItems(src);
+    return await fetchItems(src, meta);
   }
 }

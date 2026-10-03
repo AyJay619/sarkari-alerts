@@ -1,6 +1,8 @@
 {
   "inboxDir": "C:\\Dev\\sarkari-inbox",
-  "aiEnabled": true,
+  "catchOnly": true,
+  "sendToAgentsButton": false,
+  "aiEnabled": false,
   "maxAiCallsPerRun": 60,
   "maxAiCallsPerDay": 150,
   "model": "claude-haiku-4-5",

@@ -8,6 +8,7 @@ import { spawn } from "node:child_process";
 import { formatItem, formatGroup } from "../src/telegram.mjs";
 import { fetchItems } from "../src/fetchers.mjs";
 import { allowedHosts, hostAllowed, parseAlert } from "../src/inbox.mjs";
+process.env.SARKARI_LEGACY_ALERTS = "1";   // these tests cover the old alert pipeline (config.json now defaults to catch-only)
 
 const sources = JSON.parse(fs.readFileSync(new URL("../sources.json", import.meta.url), "utf8"));
 const CHAT = "42", PORT = 8811;

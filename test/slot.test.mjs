@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { slotOf, slotAlreadyDone } from "../src/slot.mjs";
+process.env.SARKARI_LEGACY_ALERTS = "1";   // these tests cover the old alert pipeline (config.json now defaults to catch-only)
 
 let n = 0, bad = 0;
 const check = (name, ok, extra = "") => { n++; if (!ok) bad++; console.log(`${ok ? "PASS" : "FAIL"}  ${name}${extra ? "  — " + extra : ""}`); };

@@ -9,7 +9,11 @@ import { CATEGORIES, NEEDS_DATES, buildPrompt, detailLines, isVacancyUpdateTitle
 export const CACHE_VERSION = 4;
 
 const readJson = f => JSON.parse(fs.readFileSync(new URL("../" + f, import.meta.url), "utf8"));
-export const loadConfig = () => readJson("config.json");
+// SARKARI_LEGACY_ALERTS=1 (set only by the old tests) runs the old way: alerts instead of catch files, AI check and button on.
+export const loadConfig = () => {
+  const cfg = readJson("config.json");
+  return process.env.SARKARI_LEGACY_ALERTS === "1" ? { ...cfg, catchOnly: false, aiEnabled: true, sendToAgentsButton: true } : cfg;
+};
 const KEYWORDS = readJson("keywords.json");
 const wordList = list =>
   new RegExp("(?:^|[^a-z])(?:" + list.map(w => w.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")(?:[^a-z]|$)", "i");

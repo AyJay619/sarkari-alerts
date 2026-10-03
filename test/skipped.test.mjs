@@ -9,6 +9,7 @@ import { digestHtml, digestsDue, istDate, markDigestSent, recordSkips } from "..
 import { fmtIstTime, missedRunNote, slotsBetween } from "../src/schedule.mjs";
 import { buildPlan } from "../src/order.mjs";
 import { splitMessage } from "../src/telegram.mjs";
+process.env.SARKARI_LEGACY_ALERTS = "1";   // these tests cover the old alert pipeline (config.json now defaults to catch-only)
 
 let n = 0, bad = 0;
 const check = (name, ok, extra = "") => { n++; if (!ok) bad++; console.log(`${ok ? "PASS" : "FAIL"}  ${name}${extra ? "  — " + extra : ""}`); };
@@ -56,8 +57,9 @@ check("istDate: 30 Sep 00:30 IST is still 29 Sep 19:00 UTC", istDate(at("2026-09
 
 // ---- the workflow schedule: 5 runs a day, 5 minutes before 9:30, 12:30, 3:30, 6:30, 9:30 IST (UTC = IST - 5:30) ----
 { const yml = fs.readFileSync(new URL("../.github/workflows/monitor.yml", import.meta.url), "utf8");
-  const crons = [...yml.matchAll(/^\s*- cron: "([^"]+)"/gm)].map(m => m[1]);
-  check("monitor.yml has ONE cron entry: 55 3,6,9,12,15 * * * (no every-30-minutes)", crons.length === 1 && crons[0] === "55 3,6,9,12,15 * * *" && !yml.includes("*/30"), crons.join(" | "));
+  // (the schedule may be PAUSED on purpose: the lines are then commented out; the one entry must still be the right one)
+  const crons = [...yml.matchAll(/^\s*(?:#\s*)?- cron: "([^"]+)"/gm)].map(m => m[1]);
+  check("monitor.yml has ONE cron entry (active or paused): 55 3,6,9,12,15 * * * (no every-30-minutes)", crons.length === 1 && crons[0] === "55 3,6,9,12,15 * * *" && !yml.includes("*/30"), crons.join(" | "));
   const [min, hours] = crons[0].split(" "); const ist = hours.split(",").map(h => { const m = (+h * 60 + +min + 330) % 1440; return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")}`; }).join(" ");
   check("...in IST that is 9:25 12:25 15:25 18:25 21:25 (5 minutes before 9:30 am, 12:30 pm, 3:30 pm, 6:30 pm, 9:30 pm)", ist === "9:25 12:25 15:25 18:25 21:25", ist);
   check("...the manual Run workflow button is still there", /workflow_dispatch:/.test(yml));

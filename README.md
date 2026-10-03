@@ -1,5 +1,13 @@
 # Sarkari Alerts — notice monitor
 
+> **Current mode: CATCH ONLY** (`"catchOnly": true` in `config.json`). The rest of this README describes the older alert pipeline, which is still in the code and comes back with `"catchOnly": false`.
+>
+> - Each scan fetches every watched page and saves only the **new** links into `C:\Dev\sarkari-inbox\catch\YYYY-MM-DD_HHMM.json` (one file per scan; the folder is created if missing). Each item has `site, group, page_url, title, link, first_seen`. The "already seen" record is still `state/seen-india.json`, so nothing is caught twice.
+> - The same file lists **every site's result**: `OK` (with its link count) or `FAILED` (with the reason). A site that could not be read is never shown as "0 new". `SKIPPED` means the ScrapFly group did not run.
+> - Two groups, set by `"tier"` in `sources.json`: `FREE` runs first. `SCRAPFLY` runs only after FREE has finished, and only if the Windows environment variable **`SCRAPFLY_KEY`** exists (the key is never stored in any file of this repo; without it the group is skipped and reported). Credits are recorded per site, per scan, and as a running monthly total (`state.scrapfly` in the state file). All current sites are `FREE`.
+> - No Claude API: `"aiEnabled": false` (Haiku check) and `"sendToAgentsButton": false` (Telegram button and its listener). The code is kept; set them to `true` (with `"catchOnly": false`) to switch back.
+> - Telegram: one short message per scan, e.g. `Scan done: 41 new links from 30 sites. Failed: IOCL, HAL.` plus a `ScrapFly: 6 links, 48 credits (month: 1,920).` line when that group exists.
+
 Five times a day (about 9:30 am, 12:30 pm, 3:30 pm, 6:30 pm and 9:30 pm India time) this checks a list of government recruitment websites and sends **new** notices
 (jobs, admit cards, results, answer keys, corrections) to you on Telegram.
 It only *sends alerts*. It never touches your website or Sanity.

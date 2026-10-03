@@ -10,6 +10,7 @@ import { Classifier, keywordVerdict, loadConfig, noFileDecision, preFilter } fro
 import { digestHtml, digestsDue, markDigestSent, recordSkips } from "./skipped.mjs";
 import { missedRunNote } from "./schedule.mjs";
 import { slotOf, slotAlreadyDone } from "./slot.mjs";
+import { runCatchScan, catchDirOf } from "./catch.mjs";
 
 const args = process.argv.slice(2);
 const flag = n => args.includes(n);
@@ -56,13 +57,13 @@ if (RUNNER === "india" && fs.existsSync(LEGACY_STATE)) {
 
 // A fingerprint of everything that decides WHICH notices a source finds (URL, filters, selectors, limit...).
 // If it changes, the source is silently re-baselined (see below) so a wider filter can never flood you with old notices.
-// Not part of it: name, runner, level and timeoutMs. Sources saved before this existed have no fingerprint yet: they just get one
+// Not part of it: name, runner, tier, level and timeoutMs. Sources saved before this existed have no fingerprint yet: they just get one
 // stored, unless sources.json carries "rebaseline": true for them.
 const hashOf = rest => crypto.createHash("sha1").update(JSON.stringify(rest)).digest("hex").slice(0, 12);
 // (extraCerts is left out too: HOW to connect does not change WHICH notices are found)
-const fingerprint = src => { const { name, runner, timeoutMs, level, extraCerts, legacyTls, ...rest } = src; return hashOf(rest); };
+const fingerprint = src => { const { name, runner, tier, timeoutMs, level, extraCerts, legacyTls, ...rest } = src; return hashOf(rest); };
 // Fingerprints saved before extraCerts was left out still count as "unchanged" (no needless silent re-baseline).
-const legacyFingerprint = src => { const { name, runner, timeoutMs, level, legacyTls, ...rest } = src; return hashOf(rest); };
+const legacyFingerprint = src => { const { name, runner, tier, timeoutMs, level, legacyTls, ...rest } = src; return hashOf(rest); };
 
 const keyOf = i => (i.title.toLowerCase().replace(/\s+/g, " ") + "|" + i.link).slice(0, 600);
 
@@ -83,11 +84,15 @@ if (!DRY && (!token || !chatId)) {
   console.error("TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set (GitHub Secrets). Nothing was sent.");
   process.exit(1);
 }
-let send = makeSender({ token, chatId, dryRun: DRY });
+// "Send to agents" button under alerts: only when config.json says "sendToAgentsButton": true
+let send = makeSender({ token, chatId, dryRun: DRY, button: loadConfig().sendToAgentsButton === true });
 
 // ---- AI classification (see config.json; OFF unless aiEnabled is true) ----
 const TEST_AI = flag("--test-ai");       // test the AI step on ONE source's latest 3 notices; changes no files
 const cfg = loadConfig();
+// CATCH-ONLY mode (config.json "catchOnly", default on): the scan only saves new links into the catch folder (src/catch.mjs) and sends one
+// short Telegram message. "catchOnly": false brings back the old way below (keyword/AI checks, one alert per notice, the button).
+const CATCH_ONLY = cfg.catchOnly !== false;
 const apiKey = process.env.ANTHROPIC_API_KEY;
 const SAVES_STATE = !DRY || flag("--state");
 let ai = null;
@@ -140,8 +145,15 @@ if (!(await waitForInternet())) {
   process.exit(0);
 }
 
-let telegramProblem = false;
+const prune = st => {
+  const keys = Object.keys(st.seen);
+  if (keys.length > MAX_SEEN_PER_SOURCE) keys.slice(0, keys.length - MAX_SEEN_PER_SOURCE).forEach(k => delete st.seen[k]);
+};
 const clockMs = () => (process.env.TEST_NOW_ISO ? Date.parse(process.env.TEST_NOW_ISO) : Date.now());   // (TEST_NOW_ISO: only the tests set it)
+
+// ---- the OLD way: one alert per notice, with keyword/AI checks, the button, warnings, morning check and digests. Used only when catchOnly is false. ----
+async function runAlertScan() {
+let telegramProblem = false;
 const skippedRun = [];   // notices skipped by a rule in this run: { source, title, rule, link, by }
 function noteSkip(sourceName, item, d) {
   if (d.skipped) skippedRun.push({ source: sourceName, title: item.title, rule: d.skipped.rule, link: item.link, by: d.skipped.by });
@@ -153,10 +165,6 @@ const pendingAlerts = [];   // notices found in this run; sent together at the e
 const pendingNotes = [];    // "N more not shown" notes, sent after the alerts
 const pendingGroups = {};   // group name -> [{ src, st, fresh, now }], sent as one alert per notice after all sources are checked
 
-const prune = st => {
-  const keys = Object.keys(st.seen);
-  if (keys.length > MAX_SEEN_PER_SOURCE) keys.slice(0, keys.length - MAX_SEEN_PER_SOURCE).forEach(k => delete st.seen[k]);
-};
 const summaries = [];
 
 // Missed-run warning: this run starts between 9 am and 10 pm IST and the last successful run is more than 4 hours back (only the
@@ -311,3 +319,18 @@ if (SAVES_STATE) {
 // (not process.exit(): on Windows, exiting while an HTTP connection is still closing can abort Node with a libuv assertion and a
 // wrong exit code 3221226505. Setting exitCode lets the last connections close, then the process ends by itself.)
 process.exitCode = telegramProblem ? 1 : 0;
+}
+
+if (CATCH_ONLY) {
+  const result = await runCatchScan({
+    sources, state, send, now: new Date(clockMs()), onlyTest: !!ONLY, runSlot: RUN_SLOT,
+    catchDir: catchDirOf(cfg, opt("--catch-dir", null)),
+    scrapflyKey: process.env.SCRAPFLY_KEY,   // read ONLY from the Windows environment variable; never from a file
+    fingerprint, legacyFingerprint, keyOf, prune,
+  });
+  if (result.saveState && SAVES_STATE) {
+    fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
+    fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 1) + "\n");
+  }
+  process.exitCode = result.exitCode;
+} else await runAlertScan();

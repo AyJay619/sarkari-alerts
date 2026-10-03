@@ -81,6 +81,7 @@ async function handleTap(cb) {
   }
   if (cb.data === "done") { await quietly(tg("answerCallbackQuery", { callback_query_id: cb.id, text: "Already sent ✅" })); return; }
   if (cb.data !== "send") return;
+  if (config.sendToAgentsButton === false && process.env.SARKARI_LEGACY_ALERTS !== "1") { await quietly(tg("answerCallbackQuery", { callback_query_id: cb.id, text: "Send to agents is switched off (config.json: sendToAgentsButton)" })); return; }
   await quietly(tg("answerCallbackQuery", { callback_query_id: cb.id, text: "⏳ Saving…" }));
 
   const alert = parseAlert(msg.text);
