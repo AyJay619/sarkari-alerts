@@ -6,12 +6,27 @@
     "tier": "FREE",
     "level": "central",
     "type": "json",
-    "url": "https://ssc.gov.in/api/general-website/portal/notice-boards?page=1&limit=20&contentType=notice-boards&key=createdAt&order=DESC&isAttachment=true&language=english&attributes=id,headline,examId,contentType,redirectUrl,startDate,endDate,language,createdAt",
+    "url": "https://ssc.gov.in/api/general-website/portal/notice-boards?page=1&contentType=notice-boards&key=createdAt&order=DESC&language=english&attributes=id,headline,examId,contentType,redirectUrl,startDate,endDate,language,createdAt",
     "itemsPath": "data",
     "titleField": "headline",
     "linkField": "attachments.0.path",
     "linkPrefix": "https://ssc.gov.in/api/attachment/",
     "fallbackLink": "https://ssc.gov.in/"
+  },
+  {
+    "id": "ssc-results",
+    "name": "SSC Results",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "json",
+    "url": "https://ssc.gov.in/api/general-website/portal/records?page=1&contentType=results&key=createdAt&order=DESC&language=english&attributes=id,headline,examId,examYear,contentType,startDate,endDate,language,createdAt",
+    "itemsPath": "data",
+    "titleField": "headline",
+    "linkField": "attachments.0.path",
+    "linkPrefix": "https://ssc.gov.in/api/attachment/",
+    "fallbackLink": "https://ssc.gov.in/",
+    "rebaseline": true
   },
   {
     "id": "isro",
