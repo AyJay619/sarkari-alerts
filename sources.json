@@ -1084,7 +1084,8 @@
     "rowTitle": "self",
     "exclude": "Post / Category Name",
     "minTitle": 15,
-    "limit": 50
+    "limit": 50,
+    "timeoutMs": 15000
   },
   {
     "id": "navy",
@@ -1099,6 +1100,18 @@
     "limit": 30
   },
   {
+    "id": "navy-civilian",
+    "name": "Indian Navy Civilian Recruitment",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://indiannavy.gov.in/content/civilian",
+    "selector": ".sb_pdf_box a",
+    "minTitle": 15,
+    "limit": 25
+  },
+  {
     "id": "barc-vacancies",
     "name": "BARC Vacancies",
     "runner": "india",
@@ -1110,7 +1123,9 @@
     "rowTitle": "td:nth-child(2)",
     "rowLink": "a[href]",
     "minTitle": 10,
-    "limit": 30
+    "limit": 30,
+    "allowEmpty": true,
+    "timeoutMs": 15000
   },
   {
     "id": "barc-results",
@@ -1127,6 +1142,36 @@
     "limit": 40
   },
   {
+    "id": "barc-eadv",
+    "name": "BARC E-Recruit Advertisements",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://recruit.barc.gov.in/barcrecruit/nbArchive.jsp?unit=ADV",
+    "rowSelector": "#notificationList tbody tr",
+    "rowTitle": "self",
+    "rowLink": "a[href]",
+    "minTitle": 10,
+    "limit": 15,
+    "timeoutMs": 15000
+  },
+  {
+    "id": "barc-enotice",
+    "name": "BARC E-Recruit Notice Board",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://recruit.barc.gov.in/barcrecruit/nbArchive.jsp?unit=BARC",
+    "rowSelector": "#notificationList tbody tr",
+    "rowTitle": "self",
+    "rowLink": "a[href]",
+    "minTitle": 10,
+    "limit": 40,
+    "timeoutMs": 15000
+  },
+  {
     "id": "nta",
     "name": "NTA",
     "runner": "india",
@@ -1138,7 +1183,8 @@
     "rowTitle": "content",
     "rowLink": "a[href]",
     "minTitle": 10,
-    "limit": 1000
+    "limit": 1000,
+    "timeoutMs": 15000
   },
   {
     "id": "kvs-notifications",
@@ -1252,7 +1298,7 @@
     "include": "Upload/Recruitment",
     "exclude": "compassionate|Appendix|Annexure|Detailed Application Form|Instructions? (for|to) candid|Click Here to View PDF",
     "minTitle": 20,
-    "limit": 40
+    "limit": 80
   },
   {
     "id": "itbp",
@@ -1297,6 +1343,21 @@
     "limit": 30
   },
   {
+    "id": "ssb-advt",
+    "name": "SSB Advertisements",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://recruitment.ssb.gov.in/advertisementsUrl",
+    "rowSelector": "table tr",
+    "rowTitle": "td:nth-child(3)",
+    "pageLink": true,
+    "minTitle": 6,
+    "limit": 20,
+    "timeoutMs": 15000
+  },
+  {
     "id": "icg",
     "name": "Indian Coast Guard (CGCAT)",
     "runner": "india",
@@ -1308,7 +1369,24 @@
     "contextClosest": "li.drop-down",
     "contextFind": "a",
     "minTitle": 5,
-    "limit": 30
+    "limit": 30,
+    "timeoutMs": 15000
+  },
+  {
+    "id": "icg-news",
+    "name": "Indian Coast Guard (CGCAT news ticker)",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "json",
+    "url": "https://joinindiancoastguard.cdac.in/cgcat/getScrollJson",
+    "titleFormat": "{Data}",
+    "linkField": "url",
+    "fallbackLink": "https://joinindiancoastguard.cdac.in/cgcat/",
+    "minTitle": 5,
+    "limit": 15,
+    "allowEmpty": true,
+    "timeoutMs": 15000
   },
   {
     "id": "aiims",
@@ -1362,8 +1440,25 @@
     "jsonInPage": "glblMasterCareerDetails",
     "titleField": "prfile",
     "linkField": "cta",
-    "exclude": "(^|[^a-z])flc([^a-z]|$)|counsellor|guest players",
-    "limit": 600
+    "limit": 600,
+    "timeoutMs": 15000
+  },
+  {
+    "id": "bob-updates",
+    "name": "Bank of Baroda Updates",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "json",
+    "url": "https://bankofbaroda.bank.in/career/current-opportunities",
+    "extraCerts": [
+      "certs/globalsign-gcc-r46-ov-tls-ca-2025.pem"
+    ],
+    "jsonInPage": "glblMasterCareerDetails",
+    "titleField": "latestUpdate",
+    "linkField": "cta",
+    "limit": 600,
+    "timeoutMs": 15000
   },
   {
     "id": "pnb",
@@ -1381,7 +1476,8 @@
     ],
     "pageLink": true,
     "minTitle": 15,
-    "limit": 40
+    "limit": 80,
+    "timeoutMs": 15000
   },
   {
     "id": "canara",
@@ -1390,10 +1486,11 @@
     "tier": "FREE",
     "level": "central",
     "type": "html",
-    "url": "https://www.canarabank.bank.in/pages/career",
-    "selector": "div.mainBox li a",
+    "url": "https://www.canarabank.bank.in/pages/recruitment",
+    "selector": "div.text-sec li a",
     "minTitle": 15,
-    "limit": 40
+    "limit": 40,
+    "timeoutMs": 15000
   },
   {
     "id": "nabard",
@@ -1403,9 +1500,12 @@
     "level": "central",
     "type": "html",
     "url": "https://www.nabard.org/careers-notices1.aspx?cid=693&id=26",
-    "include": "CareerNotices",
-    "minTitle": 10,
-    "limit": 40
+    "minTitle": 4,
+    "limit": 40,
+    "selector": ".career_row a.pdf-link[href]:not([href$=\"CareerNotices/\"]), .career_row .ext_link a[href^=\"http\"]",
+    "contextClosest": ".career_row",
+    "contextFind": ".career_title",
+    "timeoutMs": 15000
   },
   {
     "id": "drdo-vacancies",
@@ -1437,7 +1537,8 @@
     "include": "/News/Article/",
     "exclude": "vendors|contractors|message|awardees|honou?rs|awards|guidelines for film",
     "minTitle": 15,
-    "limit": 30
+    "limit": 30,
+    "timeoutMs": 15000
   },
   {
     "id": "rrc-ecor",
@@ -1470,7 +1571,10 @@
     "limit": 40,
     "group": "rrc",
     "groupName": "RRC",
-    "region": "SR Chennai"
+    "region": "SR Chennai",
+    "extraUrls": [
+      "https://www.rrcmas.in/open-market-recruitment.html"
+    ]
   },
   {
     "id": "rrc-swr",
@@ -1579,13 +1683,14 @@
     "rowSelector": "li",
     "rowTitle": "self",
     "rowLink": "a[href]",
-    "include": "pdffiles|digialm",
+    "include": "pdffiles|digialm|index[.]html$",
     "titleReplace": [
       "\\s*\\[?\\s*click here\\s*\\]?.*$",
       ""
     ],
     "minTitle": 40,
-    "limit": 40
+    "limit": 40,
+    "timeoutMs": 15000
   },
   {
     "id": "iaf-airmen",
@@ -1598,13 +1703,14 @@
     "rowSelector": "li, b",
     "rowTitle": "self",
     "rowLink": "a[href]",
-    "include": "pdfforms|digialm",
+    "include": "pdfforms|digialm|airmen/?$",
     "titleReplace": [
       "\\s*\\[?\\s*click here\\s*\\]?.*$",
       ""
     ],
     "minTitle": 40,
-    "limit": 40
+    "limit": 40,
+    "timeoutMs": 15000
   },
   {
     "id": "iaf-afcat",
@@ -1622,7 +1728,8 @@
       ""
     ],
     "minTitle": 30,
-    "limit": 40
+    "limit": 40,
+    "timeoutMs": 15000
   },
   {
     "id": "cisf",
@@ -1638,6 +1745,23 @@
     "exclude": "message|memorandum|mou\\b|service medal|flag code|posh|handbook",
     "minTitle": 12,
     "limit": 30
+  },
+  {
+    "id": "cisf-ticker",
+    "name": "CISF Latest ticker",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://www.cisf.gov.in/home.php",
+    "selector": "marquee a[href$=\".pdf\"]",
+    "titleReplace": [
+      "[ ]+has been uploaded on.*$",
+      ""
+    ],
+    "minTitle": 12,
+    "limit": 20,
+    "allowEmpty": true
   },
   {
     "id": "assam-rifles",

@@ -288,7 +288,10 @@ function fromJson(src, text) {
   return list.map(row => {
     const title = src.titleFormat ? clean(src.titleFormat.replace(/\{([\w.]+)\}/g, (_, k) => plain(pick(row, k)))) : clean(pick(row, src.titleField));
     let link = src.linkHtmlField ? cheerio.load(String(pick(row, src.linkHtmlField) ?? ""))("a[href]").first().attr("href") ?? "" : src.linkField ? pick(row, src.linkField) : "";
-    link = link ? (src.linkPrefix || "") + String(link).replaceAll("\\", "/") : src.fallbackLink || src.url;
+    // A link that is already a full web address is kept as it is (a feed may mix full and relative links, e.g. ICG); a relative one gets
+    // "linkPrefix" in front, or, without a prefix, is resolved against the source's own address ("./assets/a.pdf" -> https://site/path/assets/a.pdf).
+    const rel = link ? String(link).replaceAll("\\", "/") : "";
+    link = !rel ? src.fallbackLink || src.url : /^https?:\/\//i.test(rel) ? rel : src.linkPrefix ? src.linkPrefix + rel : new URL(rel, src.url).href;
     return { title, link };
   }).filter(i => i.title && (!include || include.test(i.title)) && !(exclude && exclude.test(i.title)));   // include / exclude work on the title, as for html sources
 }
