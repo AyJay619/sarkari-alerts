@@ -3023,13 +3023,17 @@
     "tier": "FREE",
     "level": "central",
     "type": "html",
-    "url": "https://www.thdc.co.in/en/career/job-opportunities",
+    "url": "https://www.thdc.co.in/en/career/new-job-opening",
     "extraUrls": [
-      "https://www.thdc.co.in/en/career/new-job-opening"
+      "https://www.thdc.co.in/en/career/job-opportunities",
+      "https://www.thdc.co.in/en/career/archived-job",
+      "https://www.thdc.co.in/en/career/result"
     ],
-    "include": "sites/default/files/career",
+    "rowSelector": "tr:has(a[href])",
+    "rowTitle": "td:nth-child(2)",
+    "rowLink": "a[href]",
     "allowEmpty": true,
-    "exclude": "compassionate|qualified|roll no|unique id",
+    "timeoutMs": 15000,
     "limit": 40
   },
   {
@@ -3040,9 +3044,13 @@
     "level": "central",
     "type": "html",
     "url": "https://nia.gov.in/recruitment-notices",
-    "include": "secure-pdf|writereaddata/Portal/Recruitment|sites/default/files",
+    "rowSelector": "table.custom-table tbody tr",
+    "rowTitle": "td.views-field-title",
+    "rowLink": "td.views-field-secure-pdf-link a",
+    "rowStartDate": "td.views-field-field-to-date",
+    "rowEndDate": "td.views-field-field-from-date",
     "allowEmpty": true,
-    "exclude": "compassionate|qualified|roll no|unique id",
+    "timeoutMs": 15000,
     "limit": 40
   },
   {
@@ -3076,6 +3084,21 @@
     "limit": 60
   },
   {
+    "id": "aweil-notices",
+    "name": "AWEIL Notices",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://aweil.in/notice",
+    "rowSelector": "tr[data-document-row]",
+    "rowTitle": ".dbim-document-title",
+    "rowLink": "a[href]",
+    "minTitle": 15,
+    "limit": 30,
+    "allowEmpty": true
+  },
+  {
     "id": "hsl",
     "name": "Hindustan Shipyard Careers",
     "runner": "india",
@@ -3085,7 +3108,7 @@
     "url": "https://hslvizag.in/en/careers",
     "render": true,
     "include": "hsl-cms/media|WriteReadData|[.]pdf",
-    "exclude": "procurement|improvement|Interview Results|shortlisted|compassionate|qualified|roll no|unique id",
+    "exclude": "procurement|improvement|compassionate|qualified|roll no|unique id",
     "titleReplace": [
       "^link(.*?)(\\s*\\(?Size:.*)?$",
       "$1"
@@ -3136,16 +3159,23 @@
     "runner": "india",
     "tier": "FREE",
     "level": "central",
-    "type": "html",
-    "url": "https://www.nimhans.ac.in/announcements/nimhans-recruitment-and-notifications-announcement",
+    "type": "json",
+    "method": "POST",
+    "url": "https://bkend.nimhans.ac.in/api/announcement/website-list-announcements/",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    "body": "{\"filters\":[{\"field\":\"announcement_category_slug\",\"value\":\"nimhans-recruitment-and-notifications-announcement\"},{\"field\":\"is_archived\",\"value\":false}],\"sort\":{\"field\":\"publish_date\",\"order\":\"DESC\"},\"page\":1,\"list_per_page\":50}",
     "extraCerts": [
       "certs/nimhans.pem"
     ],
-    "include": "[.]pdf",
-    "allowEmpty": true,
-    "exclude": "compassionate|qualified|roll no|unique id",
-    "minTitle": 15,
-    "limit": 40
+    "itemsPath": "results",
+    "titleField": "content",
+    "linkField": "announcement_links.0.url",
+    "fallbackLink": "https://www.nimhans.ac.in/announcements/nimhans-recruitment-and-notifications-announcement",
+    "timeoutMs": 15000,
+    "limit": 50
   },
   {
     "id": "nalco",
@@ -3157,8 +3187,25 @@
     "url": "https://mudira.nalcoindia.co.in/rec_portal/Default.aspx",
     "selector": "a.news-link",
     "include": "Uploaded_Data",
-    "exclude": "shortlist|compassionate|qualified|roll no|unique id",
+    "exclude": "compassionate|qualified|roll no|unique id",
     "noFileDownload": true,
+    "minTitle": 15,
+    "limit": 60
+  },
+  {
+    "id": "nalco-advt",
+    "name": "NALCO Advertisements",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://mudira.nalcoindia.co.in/rec_portal/Default.aspx",
+    "rowSelector": "#ctl00_ContentPlaceHolder1_GridView1 tr:has(a.advt-pdf-link)",
+    "rowTitle": "td:nth-child(3)",
+    "rowLink": "a.advt-pdf-link",
+    "include": "Uploaded_Data",
+    "noFileDownload": true,
+    "allowEmpty": true,
     "minTitle": 15,
     "limit": 60
   },
@@ -3174,11 +3221,13 @@
     "rowTitle": "td:nth-child(4)",
     "rowLink": "a[href*='View_Advertisement']",
     "titleReplace": [
-      "^(.+?)s*,s*(.+)$",
+      "^(.+?)[ ]*,[ ]*(.+)$",
       "UPPSC Advt. No. $1 dated $2"
     ],
     "minTitle": 8,
-    "limit": 20
+    "limit": 20,
+    "allowEmpty": true,
+    "timeoutMs": 15000
   },
   {
     "id": "uppsc-notices",
@@ -3190,7 +3239,9 @@
     "url": "https://uppsc.up.nic.in/",
     "include": "Open_PDF_DB",
     "minTitle": 20,
-    "limit": 30
+    "limit": 45,
+    "timeoutMs": 15000,
+    "titleRev": 1
   },
   {
     "id": "upsssc",
@@ -3199,12 +3250,12 @@
     "tier": "FREE",
     "level": "state",
     "type": "html",
-    "render": true,
-    "waitFor": "ul.Live_Adverts li a",
     "url": "https://upsssc.gov.in/Default.aspx",
     "selector": "ul.top_slider li a, ul.Live_Adverts li a",
     "minTitle": 15,
-    "limit": 40
+    "limit": 60,
+    "legacyTls": true,
+    "titleRev": 1
   },
   {
     "id": "uppbpb",
@@ -3216,7 +3267,15 @@
     "url": "https://uppbpb.gov.in/",
     "include": "FilesUploaded/Notice",
     "minTitle": 15,
-    "limit": 30
+    "limit": 40,
+    "extraUrls": [
+      "https://uppbpb.gov.in/Home/Notice"
+    ],
+    "timeoutMs": 15000,
+    "titleReplace": [
+      "^LATEST NOTICE:[ ]*|[ ]*[[][ ]*Notice Board[ ]*[]][ ]*$",
+      ""
+    ]
   },
   {
     "id": "bpsc",
@@ -3235,20 +3294,36 @@
     "limit": 30
   },
   {
+    "id": "bpsc-advt",
+    "name": "BPSC Advertisements",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "state",
+    "type": "html",
+    "render": true,
+    "waitFor": "#table-body tr td",
+    "url": "https://bpsc.bihar.gov.in/advertisement/",
+    "rowSelector": "#table-body tr",
+    "rowTitle": "td:nth-child(5)",
+    "rowLink": "a[href$='.pdf']",
+    "minTitle": 10,
+    "limit": 30
+  },
+  {
     "id": "bssc",
     "name": "BSSC (Bihar)",
     "runner": "india",
     "tier": "FREE",
     "level": "state",
     "type": "html",
-    "render": true,
     "url": "https://bssc.bihar.gov.in/NoticeBoard.htm",
     "rowSelector": "table tr:has(a[href*='Advertisement/'])",
     "rowTitle": "self",
     "rowLink": "a[href*='Advertisement/']",
     "exclude": "tender",
     "minTitle": 10,
-    "limit": 30
+    "limit": 30,
+    "timeoutMs": 15000
   },
   {
     "id": "csbc",
@@ -3260,7 +3335,7 @@
     "url": "https://csbc.bihar.gov.in/",
     "include": "Advt/",
     "minTitle": 15,
-    "limit": 40
+    "limit": 60
   },
   {
     "id": "rpsc",
@@ -3295,9 +3370,9 @@
     "tier": "FREE",
     "level": "state",
     "type": "html",
-    "render": true,
-    "waitFor": "ul.newsticker li a",
-    "url": "https://rssb.rajasthan.gov.in/",
+    "url": "https://rssb.rajasthan.gov.in/news",
+    "legacyTls": true,
+    "timeoutMs": 15000,
     "include": "storage/news_item",
     "minTitle": 15,
     "limit": 30
@@ -3308,18 +3383,14 @@
     "runner": "india",
     "tier": "FREE",
     "level": "state",
-    "type": "html",
-    "render": true,
-    "waitFor": "#tableBody tr",
-    "url": "https://rssb.rajasthan.gov.in/advertisements",
-    "rowSelector": "#tableBody tr",
-    "rowTitle": "self",
-    "titleReplace": [
-      "^d+s+",
-      ""
-    ],
-    "rowLink": "a[href*='/storage/advertisement_item/']",
-    "minTitle": 10,
+    "type": "json",
+    "url": "https://rssb.rajasthan.gov.in/filteradv/0/0?page=1",
+    "legacyTls": true,
+    "timeoutMs": 15000,
+    "itemsPath": "data",
+    "titleFormat": "{exam_name} {exam_year} : {title}",
+    "linkField": "file_name",
+    "linkPrefix": "https://rssb.rajasthan.gov.in/storage/advertisement_item/",
     "limit": 30
   },
   {
@@ -3328,18 +3399,14 @@
     "runner": "india",
     "tier": "FREE",
     "level": "state",
-    "type": "html",
-    "render": true,
-    "waitFor": "#tableBody tr",
-    "url": "https://rssb.rajasthan.gov.in/results",
-    "rowSelector": "#tableBody tr",
-    "rowTitle": "self",
-    "titleReplace": [
-      "^d+s+",
-      ""
-    ],
-    "rowLink": "a[href*='/storage/result_item/']",
-    "minTitle": 10,
+    "type": "json",
+    "url": "https://rssb.rajasthan.gov.in/filterresult/0/0?page=1",
+    "legacyTls": true,
+    "timeoutMs": 15000,
+    "itemsPath": "data",
+    "titleFormat": "{exam_name} {exam_year} : {result}",
+    "linkField": "result_link",
+    "linkPrefix": "https://rssb.rajasthan.gov.in/storage/result_item/",
     "limit": 30
   },
   {
@@ -3348,18 +3415,30 @@
     "runner": "india",
     "tier": "FREE",
     "level": "state",
-    "type": "html",
-    "render": true,
-    "waitFor": "#tableBody tr",
-    "url": "https://rssb.rajasthan.gov.in/admitcards",
-    "rowSelector": "#tableBody tr",
-    "rowTitle": "self",
-    "titleReplace": [
-      "^d+s+",
-      ""
-    ],
-    "rowLink": "a[href*='/storage/admitcard_item/']",
-    "minTitle": 10,
+    "type": "json",
+    "url": "https://rssb.rajasthan.gov.in/filteradmitcard/0/0?page=1",
+    "legacyTls": true,
+    "timeoutMs": 15000,
+    "itemsPath": "data",
+    "titleFormat": "{exam_name} {exam_year} : {title}",
+    "linkField": "file_name",
+    "linkPrefix": "https://rssb.rajasthan.gov.in/storage/admitcard_item/",
+    "limit": 30
+  },
+  {
+    "id": "rssb-answerkey",
+    "name": "RSSB Answer Keys",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "state",
+    "type": "json",
+    "url": "https://rssb.rajasthan.gov.in/filterkey/0/0?page=1",
+    "legacyTls": true,
+    "timeoutMs": 15000,
+    "itemsPath": "data",
+    "titleFormat": "{exam_name} {exam_year} : {title}",
+    "linkField": "file_name",
+    "linkPrefix": "https://rssb.rajasthan.gov.in/storage/answerkey_item/",
     "limit": 30
   },
   {
@@ -3369,11 +3448,38 @@
     "tier": "FREE",
     "level": "state",
     "type": "html",
-    "render": true,
     "url": "https://esb.mp.gov.in/home_n.html",
-    "include": "[.]pdf|default_tac|examsList",
+    "include": "[.](pdf|jpe?g|png)|default_tac|examsList",
     "minTitle": 12,
-    "limit": 40
+    "limit": 40,
+    "timeoutMs": 15000
+  },
+  {
+    "id": "mpesb-notices",
+    "name": "MPESB Important Notices",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "state",
+    "type": "html",
+    "url": "https://esb.mp.gov.in/advertisement/Important_message_candidate.htm",
+    "include": "[.](pdf|jpe?g|png)|default_tac",
+    "minTitle": 12,
+    "limit": 40,
+    "timeoutMs": 15000
+  },
+  {
+    "id": "mpesb-answerkeys",
+    "name": "MPESB Answer Keys / Objections",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "state",
+    "type": "html",
+    "url": "https://esb.mp.gov.in/Question%20Paper%20and%20Candidate%20Responses/Question_Objection.asp",
+    "include": "cbtexam|cbexams",
+    "minTitle": 10,
+    "limit": 40,
+    "allowEmpty": true,
+    "timeoutMs": 15000
   },
   {
     "id": "hpsc",
@@ -3386,7 +3492,8 @@
     "include": "Portals/0/",
     "noFileDownload": true,
     "minTitle": 15,
-    "limit": 40
+    "limit": 40,
+    "timeoutMs": 15000
   },
   {
     "id": "hpsc-advt",
@@ -3399,7 +3506,22 @@
     "include": "Portals/0/",
     "noFileDownload": true,
     "minTitle": 15,
-    "limit": 40
+    "limit": 40,
+    "timeoutMs": 15000
+  },
+  {
+    "id": "hpsc-answerkeys",
+    "name": "HPSC Answer Keys",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "state",
+    "type": "html",
+    "url": "http://hpsc.gov.in/en-us/Examination/Answer-Keys",
+    "include": "Portals/0/",
+    "noFileDownload": true,
+    "minTitle": 15,
+    "limit": 40,
+    "timeoutMs": 15000
   },
   {
     "id": "hssc-advt",
@@ -3454,12 +3576,11 @@
     "tier": "FREE",
     "level": "state",
     "type": "html",
-    "render": true,
     "url": "https://ppsc.gov.in/",
     "include": "tabid=10&",
     "minTitle": 25,
-    "limit": 40,
-    "timeoutMs": 45000
+    "limit": 60,
+    "timeoutMs": 15000
   },
   {
     "id": "pssb",
@@ -3468,13 +3589,60 @@
     "tier": "FREE",
     "level": "state",
     "type": "html",
-    "render": true,
-    "waitFor": "ul.listing li a",
     "url": "https://sssb.punjab.gov.in/",
     "legacyTls": true,
     "selector": "ul.listing li a",
     "include": "wp-content/uploads",
     "minTitle": 15,
-    "limit": 40
+    "limit": 60,
+    "timeoutMs": 15000
+  },
+  {
+    "id": "pssb-b",
+    "name": "PSSSB Group B Advts",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "state",
+    "type": "html",
+    "url": "https://sssb.punjab.gov.in/vacancy-group-b/",
+    "legacyTls": true,
+    "selector": "a",
+    "include": "wp-content/uploads",
+    "minTitle": 15,
+    "limit": 30,
+    "allowEmpty": true,
+    "timeoutMs": 15000
+  },
+  {
+    "id": "pssb-c",
+    "name": "PSSSB Group C Advts",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "state",
+    "type": "html",
+    "url": "https://sssb.punjab.gov.in/vacancy-group-c/",
+    "legacyTls": true,
+    "selector": "a",
+    "include": "wp-content/uploads",
+    "minTitle": 15,
+    "limit": 30,
+    "allowEmpty": true,
+    "timeoutMs": 15000
+  },
+  {
+    "id": "pssb-d",
+    "name": "PSSSB Group D Advts",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "state",
+    "type": "html",
+    "url": "https://sssb.punjab.gov.in/vacancy-group-d/",
+    "legacyTls": true,
+    "selector": "a",
+    "include": "wp-content/uploads",
+    "minTitle": 15,
+    "limit": 30,
+    "allowEmpty": true,
+    "timeoutMs": 15000
   }
 ]

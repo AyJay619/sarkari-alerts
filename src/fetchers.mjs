@@ -169,6 +169,14 @@ async function getBufferDirect(url, { allow = () => {}, optsFor = () => ({}), ma
 }
 
 const clean = s => String(s ?? "").replace(/\s+/g, " ").trim();
+// Some pages cut a long link text with ".." (or "…") and keep the full wording in the link's title attribute. When the shown text is such a
+// cut-off start of the title attribute, the full title is used (it gives the real post / department name). Anything else: the shown text.
+const CUT = /\s*(\.{2,}|…)\s*$/;
+export function fullTitle(shown, attr) {
+  if (!CUT.test(shown) || !attr) return "";
+  const start = shown.replace(CUT, "").trim().toLowerCase();
+  return start.length >= 8 && attr.length > start.length && attr.toLowerCase().startsWith(start) ? attr : "";
+}
 // Removes leftovers like "Read More" or "(1.68 MB)" / "PDF size:(251 KB)" so titles read cleanly.
 const tidyTitle = t => t
   .replace(/\s*\[\s*new\s*\]\s*/gi, " ")   // a "[NEW]" badge comes and goes, which would make an old notice look new
@@ -229,7 +237,8 @@ function fromHtml(src, text, finalUrl) {
     const $el = $(el);
     const href = $el.attr("href");
     if (!href || href.startsWith("#") || /^(javascript|mailto|tel):/i.test(href)) return;
-    let title = retitle(tidyTitle(clean($el.text()) || clean($el.attr("title"))));
+    const shown = clean($el.text()), full = fullTitle(shown, clean($el.attr("title")));
+    let title = retitle(tidyTitle(full || shown || clean($el.attr("title"))));
     const linkText = title;
     if (title.length < minTitle && !src.titleFromHref) return;
     let link;
@@ -263,7 +272,7 @@ function fromHtml(src, text, finalUrl) {
     const hay = `${title} ${link}`;
     if (include && !include.test(hay)) return;
     if (exclude && exclude.test(hay)) return;
-    items.push({ title, link, groupTitle });
+    items.push({ title, link, groupTitle, ...(full ? { fromTitleAttr: true } : {}) });
   });
   return items;
 }
