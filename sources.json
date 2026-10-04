@@ -38,7 +38,7 @@
     "url": "https://www.isro.gov.in/Careers.html",
     "include": "Advt|Advertisement|Corrigendum|Schedule|Selection|Admit|Result|Recruitment",
     "minTitle": 30,
-    "limit": 30
+    "limit": 45
   },
   {
     "id": "sail",
@@ -49,7 +49,8 @@
     "type": "html",
     "url": "https://sailcareers.com/",
     "minTitle": 20,
-    "limit": 15
+    "limit": 30,
+    "exclude": "PlantName="
   },
   {
     "id": "cbse",
@@ -61,7 +62,7 @@
     "url": "https://www.cbse.gov.in/cbsenew/recruitment.html",
     "include": "[.]pdf",
     "minTitle": 15,
-    "limit": 25
+    "limit": 60
   },
   {
     "id": "rbi",
@@ -73,6 +74,31 @@
     "url": "https://opportunities.rbi.org.in/Scripts/Vacancies.aspx",
     "include": "bs_viewcontent",
     "limit": 20
+  },
+  {
+    "id": "rbi-results",
+    "name": "RBI Results",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://opportunities.rbi.org.in/Scripts/resultsnew.aspx",
+    "include": "bs_viewcontent|Result_.*[.]aspx",
+    "limit": 30,
+    "timeoutMs": 15000
+  },
+  {
+    "id": "rbi-calls",
+    "name": "RBI Call Letters",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://opportunities.rbi.org.in/Scripts/CallLetters.aspx",
+    "include": "bs_viewcontent|Result_.*[.]aspx",
+    "limit": 10,
+    "allowEmpty": true,
+    "timeoutMs": 15000
   },
   {
     "id": "esic",
@@ -96,7 +122,8 @@
     "include": "documents/pdf|admit|result|advt|advertisement|recruitment",
     "exclude": "Selection Methodology|Application Count",
     "minTitle": 25,
-    "limit": 25
+    "limit": 40,
+    "timeoutMs": 15000
   },
   {
     "id": "ugc",
@@ -107,8 +134,45 @@
     "type": "html",
     "url": "https://www.ugc.gov.in/",
     "include": "pdfnews",
-    "exclude": "Organisational Chart|Certificate|letter regarding|Advisory",
+    "limit": 30
+  },
+  {
+    "id": "ugc-jobs",
+    "name": "UGC Jobs",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "json",
+    "method": "POST",
+    "url": "https://www.ugc.gov.in/Tenders/Fill_Tenders",
+    "form": {
+      "ID": "0",
+      "type": "JobsGrid"
+    },
+    "itemsPath": "List",
+    "titleFormat": "{tender_code} {tender_title}",
+    "linkHtmlField": "tender_title",
+    "linkPrefix": "https://www.ugc.gov.in/Tenders/",
     "limit": 25
+  },
+  {
+    "id": "ugc-notices",
+    "name": "UGC Notices",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "json",
+    "method": "POST",
+    "url": "https://www.ugc.gov.in/Notices/Fill_Notices",
+    "form": {
+      "ID": "0",
+      "type": "NoticeGrid"
+    },
+    "itemsPath": "List",
+    "titleFormat": "{created} {title}",
+    "linkField": "pdfnews",
+    "linkPrefix": "https://www.ugc.gov.in/pdfnews/",
+    "limit": 40
   },
   {
     "id": "bhel",
@@ -118,8 +182,9 @@
     "level": "central",
     "type": "html",
     "url": "https://careers.bhel.in/index.jsp",
-    "include": "[.]pdf",
-    "limit": 25
+    "include": "[.]pdf|ednnet|bplcareers|careers1",
+    "limit": 40,
+    "titleFromHref": true
   },
   {
     "id": "drdo-rac",
@@ -147,6 +212,19 @@
     "limit": 30
   },
   {
+    "id": "aai-updates",
+    "name": "AAI Recruitment (documents)",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://www.aai.aero/en/careers/recruitment",
+    "selector": "table tbody tr td.views-field a",
+    "contextClosest": "tr",
+    "contextFind": "td.views-field-title",
+    "limit": 130
+  },
+  {
     "id": "lic",
     "name": "LIC Careers",
     "runner": "india",
@@ -154,8 +232,23 @@
     "level": "central",
     "type": "html",
     "url": "https://licindia.in/careers",
-    "include": "engagement|recruitment|apprentice|advert",
+    "rowSelector": "#tableID tbody tr",
+    "rowTitle": "td:nth-child(3)",
+    "timeoutMs": 15000,
     "limit": 20
+  },
+  {
+    "id": "lic-aao",
+    "name": "LIC AAO/AE 2025 updates",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://licindia.in/recruitment-of-aao-generalists/-specialists/-assistant-engineers-2025",
+    "selector": "main a[href]",
+    "timeoutMs": 15000,
+    "limit": 80,
+    "allowEmpty": true
   },
   {
     "id": "upsc",
@@ -256,6 +349,21 @@
     "limit": 25
   },
   {
+    "id": "ibps-crp",
+    "name": "IBPS CRP Updates",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://www.ibps.in/index.php/crp-updates/",
+    "extraCerts": [
+      "certs/globalsign-rsa-ov-ssl-ca-2018.pem"
+    ],
+    "include": "^[0-9][0-9] (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9][0-9] ",
+    "minTitle": 15,
+    "limit": 40
+  },
+  {
     "id": "bel",
     "name": "BEL Careers",
     "runner": "india",
@@ -272,6 +380,22 @@
     "limit": 25
   },
   {
+    "id": "bel-results",
+    "name": "BEL Results",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://bel-india.in/results/",
+    "extraCerts": [
+      "certs/sectigo-ov-r36.pem"
+    ],
+    "rowSelector": ".career-result-box",
+    "rowTitle": "h2",
+    "rowLink": "a[href*=jobapply], a.file-link-results, a.file-link",
+    "limit": 25
+  },
+  {
     "id": "niacl",
     "name": "NIACL",
     "runner": "india",
@@ -279,7 +403,7 @@
     "level": "central",
     "type": "html",
     "url": "https://www.newindia.co.in/recruitment/list",
-    "include": "docs/recruitment",
+    "include": "docs/recruitment|ibpsonline.ibps.in",
     "exclude": "declaration|travelling|handout|annexure|format for",
     "minTitle": 15,
     "limit": 25,
@@ -298,6 +422,21 @@
     "rowLink": "a[href*='recruitment/details']",
     "limit": 20,
     "timeoutMs": 45000
+  },
+  {
+    "id": "uiic-1620",
+    "name": "UIIC AO 2026 notice page",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "url": "http://uiic.co.in/web/recruitment/details/1620",
+    "type": "html",
+    "rowSelector": "table tr",
+    "rowTitle": "td:nth-child(2)",
+    "rowLink": "td:nth-child(3) a[href]",
+    "limit": 30,
+    "timeoutMs": 45000,
+    "allowEmpty": true
   },
   {
     "id": "oil-india",
@@ -324,6 +463,20 @@
     "rowTitle": ".tooltiphovertext",
     "rowLink": "a[href]",
     "limit": 20
+  },
+  {
+    "id": "oil-india-results",
+    "name": "Oil India Results",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://www.oil-india.com/result",
+    "rowSelector": "table tr",
+    "rowTitle": "td:nth-child(2)",
+    "rowLink": "a[href*='files/result']",
+    "limit": 20,
+    "allowEmpty": true
   },
   {
     "id": "csir",
@@ -361,7 +514,8 @@
     "url": "https://www.indiapost.gov.in/vacancies",
     "rowSelector": "table tr",
     "rowTitle": "td:nth-child(2)",
-    "limit": 25
+    "limit": 25,
+    "timeoutMs": 15000
   },
   {
     "id": "powergrid",
@@ -372,11 +526,10 @@
     "type": "html",
     "url": "https://www.powergrid.in/en/job-opportunities",
     "limit": 400,
-    "selector": ".newBorderBox a.showMoreBtn",
+    "selector": ".newBorderBox .views-row a",
     "contextClosest": ".newBorderBox",
     "contextFind": "h4",
     "minTitle": 8,
-    "exclude": "Click here|register|login",
     "rebaseline": true
   },
   {
@@ -387,6 +540,38 @@
     "level": "central",
     "type": "html",
     "url": "https://www.coalindia.in/career-cil/jobs-coal-india/",
+    "rowSelector": "table tr",
+    "rowLink": "a[href]",
+    "minTitle": 20,
+    "limit": 25,
+    "allowedHosts": [
+      "d3u7ubx0okog7j.cloudfront.net"
+    ]
+  },
+  {
+    "id": "coal-india-cbt26",
+    "name": "Coal India MT CBT-26 notices",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://www.coalindia.in/career-cil/jobs-coal-india/recruitment-of-management-trainee-through-computer-based-test-cbt-26/",
+    "rowSelector": "table tr",
+    "rowLink": "a[href]",
+    "minTitle": 20,
+    "limit": 30,
+    "allowedHosts": [
+      "d3u7ubx0okog7j.cloudfront.net"
+    ]
+  },
+  {
+    "id": "coal-india-results",
+    "name": "Coal India Appointment/Result/Interview",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://www.coalindia.in/career-cil/appointment-result-interview/",
     "rowSelector": "table tr",
     "rowLink": "a[href]",
     "minTitle": 20,
@@ -418,7 +603,36 @@
     "url": "https://ongcindia.com/web/eng/career/recruitment-notice",
     "selector": "a.pdf-link",
     "minTitle": 15,
-    "limit": 25
+    "limit": 25,
+    "timeoutMs": 30000
+  },
+  {
+    "id": "ongc-results",
+    "name": "ONGC Results",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "selector": "a.pdf-link",
+    "minTitle": 15,
+    "limit": 25,
+    "timeoutMs": 30000,
+    "allowEmpty": true,
+    "url": "https://ongcindia.com/web/eng/career/results"
+  },
+  {
+    "id": "ongc-apprentice",
+    "name": "ONGC Apprenticeship",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "selector": "a.pdf-link",
+    "minTitle": 15,
+    "limit": 25,
+    "timeoutMs": 30000,
+    "allowEmpty": true,
+    "url": "https://ongcindia.com/web/eng/career/apprenticeship-opportunities"
   },
   {
     "id": "gail",
@@ -442,14 +656,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/ahmedabad",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Ahmedabad CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Ahmedabad {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Ahmedabad",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-ajmer",
@@ -459,14 +673,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/ajmer",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Ajmer CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Ajmer {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Ajmer",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-prayagraj",
@@ -476,14 +690,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/prayagraj",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Prayagraj CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Prayagraj {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Prayagraj",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-bengaluru",
@@ -493,14 +707,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/bengaluru",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Bengaluru CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Bengaluru {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Bengaluru",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-bhopal",
@@ -510,14 +724,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/bhopal",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Bhopal CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Bhopal {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Bhopal",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-bhubaneswar",
@@ -527,14 +741,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/bhubaneswar",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Bhubaneswar CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Bhubaneswar {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Bhubaneswar",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-bilaspur",
@@ -544,14 +758,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/bilaspur",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Bilaspur CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Bilaspur {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Bilaspur",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-chandigarh",
@@ -561,14 +775,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/chandigarh",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Chandigarh CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Chandigarh {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Chandigarh",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-chennai",
@@ -578,14 +792,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/chennai",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Chennai CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Chennai {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Chennai",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-gorakhpur",
@@ -595,14 +809,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/gorakhpur",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Gorakhpur CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Gorakhpur {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Gorakhpur",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-guwahati",
@@ -612,14 +826,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/guwahati",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Guwahati CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Guwahati {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Guwahati",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-jammu",
@@ -629,14 +843,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/jammu",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Jammu CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Jammu {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Jammu",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-kolkata",
@@ -646,14 +860,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/kolkata",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Kolkata CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Kolkata {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Kolkata",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-malda",
@@ -663,14 +877,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/malda",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Malda CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Malda {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Malda",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-mumbai",
@@ -680,14 +894,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/mumbai",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Mumbai CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Mumbai {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Mumbai",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-muzaffarpur",
@@ -697,14 +911,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/muzaffarpur",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Muzaffarpur CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Muzaffarpur {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Muzaffarpur",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-patna",
@@ -714,14 +928,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/patna",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Patna CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Patna {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Patna",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-ranchi",
@@ -731,14 +945,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/ranchi",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Ranchi CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Ranchi {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Ranchi",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-secunderabad",
@@ -748,14 +962,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/secunderabad",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Secunderabad CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Secunderabad {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Secunderabad",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-siliguri",
@@ -765,14 +979,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/siliguri",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Siliguri CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Siliguri {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Siliguri",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "rrb-thiruvananthapuram",
@@ -782,14 +996,14 @@
     "level": "central",
     "type": "html",
     "url": "https://rrb.indianrailways.gov.in/thiruvananthapuram",
-    "include": "getdata[?]cennum",
-    "titleTemplate": "RRB Thiruvananthapuram CEN {cennum}: {text}",
+    "include": "getdata[?]loc=[a-z]+&cenum=",
+    "titleTemplate": "RRB Thiruvananthapuram {text}",
     "minTitle": 3,
     "limit": 400,
     "group": "rrb",
     "groupName": "RRB",
     "region": "Thiruvananthapuram",
-    "groupTemplate": "RRB CEN {cennum}: {text}"
+    "groupTemplate": "RRB {text}"
   },
   {
     "id": "sbi",
@@ -805,7 +1019,8 @@
     "contextAttr": "data-articleid",
     "minTitle": 4,
     "exclude": ": Hindi https",
-    "limit": 500
+    "limit": 500,
+    "timeoutMs": 15000
   },
   {
     "id": "ntpc",
@@ -1019,7 +1234,9 @@
     "level": "central",
     "type": "html",
     "url": "https://rectt.bsf.gov.in/",
-    "allowedHosts": ["d3t79nicn48uzj.cloudfront.net"],
+    "allowedHosts": [
+      "d3t79nicn48uzj.cloudfront.net"
+    ],
     "include": "cloudfront[.]net/bsf/custom",
     "minTitle": 15,
     "limit": 30
@@ -1122,7 +1339,9 @@
     "level": "central",
     "type": "html",
     "url": "https://www.epfo.gov.in/archive-recruitments",
-    "allowedHosts": ["pmvbry-cdn.epfindia.gov.in"],
+    "allowedHosts": [
+      "pmvbry-cdn.epfindia.gov.in"
+    ],
     "rowSelector": ".jobgrid",
     "rowTitle": "h4.job-title",
     "rowLink": "a.card",
@@ -1137,7 +1356,9 @@
     "level": "central",
     "type": "json",
     "url": "https://bankofbaroda.bank.in/career/current-opportunities",
-    "extraCerts": ["certs/globalsign-gcc-r46-ov-tls-ca-2025.pem"],
+    "extraCerts": [
+      "certs/globalsign-gcc-r46-ov-tls-ca-2025.pem"
+    ],
     "jsonInPage": "glblMasterCareerDetails",
     "titleField": "prfile",
     "linkField": "cta",
@@ -1210,7 +1431,9 @@
     "level": "central",
     "type": "html",
     "url": "https://indianarmy.nic.in/",
-    "extraCerts": ["certs/rapidssl-tls-rsa-ca-g1.pem"],
+    "extraCerts": [
+      "certs/rapidssl-tls-rsa-ca-g1.pem"
+    ],
     "include": "/News/Article/",
     "exclude": "vendors|contractors|message|awardees|honou?rs|awards|guidelines for film",
     "minTitle": 15,
@@ -1842,7 +2065,9 @@
     "level": "central",
     "type": "html",
     "url": "https://www.sci.gov.in/recruitments/",
-    "allowedHosts": ["cdnbbsr.s3waas.gov.in"],
+    "allowedHosts": [
+      "cdnbbsr.s3waas.gov.in"
+    ],
     "rowSelector": "tr:has(td a[href*='.pdf'])",
     "rowTitle": "td:first-child",
     "rowLink": "td:first-child a[href*='.pdf']",
@@ -1857,7 +2082,9 @@
     "level": "central",
     "type": "html",
     "url": "https://www.railtel.in/career.html",
-    "extraCerts": ["certs/sectigo-ov-r36.pem"],
+    "extraCerts": [
+      "certs/sectigo-ov-r36.pem"
+    ],
     "rowSelector": "li:has(span.title)",
     "rowTitle": "span.title",
     "rowLink": "a[href*='images/careers']",
@@ -1889,7 +2116,9 @@
     "level": "central",
     "type": "html",
     "url": "https://pgimer.edu.in/PGIMER_PORTAL/PGIMERPORTAL/Vacancies/JSP/VIEW_CALL.jsp?aflag=0",
-    "extraCerts": ["certs/letsencrypt-yr1-chain.pem"],
+    "extraCerts": [
+      "certs/letsencrypt-yr1-chain.pem"
+    ],
     "include": "ViewAll[.]jsp",
     "exclude": "shortlisted|compassionate|qualified|roll no|unique id",
     "limit": 60
@@ -2011,7 +2240,9 @@
     "level": "central",
     "type": "html",
     "url": "https://pfcindia.co.in/en/data/careers/jobs-on-offer",
-    "allowedHosts": ["cms.pfcindia.co.in"],
+    "allowedHosts": [
+      "cms.pfcindia.co.in"
+    ],
     "render": true,
     "waitFor": "a[href*='.pdf']",
     "include": "cms[.]pfcindia[.]co[.]in/media/documents",
@@ -2026,7 +2257,9 @@
     "level": "central",
     "type": "html",
     "url": "https://delhimetrorail.com/pages/en/career",
-    "allowedHosts": ["backend.delhimetrorail.com"],
+    "allowedHosts": [
+      "backend.delhimetrorail.com"
+    ],
     "render": true,
     "waitFor": "a[href*='.pdf']",
     "include": "backend[.]delhimetrorail[.]com/documents",
@@ -2083,7 +2316,9 @@
     "level": "central",
     "type": "json",
     "url": "https://portal.upmetrorail.com/en/api/v2/notices_list/Notices/?page=1",
-    "allowedHosts": ["upmrcl-media.s3.amazonaws.com"],
+    "allowedHosts": [
+      "upmrcl-media.s3.amazonaws.com"
+    ],
     "itemsPath": "results",
     "titleField": "title",
     "linkField": "document",
@@ -2298,7 +2533,9 @@
     "level": "central",
     "type": "html",
     "url": "https://recindia.nic.in/careers",
-    "extraCerts": ["certs/emsign-dv-tls-ca-g2a-1.pem"],
+    "extraCerts": [
+      "certs/emsign-dv-tls-ca-g2a-1.pem"
+    ],
     "include": "uploads/files",
     "exclude": "certificate|format|backlog|प्रारूप|compassionate|qualified|roll no|unique id",
     "minTitle": 6,
@@ -2358,7 +2595,9 @@
     "level": "central",
     "type": "html",
     "url": "https://www.moil.nic.in/public/career",
-    "allowedHosts": ["backend.moil.nic.in"],
+    "allowedHosts": [
+      "backend.moil.nic.in"
+    ],
     "render": true,
     "include": "getFiles|userfiles",
     "exclude": "shortlisted|format|certificate|compassionate|qualified|roll no|unique id",
