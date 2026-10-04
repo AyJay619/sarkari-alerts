@@ -2,6 +2,7 @@
   "inboxDir": "C:\\Dev\\sarkari-inbox",
   "catchOnly": true,
   "floodLimit": 15,
+  "repeatFailLimit": 3,
   "scrapflyCreditLimit": null,
   "scrapflyRetryMinLeft": 100,
   "sendToAgentsButton": false,

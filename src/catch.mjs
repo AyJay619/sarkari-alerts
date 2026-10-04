@@ -8,6 +8,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fetchItems } from "./fetchers.mjs";
+import { esc } from "./telegram.mjs";
 
 const two = n => String(n).padStart(2, "0");
 const localDate = d => `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`;
@@ -68,11 +69,15 @@ export function writeCatchFile(dir, when, data) {
 // The ONE Telegram message of a scan, e.g.
 //   Scan done: 41 new links from 30 sites. Failed: IOCL, HAL.
 //   ScrapFly: 6 links, 48 credits (month: 1,920).
-export function scanMessage({ newLinks, sitesWithNew, failed, floods = [], networkDown, scrapfly }) {
+export const REPEAT_FAIL_LIMIT = 3;   // the same site FAILED in this many scans in a row = "needs audit" line in the Telegram message
+export function scanMessage({ newLinks, sitesWithNew, failed, floods = [], repeat = [], repeatLimit = REPEAT_FAIL_LIMIT, networkDown, scrapfly }) {
   const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
-  const names = failed.length > 12 ? failed.slice(0, 12).join(", ") + ` and ${failed.length - 12} more` : failed.join(", ");
+  const names = esc(failed.length > 12 ? failed.slice(0, 12).join(", ") + ` and ${failed.length - 12} more` : failed.join(", "));
   const head = `Scan done: ${plural(newLinks, "new link")} from ${plural(sitesWithNew, "site")}. Failed: ${failed.length ? names : "none"}.`;
   const lines = [networkDown ? "⚠️ Almost every site failed, so the internet probably dropped.\n" + head : head];
+  // a site that keeps failing: one line each (counts up every scan until it works again)
+  for (const r of repeat.slice(0, 8)) lines.push(`${esc(r.name)} failed ${r.n} scans in a row - needs audit`);
+  if (repeat.length > 8) lines.push(`and ${repeat.length - 8} more sites failed ${repeatLimit} or more scans in a row - needs audit`);
   if (floods.length) lines.push(`⚠️ Possible flood (marked in the catch file, sorter please check): ${floods.slice(0, 10).join(", ")}${floods.length > 10 ? ` and ${floods.length - 10} more` : ""}.`);
   if (scrapfly.configured) {
     lines.push(scrapfly.ran
@@ -240,6 +245,10 @@ export async function runCatchScan(ctx) {
   if (networkDown) console.log(`Almost every site failed (${failedNow.length}/${attempted}): treating it as a lost connection, not counting failures.`);
   else for (const { st, res } of failedNow) { st.fails++; res.failed_scans_in_a_row = st.fails; }
 
+  // ---- repeat failures: the counter lives in the seen record (state.sources[id].fails), so it survives between scans and resets on the first success ----
+  const repeatLimit = ctx.repeatFailLimit ?? REPEAT_FAIL_LIMIT;
+  const repeat = networkDown ? [] : failedNow.filter(f => f.st.fails >= repeatLimit).map(f => { f.res.repeat_failure = true; return { name: f.src.name, n: f.st.fails }; });
+
   // ---- the catch file ----
   const sitesWithNew = new Set(items.map(i => i.site)).size;
   const failedNames = failedNow.map(f => f.src.name);
@@ -257,6 +266,7 @@ export async function runCatchScan(ctx) {
       new_links: items.length,
       sites_with_new_links: sitesWithNew,
       possible_flood_sites: floods.length,
+      repeat_failure_sites: repeat.length,
       ...(networkDown ? { warning: "almost every site failed: the internet probably dropped during this scan" } : {}),
     },
     scrapfly: paid.length
@@ -271,7 +281,7 @@ export async function runCatchScan(ctx) {
   console.log(`CATCH FILE: ${file} (${items.length} new links, ${failedNow.length} failed sites)`);
 
   // ---- the one Telegram message ----
-  const message = scanMessage({ newLinks: items.length, sitesWithNew, failed: failedNames, floods, networkDown, scrapfly });
+  const message = scanMessage({ newLinks: items.length, sitesWithNew, failed: failedNames, floods, repeat, repeatLimit, networkDown, scrapfly });
   const delivered = await send(message);
   if (!delivered) console.error("Could not deliver the scan message to Telegram.");
 

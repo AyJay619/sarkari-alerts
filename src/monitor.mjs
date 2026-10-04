@@ -328,6 +328,7 @@ if (CATCH_ONLY) {
     scrapflyCreditLimit: opt("--scrapfly-credit-limit", null) !== null ? Number(opt("--scrapfly-credit-limit")) : cfg.scrapflyCreditLimit,   // (the two --scrapfly-... flags are for tests)
     scrapflyRetryMinLeft: opt("--scrapfly-retry-min-left", null) !== null ? Number(opt("--scrapfly-retry-min-left")) : cfg.scrapflyRetryMinLeft,   // the ScrapFly retry only runs while enough credits are left this month
     floodLimit: cfg.floodLimit,   // more new links than this from one site = "possible flood"
+    repeatFailLimit: cfg.repeatFailLimit,   // the same site FAILED this many scans in a row: a "needs audit" line in the Telegram message
     scrapflyKey: process.env.SCRAPFLY_KEY,   // read ONLY from the Windows environment variable; never from a file
     fingerprint, legacyFingerprint, keyOf, prune,
   });
