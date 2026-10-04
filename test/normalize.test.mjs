@@ -22,6 +22,10 @@ check("the real BEML change: old and new spelling are the same link", same(
 check("host case and #fragment are ignored", same("https://X.in/a.pdf#top", "https://x.in/a.pdf"));
 check("different files stay different", !same("https://x.in/a.pdf", "https://x.in/b.pdf") && !same("https://x.in/a.pdf?id=1", "https://x.in/a.pdf?id=2"));
 check("a different site stays different", !same("https://a.gov.in/x.pdf", "https://b.gov.in/x.pdf"));
+check("a site release that bumps ?v= on every file link is the same link (AWEIL)", same("https://aweil.in/files/ad.pdf?v=1.4.93", "https://aweil.in/files/ad.pdf?v=1.4.94") && same("https://aweil.in/files/ad.pdf?v=1.4.93", "https://aweil.in/files/ad.pdf"));
+check("other cache-busting names are ignored too, other parameters are kept", same("https://x.in/a.pdf?id=5&ver=2&_=1727", "https://x.in/a.pdf?id=5") && !same("https://x.in/a.pdf?id=5&v=1", "https://x.in/a.pdf?id=6&v=1"));
+check("a link WITHOUT such a parameter is not touched (no re-catch of existing links)", normalizeLink("https://x.in/view.php?NBE=abc def&type=2") === normalizeLink("https://x.in/view.php?NBE=abc def&type=2") && normalizeLink("https://x.in/view.php?NBE=abc&type=2") === "x.in/view.php?NBE=abc&type=2");
+check("a relative link is cleaned of ?v= as well", same("assets/a.pdf?v=3", "assets/a.pdf?v=4"));
 check("a bad % sequence does not crash", typeof normalizeLink("https://x.in/100%.pdf") === "string" && typeof normalizeLink("not a url %zz") === "string");
 
 // ---- through the real monitor ----
@@ -36,6 +40,7 @@ const pages = {
   flood: links("flood", 20),   // 20 new links at once
   edge: links("edge", 15),     // exactly 15: not a flood
   grp: links("grp", 16),       // grouped site with 16 new links: flagged too
+  aw: [{ title: "Advertisement for Machinist trade apprentices", href: "http://127.0.0.1:8832/files/machinist.pdf?v=1.4.94" }],   // the site bumped ?v= since the seen record was made
 };
 const server = http.createServer((req, res) => {
   const name = req.url.slice(1);
@@ -50,13 +55,14 @@ const B = "http://127.0.0.1:8832";
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "norm-"));
 const sourcesFile = path.join(dir, "sources.json"), stateFile = path.join(dir, "seen.json"), catchDir = path.join(dir, "catch");
 const src = (id, extra = {}) => ({ id, name: id + " Board", runner: "india", tier: "FREE", level: "central", type: "html", url: `${B}/${id}`, minTitle: 10, limit: 50, ...extra });
-fs.writeFileSync(sourcesFile, JSON.stringify([src("norm"), src("flood"), src("edge"), src("grp", { group: "G", groupName: "Group G", region: "grp" })]));
+fs.writeFileSync(sourcesFile, JSON.stringify([src("norm"), src("flood"), src("edge"), src("grp", { group: "G", groupName: "Group G", region: "grp" }), src("aw")]));
 // the seen record keeps its OLD spelling of the links (this is what is already saved in state/seen-india.json)
 const key = (t, l) => (t.toLowerCase().replace(/\s+/g, " ") + "|" + l).slice(0, 600);
 const st = seen => ({ initialized: true, seen, fails: 0, warned: false });
 fs.writeFileSync(stateFile, JSON.stringify({ sources: {
   norm: st({ [key("Advertisement KP/S/14/2026 recruitment", "http://norm.example.org/DATA//Notice (1).pdf")]: "2026-09-29T00:00:00Z", [key("Corrigendum KP/S/14/2026 recruitment", "http://norm.example.org/DATA/Corr&Ext.pdf")]: "2026-09-29T00:00:00Z" }),
   flood: st({}), edge: st({}), grp: st({}),
+  aw: st({ [key("Advertisement for Machinist trade apprentices", "http://127.0.0.1:8832/files/machinist.pdf?v=1.4.93")]: "2026-09-29T00:00:00Z" }),
 } }));
 await new Promise(r => setTimeout(r, 200));
 const r = await new Promise(res => execFile(process.execPath, ["src/monitor.mjs", "--sources", sourcesFile, "--state", stateFile, "--catch-dir", catchDir],
@@ -70,6 +76,7 @@ check("old-spelling links already seen are NOT caught again (no mass re-catch); 
 check("the saved link keeps the site's own spelling", by("norm")[0].link === "https://norm.example.org/DATA/new.pdf");
 check("20 new links from one site are ALL kept (nothing dropped)", by("flood").length === 20);
 check("...and flagged possible_flood, on every item and on the site's result", by("flood").every(i => i.possible_flood === true) && row("flood").possible_flood === true && c.summary.possible_flood_sites === 2, JSON.stringify(c.summary));
+check("the same file with a bumped ?v= is NOT caught again (no mass re-catch after a site release)", by("aw").length === 0 && row("aw").new_links === 0, JSON.stringify(row("aw")));
 check("exactly 15 new links is not a flood", by("edge").length === 15 && !row("edge").possible_flood && by("edge").every(i => !("possible_flood" in i)));
 check("a grouped site over the limit is flagged too", by("grp").length === 16 && by("grp").every(i => i.possible_flood === true));
 check("the Telegram message says so, in the one message", sent.length === 1 && /Possible flood/.test(sent[0].text) && /flood Board \(20\)/.test(sent[0].text) && /grp Board \(16\)/.test(sent[0].text) && !/edge Board/.test(sent[0].text), sent[0]?.text);

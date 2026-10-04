@@ -2500,8 +2500,8 @@
     "render": true,
     "waitFor": "a[href*='.pdf']",
     "include": "backend[.]delhimetrorail[.]com/documents",
-    "exclude": "screening|result of|shortlisted|compassionate|qualified|roll no|unique id",
-    "limit": 40
+    "limit": 40,
+    "minTitle": 8
   },
   {
     "id": "nmdc",
@@ -2512,10 +2512,11 @@
     "type": "html",
     "url": "https://www.nmdc.co.in/careers",
     "render": true,
-    "include": "Career_Documents",
+    "include": "Career_Documents|Media_Gallery",
     "exclude": "compassionate|qualified|roll no|unique id",
     "minTitle": 15,
-    "limit": 40
+    "limit": 40,
+    "selector": "app-careers a"
   },
   {
     "id": "cmrl",
@@ -2543,7 +2544,10 @@
     "include": "CareersRecentItems",
     "exclude": "application form|format|certificate|compassionate|qualified|roll no|unique id",
     "minTitle": 12,
-    "limit": 30
+    "limit": 30,
+    "selector": "#careerTable tbody td a",
+    "contextClosest": "tr",
+    "contextFind": "td:nth-child(3)"
   },
   {
     "id": "upmrc",
@@ -2570,8 +2574,12 @@
     "level": "central",
     "type": "html",
     "url": "https://www.mahametro.org/Career.aspx",
-    "include": "mahametro[.]org/pdf/",
-    "exclude": "certificate|standards|instructions|how to|document verification|objection|format|compassionate|qualified|roll no|unique id",
+    "selector": "a[href*='pdf/']:not([style*='display:none'])",
+    "minTitle": 4,
+    "contextClosest": "tr",
+    "contextFind": "td:nth-child(2)",
+    "exclude": "steps to download|certificate|standards|instructions|how to|objection|format|compassionate",
+    "timeoutMs": 15000,
     "limit": 40
   },
   {
@@ -2582,9 +2590,24 @@
     "level": "central",
     "type": "html",
     "url": "https://konkanrailway.com/en/current_notification",
-    "render": true,
-    "include": "(vacanc|notification|recruit|post of|engage|employment).*sites/default/files|sites/default/files.*(vacanc|notification|recruit)",
-    "exclude": "shortlisted|panel|RTI|Freight|IRCTC|Consolidate|policy|compassionate|qualified|roll no|unique id",
+    "legacyTls": true,
+    "timeoutMs": 15000,
+    "include": "(vacanc|notification|recruit|post of|engage|employment|selection|corrigendum|intimation|addendum).*sites/default/files|sites/default/files.*(vacanc|notification|recruit)",
+    "exclude": "RTI|Freight|IRCTC|Consolidate|policy|compassionate|BOD|OrgChart|MCA|Coffee|KR-Mirror",
+    "limit": 40
+  },
+  {
+    "id": "konkan-archive",
+    "name": "Konkan Railway Archive Notifications",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://konkanrailway.com/en/archive_notification",
+    "legacyTls": true,
+    "timeoutMs": 15000,
+    "include": "(vacanc|notification|recruit|post of|engage|employment|selection|corrigendum|intimation|addendum).*sites/default/files|sites/default/files.*(vacanc|notification|recruit|corrigendum|inmation)",
+    "exclude": "RTI|Freight|IRCTC|Consolidate|policy|compassionate|BOD|OrgChart|MCA|Coffee|KR-Mirror",
     "limit": 40
   },
   {
@@ -2616,7 +2639,7 @@
       "certs/goashipyard.pem"
     ],
     "include": "storage/clients_logo",
-    "exclude": "shortlisted|compassionate|qualified|roll no|unique id",
+    "exclude": "compassionate",
     "limit": 40
   },
   {
@@ -2628,7 +2651,7 @@
     "type": "html",
     "url": "https://midhani-india.in/department_hrd/career-at-midhani/",
     "include": "(advt|advert|recruit|walk).*WordPress-content|WordPress-content.*(advt|advert|recruit|walk)",
-    "exclude": "brochure|profile|compassionate|qualified|roll no|unique id",
+    "exclude": "brochure|profile|compassionate",
     "limit": 30,
     "minTitle": 6
   },
@@ -2641,9 +2664,10 @@
     "type": "html",
     "url": "https://munitionsindia.in/career-ajax/",
     "include": "wp-content/uploads",
-    "exclude": "compassionate|qualified|roll no|unique id",
     "minTitle": 8,
-    "limit": 30
+    "limit": 30,
+    "selector": "a[href*='wp-content/uploads']:nth-last-of-type(-n+30)",
+    "timeoutMs": 15000
   },
   {
     "id": "fact",
@@ -2654,9 +2678,24 @@
     "type": "html",
     "url": "https://fact.co.in/home/Dynamicpages?MenuId=90",
     "include": "(Recruitment Notification|Apprenticeship|ENGAGEMENT OF|Selection of).*Dynamicpages",
-    "exclude": "compassionate|qualified|roll no|unique id",
+    "exclude": "compassionate|unique id",
     "minTitle": 12,
-    "limit": 40
+    "limit": 40,
+    "timeoutMs": 15000
+  },
+  {
+    "id": "fact-results",
+    "name": "FACT Results",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://fact.co.in/home/Dynamicpages?MenuId=97",
+    "include": "/images/upload/",
+    "minTitle": 12,
+    "limit": 40,
+    "timeoutMs": 15000,
+    "allowEmpty": true
   },
   {
     "id": "bsnl",
@@ -2670,7 +2709,8 @@
     "titleFromHref": true,
     "exclude": "compassionate|qualified|roll no|unique id",
     "minTitle": 6,
-    "limit": 30
+    "limit": 30,
+    "allowEmpty": true
   },
   {
     "id": "hurl",
@@ -2679,11 +2719,26 @@
     "tier": "FREE",
     "level": "central",
     "type": "html",
-    "url": "https://career.hurl.net.in/",
-    "include": "career[.]hurl[.]net[.]in/others",
-    "exclude": "syllabus|objection|admit card|compassionate|qualified|roll no|unique id",
-    "minTitle": 10,
-    "limit": 40
+    "url": "https://jobse4.hurl.net.in/",
+    "include": "/others/",
+    "minTitle": 3,
+    "limit": 40,
+    "timeoutMs": 15000
+  },
+  {
+    "id": "hurl-careers",
+    "name": "HURL Careers (early warning)",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://hurl.net.in/careers/",
+    "rowSelector": ".job-card",
+    "rowTitle": ".job-title",
+    "rowLink": "a.btn-download, a.btn-hurl-primary",
+    "allowEmpty": true,
+    "limit": 25,
+    "timeoutMs": 15000
   },
   {
     "id": "mazagon-dock",
@@ -2718,9 +2773,9 @@
     "url": "https://bankofmaharashtra.bank.in/current-openings",
     "selector": "div.inner_post_content a[href*='documentlibrary']",
     "contextPrev": "h4",
-    "exclude": "shortlisted|compassionate|qualified|roll no|unique id",
+    "exclude": "compassionate|roll no|unique id",
     "minTitle": 8,
-    "limit": 120
+    "limit": 200
   },
   {
     "id": "indian-bank",
@@ -2732,7 +2787,6 @@
     "url": "https://indianbank.bank.in/en/career",
     "render": true,
     "include": "documents/20117/34414",
-    "exclude": "annexure|compassionate|qualified|roll no|unique id",
     "limit": 60
   },
   {
@@ -2774,9 +2828,34 @@
       "certs/emsign-dv-tls-ca-g2a-1.pem"
     ],
     "include": "uploads/files",
-    "exclude": "certificate|format|backlog|प्रारूप|compassionate|qualified|roll no|unique id",
+    "exclude": "certificate|format|backlog|compassionate|qualified|roll no|unique id",
     "minTitle": 6,
-    "limit": 30
+    "limit": 30,
+    "cookieUrl": "https://recindia.nic.in/ajax.php?lang=en",
+    "titleReplace": [
+      "[(][0-9]+ KB[)] PDF$",
+      ""
+    ]
+  },
+  {
+    "id": "rec-archive",
+    "name": "REC Careers archive",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "html",
+    "url": "https://recindia.nic.in/archive-opportunities",
+    "cookieUrl": "https://recindia.nic.in/ajax.php?lang=en",
+    "extraCerts": [
+      "certs/emsign-dv-tls-ca-g2a-1.pem"
+    ],
+    "include": "uploads/files",
+    "minTitle": 6,
+    "limit": 60,
+    "titleReplace": [
+      "[(][0-9]+ KB[)] PDF$",
+      ""
+    ]
   },
   {
     "id": "intelligence-bureau",
@@ -2790,7 +2869,7 @@
     "rowTitle": "td.views-field-title",
     "rowLink": "a.ext",
     "exclude": "compassionate|qualified|roll no|unique id",
-    "limit": 60
+    "limit": 25
   },
   {
     "id": "sidbi",
@@ -2803,7 +2882,8 @@
     "render": true,
     "include": "careers/careerdetails",
     "exclude": "compassionate|qualified|roll no|unique id",
-    "limit": 40
+    "limit": 40,
+    "allowEmpty": true
   },
   {
     "id": "ircon",
@@ -2830,15 +2910,61 @@
     "runner": "india",
     "tier": "FREE",
     "level": "central",
-    "type": "html",
-    "url": "https://www.moil.nic.in/public/career",
-    "allowedHosts": [
-      "backend.moil.nic.in"
-    ],
-    "render": true,
-    "include": "getFiles|userfiles",
-    "exclude": "shortlisted|format|certificate|compassionate|qualified|roll no|unique id",
-    "minTitle": 15,
+    "type": "json",
+    "url": "https://backend.moil.nic.in/career/career-public-list",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": "{\"page\":1,\"lang\":\"english\",\"searchString\":\"\",\"publishDate\":\"\",\"lastDate\":\"\",\"type\":\"careerList\"}",
+    "itemsPath": "result",
+    "titleField": "title",
+    "linkField": "advertisementPdf",
+    "linkPrefix": "https://backend.moil.nic.in/getFiles/",
+    "fallbackLink": "https://www.moil.nic.in/public/career",
+    "timeoutMs": 15000,
+    "limit": 40
+  },
+  {
+    "id": "moil-updates",
+    "name": "MOIL Results / interview lists",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "json",
+    "url": "https://backend.moil.nic.in/career/career-public-list",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": "{\"page\":1,\"lang\":\"english\",\"searchString\":\"\",\"publishDate\":\"\",\"lastDate\":\"\",\"type\":\"careerList\"}",
+    "itemsPath": "result",
+    "titleFormat": "{title} - update",
+    "linkField": "otherPdf.url",
+    "linkPrefix": "https://backend.moil.nic.in/getFiles/",
+    "fallbackLink": "https://www.moil.nic.in/public/career",
+    "timeoutMs": 15000,
+    "limit": 40
+  },
+  {
+    "id": "moil-corrigendum",
+    "name": "MOIL Corrigenda",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "json",
+    "url": "https://backend.moil.nic.in/career/career-public-list",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": "{\"page\":1,\"lang\":\"english\",\"searchString\":\"\",\"publishDate\":\"\",\"lastDate\":\"\",\"type\":\"careerList\"}",
+    "itemsPath": "result",
+    "titleFormat": "{title} - corrigendum",
+    "linkField": "corrigendumPdf",
+    "linkPrefix": "https://backend.moil.nic.in/getFiles/",
+    "fallbackLink": "https://www.moil.nic.in/public/career",
+    "timeoutMs": 15000,
     "limit": 40
   },
   {
@@ -2852,7 +2978,8 @@
     "include": "careerdetail",
     "exclude": "compassionate|qualified|roll no|unique id",
     "minTitle": 15,
-    "limit": 400
+    "limit": 400,
+    "timeoutMs": 15000
   },
   {
     "id": "cwc",

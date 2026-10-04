@@ -18,15 +18,24 @@ export const tierOf = src => (src.tier === "SCRAPFLY" ? "SCRAPFLY" : "FREE");
 // Link normalising for the "already seen" check, for ALL sites: the same file written a little differently is the same link.
 // Ignored: http vs https, www vs no www, double slashes in the path, a #fragment, and encoded vs raw characters (%28 = "(").
 // Only the COMPARISON uses this; the link that is saved in the catch file stays exactly as the site gives it.
+// Version / cache-busting parameters (a site release that bumps "?v=1.4.93" to "?v=1.4.94" on every file link) are ignored too.
+const BUST_NAMES = "v|ver|version|_v|cb|cache|cachebust|cache_bust|nocache|_|ts|timestamp|rnd|rand|random";
+const BUST_PARAM = new RegExp("^(" + BUST_NAMES + ")$", "i");
 export function normalizeLink(link) {
   const dec = t => { try { return decodeURIComponent(t); } catch { return t; } };
   const raw = String(link ?? "").trim();
   try {
     const u = new URL(raw);
     const pathname = dec(u.pathname).replace(/\/{2,}/g, "/");
-    return u.hostname.toLowerCase().replace(/^www\./, "") + (u.port ? ":" + u.port : "") + pathname + dec(u.search);
+    let search = u.search;
+    if (search) {   // only a link that really has such a parameter is re-written; all other queries stay exactly as before
+      const ps = new URLSearchParams(search);
+      const hit = [...ps.keys()].filter(k => BUST_PARAM.test(k));
+      if (hit.length) { hit.forEach(k => ps.delete(k)); search = ps.toString() ? "?" + ps.toString() : ""; }
+    }
+    return u.hostname.toLowerCase().replace(/^www\./, "") + (u.port ? ":" + u.port : "") + pathname + dec(search);
   } catch {
-    return dec(raw).replace(/^https?:\/\/(www\.)?/i, "").replace(/([^:])\/{2,}/g, "$1/");
+    return dec(raw).replace(/^https?:\/\/(www\.)?/i, "").replace(/([^:])\/{2,}/g, "$1/").replace(new RegExp("[?&](" + BUST_NAMES + ")=[^&#]*", "gi"), "");
   }
 }
 // "title|link" (the seen record's key form, see keyOf in monitor.mjs) -> "title|normalised link"

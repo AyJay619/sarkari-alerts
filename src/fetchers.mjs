@@ -70,10 +70,20 @@ const explain = (e, started, url) => {
 };
 
 // One attempt, with a detailed error message so the GitHub log shows exactly what went wrong.
+// "cookieUrl" (optional, per source): an address visited first, in the same run, whose Set-Cookie answer is sent along with the page request.
+// For sites that serve a stale copy (REC: the Hindi page) until the browser has been given its language cookie by a small ajax call.
+async function withCookie(srcOpts) {
+  if (!srcOpts.cookieUrl) return srcOpts;
+  const r = await request(srcOpts.cookieUrl, { ...srcOpts, cookieUrl: undefined, method: undefined, form: undefined, body: undefined });
+  await r.text().catch(() => {});
+  const cookies = (r.headers.getSetCookie?.() ?? []).map(c => c.split(";")[0]).filter(Boolean);
+  return cookies.length ? { ...srcOpts, headers: { ...srcOpts.headers, Cookie: cookies.join("; ") } } : srcOpts;
+}
+
 export async function getText(url, srcOpts = {}) {
   const started = Date.now();
   try {
-    const res = await request(url, srcOpts);
+    const res = await request(url, await withCookie(srcOpts));
     if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`.trim());
     return { text: await res.text(), finalUrl: res.url };
   } catch (e) {
