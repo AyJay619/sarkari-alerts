@@ -2015,8 +2015,9 @@
     "type": "html",
     "url": "https://www.unionbankofindia.co.in/en/common/recruitment",
     "include": "/pdf/",
-    "exclude": "call letter|handout|scribe|medical fitness|format of|tie up|hospital|compassionate|qualified|roll no|unique id",
-    "limit": 80
+    "exclude": "call letter|handout|scribe|medical fitness|format of|tie up|hospital|compassionate|unique id",
+    "limit": 80,
+    "timeoutMs": 15000
   },
   {
     "id": "central-bank",
@@ -2025,12 +2026,13 @@
     "tier": "FREE",
     "level": "central",
     "type": "html",
-    "url": "https://www.centralbankofindia.co.in/en/recruitments",
+    "url": "https://centralbank.bank.in/en/recruitments",
     "rowSelector": "li:has(div.views-field a)",
     "rowTitle": "div.views-field-title",
     "rowLink": "div.views-field a[href]",
-    "exclude": "compassionate|qualified|roll no|unique id",
-    "limit": 60
+    "exclude": "compassionate|unique id",
+    "limit": 60,
+    "timeoutMs": 15000
   },
   {
     "id": "exim",
@@ -2040,9 +2042,10 @@
     "level": "central",
     "type": "html",
     "url": "https://www.eximbankindia.in/careers",
-    "include": "sites/default/files",
-    "exclude": "cyber|awareness|compassionate|qualified|roll no|unique id",
-    "limit": 50
+    "include": "sites/default/files|/assets/|/themes/custom/exim/pdf/careers/",
+    "exclude": "cyber|awareness|compassionate|unique id",
+    "limit": 50,
+    "timeoutMs": 15000
   },
   {
     "id": "gic-re",
@@ -2051,10 +2054,14 @@
     "tier": "FREE",
     "level": "central",
     "type": "html",
-    "url": "https://www.gicre.in/en/?option=com_content&view=article&id=304",
+    "url": "https://www.gicre.in/en/people-resources/career-en",
     "include": "recruit|vacanc|engage|appoint|deputation|walk-in|shortlist",
-    "exclude": "RFP|proposal|EOI|reinsurers|compassionate|qualified|roll no|unique id",
-    "limit": 50
+    "exclude": "RFP|proposal|EOI|reinsurers|compassionate|unique id",
+    "limit": 60,
+    "extraUrls": [
+      "https://www.gicre.in/en/?option=com_content&view=article&id=304"
+    ],
+    "timeoutMs": 15000
   },
   {
     "id": "national-insurance",
@@ -2065,8 +2072,8 @@
     "type": "html",
     "url": "https://nationalinsurance.nic.co.in/recruitment",
     "include": "sites/default/files",
-    "exclude": "call letter|roll number|compassionate|qualified|unique id",
-    "limit": 60
+    "limit": 60,
+    "timeoutMs": 15000
   },
   {
     "id": "oriental-insurance",
@@ -2080,7 +2087,9 @@
     "waitFor": "a[href*='.pdf']",
     "include": "[.]pdf",
     "exclude": "format of|instructions|data sheet|compassionate|qualified|roll no|unique id",
-    "limit": 40
+    "limit": 40,
+    "contextClosest": "tr",
+    "contextFind": "td:first-child"
   },
   {
     "id": "uco-bank",
@@ -2091,8 +2100,9 @@
     "type": "html",
     "url": "https://uco.bank.in/job-opportunities",
     "include": "documents/d/guest",
-    "exclude": "proforma|certificate|format|shortlisted|compassionate|qualified|roll no|unique id",
-    "limit": 60
+    "exclude": "proforma|certificate|compassionate|roll no|unique id",
+    "limit": 120,
+    "timeoutMs": 15000
   },
   {
     "id": "iob",
@@ -2128,14 +2138,45 @@
     "runner": "india",
     "tier": "FREE",
     "level": "central",
-    "type": "html",
-    "url": "https://nhai.gov.in/nhai/taxonomy/term/249",
-    "include": "/node/",
-    "titleReplace": [
-      "^Read more about ",
-      ""
-    ],
-    "exclude": "compassionate|qualified|roll no|unique id",
+    "type": "json",
+    "url": "https://nhai.gov.in/nhai/api/vacancies-current",
+    "method": "POST",
+    "form": {
+      "language": "en",
+      "index": "0",
+      "archive": "0",
+      "totalrecord": "40",
+      "status": "Open"
+    },
+    "itemsPath": "list",
+    "titleFormat": "{title} [{type}]",
+    "linkField": "upload_file.0.uf_target_id",
+    "fallbackLink": "https://nhai.gov.in/#/vacancies/current",
+    "timeoutMs": 15000,
+    "limit": 40,
+    "allowEmpty": true
+  },
+  {
+    "id": "nhai-results",
+    "name": "NHAI Results and notices",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "type": "json",
+    "url": "https://nhai.gov.in/nhai/api/vacancy-result",
+    "method": "POST",
+    "form": {
+      "language": "en",
+      "index": "0",
+      "totalrecord": "40",
+      "sortby": "archive_date_val",
+      "sorttype": "desc"
+    },
+    "itemsPath": "list",
+    "titleFormat": "{title}",
+    "linkField": "upload_file.0.uf_target_id",
+    "fallbackLink": "https://nhai.gov.in/#/vacancies/result",
+    "timeoutMs": 15000,
     "limit": 40
   },
   {
@@ -2149,7 +2190,7 @@
     "rowSelector": "table.common-table",
     "rowTitle": "th",
     "rowLink": "a:contains('View Job Details')",
-    "exclude": "compassionate|qualified|roll no|unique id",
+    "exclude": "compassionate|unique id",
     "limit": 40
   },
   {
@@ -2160,8 +2201,10 @@
     "level": "central",
     "type": "html",
     "url": "https://bdl-india.in/recruitments",
-    "include": "[.]pdf",
-    "exclude": "directory|standardisation|certification|compassionate|qualified|roll no|unique id",
+    "rowSelector": "table tbody tr",
+    "rowTitle": "td.views-field-title",
+    "rowLink": "a[href$='.pdf']",
+    "exclude": "directory|standardisation|certification|compassionate|unique id",
     "limit": 40
   },
   {
@@ -2178,7 +2221,6 @@
     "rowSelector": "tr:has(a[href])",
     "rowTitle": "td:nth-child(2)",
     "rowLink": "a[href]",
-    "exclude": "shortlisted|not shortlisted|qualified|roll no|unique id|compassionate",
     "limit": 80
   },
   {
@@ -2195,7 +2237,7 @@
     "rowSelector": "tr:has(td a[href*='.pdf'])",
     "rowTitle": "td:first-child",
     "rowLink": "td:first-child a[href*='.pdf']",
-    "exclude": "shortlisted|qualified|roll no|unique id|compassionate",
+    "exclude": "compassionate|unique id",
     "limit": 60
   },
   {
@@ -2209,11 +2251,12 @@
     "extraCerts": [
       "certs/sectigo-ov-r36.pem"
     ],
-    "rowSelector": "li:has(span.title)",
-    "rowTitle": "span.title",
-    "rowLink": "a[href*='images/careers']",
-    "exclude": "compassionate|qualified|roll no|unique id",
-    "limit": 60
+    "selector": "table.railtel_table a[href]",
+    "contextClosest": "table",
+    "contextFind": "tr.heading td",
+    "minTitle": 4,
+    "exclude": "compassionate|unique id",
+    "limit": 80
   },
   {
     "id": "icmr",
@@ -2229,8 +2272,25 @@
     "rowSelector": "tr:has(a.descView__link)",
     "rowTitle": "td:nth-child(2)",
     "rowLink": "a.descView__link",
-    "exclude": "compassionate|qualified|roll no|unique id",
+    "exclude": "compassionate",
     "limit": 60
+  },
+  {
+    "id": "icmr-results",
+    "name": "ICMR Career Results",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "url": "https://www.icmr.gov.in/career-results",
+    "type": "html",
+    "extraCerts": [
+      "certs/icmr.pem"
+    ],
+    "rowSelector": "tr:has(a.descView__link)",
+    "rowTitle": "td:nth-child(2)",
+    "rowLink": "a.descView__link",
+    "limit": 60,
+    "allowEmpty": true
   },
   {
     "id": "pgimer",
@@ -2244,8 +2304,8 @@
       "certs/letsencrypt-yr1-chain.pem"
     ],
     "include": "ViewAll[.]jsp",
-    "exclude": "shortlisted|compassionate|qualified|roll no|unique id",
-    "limit": 60
+    "exclude": "compassionate",
+    "limit": 80
   },
   {
     "id": "idbi",
@@ -2260,8 +2320,24 @@
     ],
     "include": "pdf/careers",
     "titleFromHref": true,
-    "exclude": "Certificate|Format|Annexure|compassionate|qualified|roll no|unique id",
+    "exclude": "Certificate|Format|Annexure|compassionate",
     "limit": 50
+  },
+  {
+    "id": "idbi-results",
+    "name": "IDBI Bank Careers Results",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "url": "https://www.idbi.bank.in/idbi-bank-careers-current-result.aspx",
+    "type": "html",
+    "extraCerts": [
+      "certs/idbi.pem"
+    ],
+    "include": "pdf/careers",
+    "titleFromHref": true,
+    "limit": 50,
+    "allowEmpty": true
   },
   {
     "id": "rites",
@@ -2276,9 +2352,43 @@
     "rowSelector": "table tbody tr",
     "rowTitle": "td:nth-child(3)",
     "rowLink": "a[href]",
-    "exclude": "compassionate|qualified|roll no|unique id",
+    "exclude": "compassionate",
     "minTitle": 15,
     "limit": 30
+  },
+  {
+    "id": "rites-results",
+    "name": "RITES Results",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "url": "https://www.rites.com/Result",
+    "type": "html",
+    "render": true,
+    "waitFor": "table tbody tr td",
+    "rowSelector": "table tbody tr",
+    "rowTitle": "td:nth-child(3)",
+    "rowLink": "a[href]",
+    "minTitle": 5,
+    "limit": 30,
+    "allowEmpty": true
+  },
+  {
+    "id": "rites-schedule",
+    "name": "RITES Selection Schedule",
+    "runner": "india",
+    "tier": "FREE",
+    "level": "central",
+    "url": "https://www.rites.com/SelectionSchedule",
+    "type": "html",
+    "render": true,
+    "waitFor": "table tbody tr td",
+    "rowSelector": "table tbody tr",
+    "rowTitle": "td:nth-child(3)",
+    "rowLink": "a[href]",
+    "minTitle": 5,
+    "limit": 30,
+    "allowEmpty": true
   },
   {
     "id": "jipmer",
@@ -2292,9 +2402,10 @@
       "certs/jipmer.pem"
     ],
     "include": "jipmer[.]edu[.]in/announcement/[a-z0-9]",
-    "exclude": "jobs-archive|entrance|admission|shortlisted|eligible|compassionate|qualified|roll no|unique id",
+    "exclude": "jobs-archive|entrance|admission|compassionate",
     "minTitle": 30,
-    "limit": 50
+    "limit": 50,
+    "timeoutMs": 30000
   },
   {
     "id": "grse",
@@ -2304,15 +2415,14 @@
     "level": "central",
     "type": "html",
     "url": "https://grse.in/career/",
-    "render": true,
-    "waitFor": "a[href*='.pdf']",
     "include": "[.]pdf",
-    "exclude": "shortlisted|hindi|compassionate|qualified|roll no|unique id",
+    "exclude": "hindi|compassionate|roll no|unique id",
     "titleReplace": [
       "\\s*\\(\\s*[|].*$",
       ""
     ],
-    "limit": 40
+    "limit": 40,
+    "timeoutMs": 15000
   },
   {
     "id": "ncert",
@@ -2321,11 +2431,12 @@
     "tier": "FREE",
     "level": "central",
     "type": "html",
-    "url": "https://ncert.nic.in/vacancies.php?ln=en",
-    "render": true,
+    "url": "https://www.ncert.nic.in/vacancies.php?ln=en",
     "include": "vacancies/",
-    "exclude": "shortlisted|compassionate|qualified|roll no|unique id",
-    "limit": 60
+    "exclude": "compassionate|roll no|unique id",
+    "limit": 150,
+    "timeoutMs": 15000,
+    "minTitle": 3
   },
   {
     "id": "nbems",
@@ -2337,7 +2448,7 @@
     "url": "https://natboard.edu.in/vacancy.php",
     "rowSelector": "tr:not(:has(tr)):has(a[href*='viewNotice'])",
     "rowTitle": "td:nth-child(2)",
-    "rowLink": "td:nth-child(2) a[href*='viewNotice']",
+    "rowLink": "td:nth-child(3) a[href*='viewNotice']",
     "exclude": "compassionate|qualified|roll no|unique id",
     "minTitle": 15,
     "limit": 60
@@ -2353,8 +2464,10 @@
     "render": true,
     "waitFor": "a[href*='.pdf']",
     "include": "sites/default/files/20",
-    "exclude": "policy|shortlist|list of|सूची|शॉर्टलिस्ट|compassionate|qualified|roll no|unique id",
-    "limit": 40
+    "limit": 40,
+    "clickText": "English",
+    "minTitle": 8,
+    "timeoutMs": 25000
   },
   {
     "id": "pfc",
@@ -2370,7 +2483,7 @@
     "render": true,
     "waitFor": "a[href*='.pdf']",
     "include": "cms[.]pfcindia[.]co[.]in/media/documents",
-    "exclude": "shortlisted|refund|backlog|compassionate|qualified|roll no|unique id",
+    "exclude": "refund|backlog|compassionate|qualified|roll no|unique id",
     "limit": 40
   },
   {
